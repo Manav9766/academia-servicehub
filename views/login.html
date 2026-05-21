@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Services Login</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Student Services Appointment and Case Management System</h1>
+    <h2>Login</h2>
+
+    <p id="error" class="error"></p>
+
+    <form action="/login" method="POST">
+      <label>Username</label>
+      <input type="text" name="username" required>
+
+      <label>Password</label>
+      <input type="password" name="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+    <!--
+    <div class="info">
+      <p><b>Student:</b> student / student123</p>
+      <p><b>Staff:</b> staff / staff123</p>
+      <p><b>Admin:</b> admin / admin123</p>
+    </div>
+-->
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    if (error) {
+      document.getElementById("error").textContent = error;
+    }
+  </script>
+</body>
+</html>
