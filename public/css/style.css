@@ -80,3 +80,168 @@ button:hover {
   padding: 15px;
   border-radius: 6px;
 }
+/* Manav - Student Dashboard and Appointment Booking */
+
+.student-page {
+  margin: 0;
+  background: #f4f6f9;
+  font-family: Arial, sans-serif;
+  color: #222;
+}
+
+.student-header {
+  background: #23395d;
+  color: white;
+  padding: 24px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-header h1 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.student-header p {
+  margin: 6px 0 0;
+  font-size: 16px;
+}
+
+.logout-btn {
+  background: white;
+  color: #23395d;
+  padding: 10px 18px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.logout-btn:hover {
+  background: #e6eaf2;
+}
+
+.student-container {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.student-card {
+  background: white;
+  padding: 25px;
+  margin-bottom: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.student-card h2 {
+  margin-top: 0;
+  color: #23395d;
+}
+
+.section-text {
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.service-card {
+  background: #eef3fb;
+  padding: 18px;
+  border-radius: 8px;
+  border-left: 5px solid #23395d;
+}
+
+.service-card h3 {
+  margin-top: 0;
+  color: #23395d;
+}
+
+.service-card p {
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+.appointment-form {
+  display: grid;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 11px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.primary-btn {
+  background: #23395d;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.primary-btn:hover {
+  background: #1a2c49;
+}
+
+.message {
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.message.success {
+  color: #198754;
+}
+
+.message.error {
+  color: #dc3545;
+}
+
+.appointment-display {
+  background: #eef3fb;
+  padding: 18px;
+  border-radius: 8px;
+}
+
+.booked-appointment p {
+  margin: 8px 0;
+}
+
+@media (max-width: 768px) {
+  .student-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.student-header h1,
+.student-header p {
+  color: white;
+}

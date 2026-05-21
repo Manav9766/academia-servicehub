@@ -1,25 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Dashboard</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body>
-  <div class="container">
-    <h1>Student Dashboard</h1>
-    <p>Welcome, Student. You can book appointments, submit service requests, and track request status.</p>
+<body class="student-page">
 
-    <div class="card">
-      <h2>Appointment Booking</h2>
-      <p>Student can select service, date, time, and notes.</p>
+  <header class="student-header">
+    <div>
+      <h1>Student Dashboard</h1>
+      <p>Welcome, Student</p>
     </div>
 
-    <div class="card">
-      <h2>Service Request Tracking</h2>
-      <p>Student can submit service requests and check status.</p>
-    </div>
+    <a href="/logout" class="logout-btn">Logout</a>
+  </header>
 
-    <a href="/logout" class="logout">Logout</a>
-  </div>
+  <main class="student-container">
+
+    <!-- Available Services -->
+    <section class="student-card">
+      <h2>Available Student Services</h2>
+      <p class="section-text">
+        Select a student service to book an appointment with the correct department.
+      </p>
+
+      <div class="services-grid">
+        <div class="service-card">
+          <h3>Academic Advising</h3>
+          <p>Support for course planning, academic decisions, and program guidance.</p>
+        </div>
+
+        <div class="service-card">
+          <h3>Financial Aid</h3>
+          <p>Help with fees, scholarships, bursaries, and financial support options.</p>
+        </div>
+
+        <div class="service-card">
+          <h3>Career Support</h3>
+          <p>Guidance for resumes, interviews, co-op preparation, and career planning.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Appointment Booking -->
+    <section class="student-card">
+      <h2>Book an Appointment</h2>
+      <p class="section-text">
+        Fill out the form below to schedule an appointment with student services.
+      </p>
+
+      <form id="appointmentForm" class="appointment-form">
+
+        <div class="form-group">
+          <label for="serviceType">Service Type</label>
+          <select id="serviceType" required>
+            <option value="">Select a service</option>
+            <option value="Academic Advising">Academic Advising</option>
+            <option value="Financial Aid">Financial Aid</option>
+            <option value="Career Support">Career Support</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentDate">Appointment Date</label>
+          <input type="date" id="appointmentDate" required />
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentTime">Time Slot</label>
+          <select id="appointmentTime" required>
+            <option value="">Select a time</option>
+            <option value="09:00 AM">09:00 AM</option>
+            <option value="10:00 AM">10:00 AM</option>
+            <option value="11:00 AM">11:00 AM</option>
+            <option value="01:00 PM">01:00 PM</option>
+            <option value="02:00 PM">02:00 PM</option>
+            <option value="03:00 PM">03:00 PM</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea id="notes" rows="4" placeholder="Enter optional notes for staff"></textarea>
+        </div>
+
+        <button type="submit" class="primary-btn">Book Appointment</button>
+      </form>
+
+      <p id="message" class="message"></p>
+    </section>
+
+    <!-- Appointment Display -->
+    <section class="student-card">
+      <h2>Appointment Details</h2>
+
+      <div id="appointmentDisplay" class="appointment-display">
+        <p>No appointment booked yet.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/js/student.js"></script>
 </body>
 </html>
