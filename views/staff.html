@@ -1,25 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Staff Dashboard</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8">
+  <title>Staff Dashboard - Student Services</title>
+  <link rel="stylesheet" href="/css/staff.css">
 </head>
-<body>
-  <div class="container">
-    <h1>Staff Dashboard</h1>
-    <p>Welcome, Staff. You can view appointments, manage requests, update statuses, and add notes.</p>
+<body class="staff-page">
+  <header class="staff-header">
+    <div>
+      <h1>Staff Dashboard</h1>
+      <p>Manage Student Appointments and Service Requests</p>
+    </div>
+    <a href="/logout" class="logout-btn">Logout</a>
+  </header>
 
-    <div class="card">
+  <div class="staff-container">
+    
+    <div class="staff-card">
       <h2>Assigned Appointments</h2>
-      <p>Staff can view and update appointment status.</p>
+      <p class="section-text">View and update student appointments.</p>
+      <div id="appointmentsList" class="data-list">
+        <!-- Rendered by JS -->
+      </div>
     </div>
 
-    <div class="card">
+    <div class="staff-card">
       <h2>Service Requests</h2>
-      <p>Staff can manage student cases and add notes.</p>
+      <p class="section-text">Manage student cases and add notes.</p>
+      <div id="requestsList" class="data-list">
+        <!-- Rendered by JS -->
+      </div>
     </div>
 
-    <a href="/logout" class="logout">Logout</a>
   </div>
+
+  <script src="/js/staff.js"></script>
 </body>
 </html>

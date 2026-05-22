@@ -1,0 +1,131 @@
+
+/* Tisha - Staff Dashboard */
+.staff-page {
+  margin: 0;
+  background: #f4f6f9;
+  font-family: Arial, sans-serif;
+  color: #222;
+}
+
+.staff-header {
+  background: #1e4a28;
+  color: white;
+  padding: 24px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.staff-header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: white;
+}
+
+.staff-header p {
+  margin: 6px 0 0;
+  font-size: 16px;
+  color: white;
+}
+
+.staff-container {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.staff-card {
+  background: white;
+  padding: 25px;
+  margin-bottom: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.staff-card h2 {
+  margin-top: 0;
+  color: #1e4a28;
+}
+
+.item-card {
+  background: #fdfdfd;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  padding: 15px;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.item-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.status-scheduled { background: #cce5ff; color: #004085; }
+.status-inprogress { background: #fff3cd; color: #856404; }
+.status-completed { background: #d4edda; color: #155724; }
+.status-submitted { background: #e2e3e5; color: #383d41; }
+.status-cancelled { background: #f8d7da; color: #721c24; }
+
+.status-updater {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-updater select {
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.notes-section {
+  margin-top: 15px;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.notes-section textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 5px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.small-btn {
+  background: #1e4a28;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 5px;
+  width: auto;
+}
+
+.small-btn:hover {
+  background: #14351a;
+}
+
+.save-msg {
+  margin-left: 10px;
+  font-size: 14px;
+}
