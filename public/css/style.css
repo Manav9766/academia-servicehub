@@ -245,3 +245,108 @@ button:hover {
 .student-header p {
   color: white;
 }
+.student-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.action-btn {
+  background-color: #23395d;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.action-btn:hover {
+  background-color: #1a2c49;
+}
+
+.action-btn.secondary {
+  background-color: white;
+  color: #23395d;
+  border: 2px solid #23395d;
+}
+
+.action-btn.secondary:hover {
+  background-color: #eef3fb;
+}
+
+@media (max-width: 768px) {
+  .student-actions {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    text-align: center;
+  }
+}
+.staff-page {
+  margin: 0;
+  background: #f4f6f9;
+  font-family: Arial, sans-serif;
+}
+
+.staff-header {
+  background: #1f4f2b;
+  color: white;
+  padding: 24px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.staff-header h1,
+.staff-header p {
+  color: white;
+  margin: 0;
+}
+
+.staff-header p {
+  margin-top: 6px;
+}
+
+.staff-container {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.staff-card {
+  background: white;
+  padding: 25px;
+  margin-bottom: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.staff-card h2 {
+  color: #1f4f2b;
+  margin-top: 0;
+}
+
+.staff-actions {
+  max-width: 1100px;
+  margin: 25px auto 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.staff-action-btn {
+  background-color: #1f4f2b;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.staff-action-btn:hover {
+  background-color: #163b20;
+}

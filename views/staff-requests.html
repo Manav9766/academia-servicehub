@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manage Service Requests</title>
+</head>
+<body>
+  <h1>Manage Service Requests</h1>
+
+  <table border="1" cellpadding="10">
+    <thead>
+      <tr>
+        <th>Request ID</th>
+        <th>Student</th>
+        <th>Category</th>
+        <th>Subject</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Update Status</th>
+      </tr>
+    </thead>
+    <tbody id="requestTable"></tbody>
+  </table>
+
+  <br>
+  <a href="/staff">Back to Staff Dashboard</a>
+
+  <script>
+    fetch("/api/all-requests")
+      .then((res) => res.json())
+      .then((requests) => {
+        const table = document.getElementById("requestTable");
+
+        if (requests.length === 0) {
+          table.innerHTML = "<tr><td colspan='7'>No requests found.</td></tr>";
+          return;
+        }
+
+        requests.forEach((request) => {
+          table.innerHTML += `
+            <tr>
+              <td>${request.requestId}</td>
+              <td>${request.student}</td>
+              <td>${request.category}</td>
+              <td>${request.subject}</td>
+              <td>${request.description}</td>
+              <td>${request.status}</td>
+              <td>
+                <form method="POST" action="/staff/update-request-status">
+                  <input type="hidden" name="requestId" value="${request.requestId}">
+                  <select name="status">
+                    <option value="Submitted" ${request.status === "Submitted" ? "selected" : ""}>Submitted</option>
+                    <option value="In Progress" ${request.status === "In Progress" ? "selected" : ""}>In Progress</option>
+                    <option value="Completed" ${request.status === "Completed" ? "selected" : ""}>Completed</option>
+                  </select>
+                  <button type="submit">Save</button>
+                </form>
+              </td>
+            </tr>
+          `;
+        });
+      });
+  </script>
+</body>
+</html>

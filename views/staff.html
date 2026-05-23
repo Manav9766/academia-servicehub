@@ -3,36 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <title>Staff Dashboard - Student Services</title>
-  <link rel="stylesheet" href="/css/staff.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body class="staff-page">
+
   <header class="staff-header">
     <div>
       <h1>Staff Dashboard</h1>
       <p>Manage Student Appointments and Service Requests</p>
     </div>
+
     <a href="/logout" class="logout-btn">Logout</a>
   </header>
 
-  <div class="staff-container">
-    
-    <div class="staff-card">
+  <div class="staff-actions">
+    <a href="/staff/requests" class="staff-action-btn">
+      Manage Service Requests
+    </a>
+  </div>
+
+  <main class="staff-container">
+
+    <section class="staff-card">
       <h2>Assigned Appointments</h2>
-      <p class="section-text">View and update student appointments.</p>
+
+      <p class="section-text">
+        View and update student appointments.
+      </p>
+
       <div id="appointmentsList" class="data-list">
         <!-- Rendered by JS -->
       </div>
-    </div>
+    </section>
 
-    <div class="staff-card">
+    <section class="staff-card">
       <h2>Service Requests</h2>
-      <p class="section-text">Manage student cases and add notes.</p>
+
+      <p class="section-text">
+        Manage student cases and add notes.
+      </p>
+
       <div id="requestsList" class="data-list">
         <!-- Rendered by JS -->
       </div>
-    </div>
+    </section>
 
-  </div>
+  </main>
 
   <script src="/js/staff.js"></script>
 </body>
