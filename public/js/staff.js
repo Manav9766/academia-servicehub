@@ -1,16 +1,26 @@
-// Mock data for appointments
-let appointments = [
-  { id: 1, student: "Alice Smith", service: "Academic Advising", date: "2026-05-25", time: "10:00", status: "Scheduled" },
-  { id: 2, student: "Bob Jones", service: "Financial Aid", date: "2026-05-26", time: "14:30", status: "In Progress" }
-];
+// staff.js - Uses API endpoints for data
 
-// Mock data for requests
-let requests = [
-  { id: 101, student: "Alice Smith", category: "Course Registration", subject: "Error adding math class", description: "Getting a prerequisite error even though I took it.", status: "Submitted", notes: "" },
-  { id: 102, student: "Charlie Brown", category: "IT Support", subject: "Can't access portal", description: "Password reset is not working.", status: "In Progress", notes: "Emailed IT desk." }
-];
+async function fetchAppointments() {
+  try {
+    const res = await fetch("/api/appointments");
+    const appointments = await res.json();
+    renderAppointments(appointments);
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+  }
+}
 
-function renderAppointments() {
+async function fetchRequests() {
+  try {
+    const res = await fetch("/api/all-requests");
+    const requests = await res.json();
+    renderRequests(requests);
+  } catch (error) {
+    console.error("Error fetching requests:", error);
+  }
+}
+
+function renderAppointments(appointments) {
   const container = document.getElementById("appointmentsList");
   container.innerHTML = "";
   
@@ -22,22 +32,24 @@ function renderAppointments() {
   appointments.forEach(app => {
     const card = document.createElement("div");
     card.className = "item-card";
+    const safeStatus = (app.status || "").replace(" ", "").toLowerCase();
     card.innerHTML = `
       <div class="item-header">
         <h3>${app.service} - ${app.student}</h3>
-        <span class="status-badge status-${app.status.replace(" ", "").toLowerCase()}">${app.status}</span>
+        <span class="status-badge status-${safeStatus}">${app.status}</span>
       </div>
       <div class="item-body">
         <p><strong>Date:</strong> ${app.date}</p>
         <p><strong>Time:</strong> ${app.time}</p>
         <div class="status-updater">
           <label>Update Status:</label>
-          <select onchange="updateAppointmentStatus(${app.id}, this.value)">
+          <select id="app-status-${app.id}">
             <option value="Scheduled" ${app.status === 'Scheduled' ? 'selected' : ''}>Scheduled</option>
             <option value="In Progress" ${app.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
             <option value="Completed" ${app.status === 'Completed' ? 'selected' : ''}>Completed</option>
             <option value="Cancelled" ${app.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
           </select>
+          <button class="small-btn" onclick="updateAppointmentStatus(${app.id})">Update Status</button>
         </div>
       </div>
     `;
@@ -45,7 +57,7 @@ function renderAppointments() {
   });
 }
 
-function renderRequests() {
+function renderRequests(requests) {
   const container = document.getElementById("requestsList");
   container.innerHTML = "";
 
@@ -57,10 +69,11 @@ function renderRequests() {
   requests.forEach(req => {
     const card = document.createElement("div");
     card.className = "item-card";
+    const safeStatus = (req.status || "").replace(" ", "").toLowerCase();
     card.innerHTML = `
       <div class="item-header">
-        <h3>[#${req.id}] ${req.subject} (${req.category})</h3>
-        <span class="status-badge status-${req.status.replace(" ", "").toLowerCase()}">${req.status}</span>
+        <h3>[#${req.requestId}] ${req.subject} (${req.category})</h3>
+        <span class="status-badge status-${safeStatus}">${req.status}</span>
       </div>
       <div class="item-body">
         <p><strong>Student:</strong> ${req.student}</p>
@@ -68,18 +81,19 @@ function renderRequests() {
         
         <div class="status-updater">
           <label>Update Status:</label>
-          <select onchange="updateRequestStatus(${req.id}, this.value)">
+          <select id="req-status-${req.requestId}">
             <option value="Submitted" ${req.status === 'Submitted' ? 'selected' : ''}>Submitted</option>
             <option value="In Progress" ${req.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
             <option value="Completed" ${req.status === 'Completed' ? 'selected' : ''}>Completed</option>
           </select>
+          <button class="small-btn" onclick="updateRequestStatus('${req.requestId}')">Update Status</button>
         </div>
 
         <div class="notes-section">
           <label>Staff Notes:</label>
-          <textarea id="notes-${req.id}" rows="2" placeholder="Add notes...">${req.notes}</textarea>
-          <button class="small-btn" onclick="saveNotes(${req.id})">Save Notes</button>
-          <span id="note-msg-${req.id}" class="save-msg"></span>
+          <textarea id="notes-${req.requestId}" rows="2" placeholder="Add notes...">${req.notes || ""}</textarea>
+          <button class="small-btn" onclick="saveNotes('${req.requestId}')">Save Notes</button>
+          <span id="note-msg-${req.requestId}" class="save-msg"></span>
         </div>
       </div>
     `;
@@ -87,37 +101,56 @@ function renderRequests() {
   });
 }
 
-function updateAppointmentStatus(id, newStatus) {
-  const app = appointments.find(a => a.id === id);
-  if (app) {
-    app.status = newStatus;
-    renderAppointments();
+async function updateAppointmentStatus(id) {
+  const status = document.getElementById(`app-status-${id}`).value;
+  try {
+    await fetch(`/api/appointments/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status })
+    });
+    fetchAppointments(); // Re-render
+  } catch (error) {
+    console.error("Error updating appointment:", error);
   }
 }
 
-function updateRequestStatus(id, newStatus) {
-  const req = requests.find(r => r.id === id);
-  if (req) {
-    req.status = newStatus;
-    renderRequests();
+async function updateRequestStatus(requestId) {
+  const status = document.getElementById(`req-status-${requestId}`).value;
+  try {
+    await fetch(`/api/requests/${requestId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status })
+    });
+    fetchRequests(); // Re-render
+  } catch (error) {
+    console.error("Error updating request:", error);
   }
 }
 
-function saveNotes(id) {
-  const req = requests.find(r => r.id === id);
-  if (req) {
-    const notesInput = document.getElementById(`notes-${id}`).value;
-    req.notes = notesInput;
+async function saveNotes(requestId) {
+  const notes = document.getElementById(`notes-${requestId}`).value;
+  try {
+    await fetch(`/api/requests/${requestId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes })
+    });
     
-    const msg = document.getElementById(`note-msg-${id}`);
+    const msg = document.getElementById(`note-msg-${requestId}`);
     msg.textContent = "Saved!";
     msg.style.color = "green";
     setTimeout(() => { msg.textContent = ""; }, 2000);
+    
+    // fetchRequests(); // Optional: Re-render if you want to sync other fields
+  } catch (error) {
+    console.error("Error saving notes:", error);
   }
 }
 
 // Initial render
 document.addEventListener("DOMContentLoaded", () => {
-  renderAppointments();
-  renderRequests();
+  fetchAppointments();
+  fetchRequests();
 });

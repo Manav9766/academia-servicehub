@@ -116,21 +116,46 @@ app.get("/staff/requests", requireLogin, requireRole("staff"), (req, res) => {
   res.sendFile(path.join(__dirname, "views", "staff-requests.html"));
 });
 
+// In-memory store for appointments
+const appointments = [
+  { id: 1, student: "student", service: "Academic Advising", date: "2026-06-10", time: "10:00", status: "Scheduled" }
+];
+
 app.get("/api/all-requests", requireLogin, requireRole("staff"), (req, res) => {
   res.json(serviceRequests);
 });
 
-app.post("/staff/update-request-status", requireLogin, requireRole("staff"), (req, res) => {
-  const { requestId, status } = req.body;
+app.put("/api/requests/:id", requireLogin, requireRole("staff"), (req, res) => {
+  const requestId = req.params.id;
+  const { status, notes } = req.body;
 
-  const request = serviceRequests.find((request) => request.requestId === requestId);
-
+  const request = serviceRequests.find((req) => req.requestId === requestId);
   if (!request) {
-    return res.redirect("/staff/requests?error=Request not found");
+    return res.status(404).json({ error: "Request not found" });
   }
 
-  request.status = status;
-  res.redirect("/staff/requests?success=Status updated");
+  if (status) request.status = status;
+  if (notes !== undefined) request.notes = notes;
+
+  res.json({ message: "Request updated successfully", request });
+});
+
+app.get("/api/appointments", requireLogin, requireRole("staff"), (req, res) => {
+  res.json(appointments);
+});
+
+app.put("/api/appointments/:id", requireLogin, requireRole("staff"), (req, res) => {
+  const appointmentId = parseInt(req.params.id, 10);
+  const { status } = req.body;
+
+  const appointment = appointments.find((app) => app.id === appointmentId);
+  if (!appointment) {
+    return res.status(404).json({ error: "Appointment not found" });
+  }
+
+  if (status) appointment.status = status;
+
+  res.json({ message: "Appointment updated successfully", appointment });
 });
 
 app.get("/admin", requireLogin, requireRole("admin"), (req, res) => {
