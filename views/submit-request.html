@@ -1,32 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Submit Request</title>
+
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
 
-<h1>Submit Service Request</h1>
+<body class="student-page">
 
-<form action="/submit-request" method="POST">
+  <header class="student-header">
+    <div>
+      <h1>Submit Service Request</h1>
+      <p>Create a new support request for student services</p>
+    </div>
 
-  <input
-    type="text"
-    name="issue"
-    placeholder="Enter issue"
-    required
-  >
+    <a href="/logout" class="logout-btn">
+      Logout
+    </a>
+  </header>
 
-  <button type="submit">
-    Submit
-  </button>
+  <main class="student-container">
 
-</form>
+    <div class="student-actions">
+      <a href="/student" class="action-btn secondary">
+        Back to Dashboard
+      </a>
 
-<br>
+      <a href="/track-requests" class="action-btn">
+        Track Requests
+      </a>
+    </div>
 
-<a href="/student">
-  Back
-</a>
+    <div class="student-card">
+
+      <h2>Request Details</h2>
+
+      <p class="section-text">
+        Submit your issue and staff members will review your request.
+      </p>
+
+      <form
+        action="/submit-request"
+        method="POST"
+        class="appointment-form"
+      >
+
+        <div class="form-group">
+          <label for="issue">
+            Describe Your Issue
+          </label>
+
+          <textarea
+            id="issue"
+            name="issue"
+            rows="6"
+            placeholder="Enter your issue here..."
+            required
+          ></textarea>
+        </div>
+
+        <button type="submit" class="primary-btn">
+          Submit Request
+        </button>
+
+      </form>
+
+    </div>
+
+  </main>
 
 </body>
 </html>

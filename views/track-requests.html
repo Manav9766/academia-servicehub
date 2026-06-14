@@ -1,40 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
   <title>Track Requests</title>
+
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
 
-<h1>My Service Requests</h1>
+<body class="student-page">
 
-<table border="1" cellpadding="10">
-  <thead>
-    <tr>
-      <th>Request ID</th>
-      <th>Student</th>
-      <th>Issue</th>
-      <th>Status</th>
-    </tr>
-  </thead>
+  <header class="student-header">
+    <div>
+      <h1>My Service Requests</h1>
+      <p>Track your submitted requests and their current status</p>
+    </div>
 
-  <tbody id="requestTable"></tbody>
-</table>
+    <a href="/logout" class="logout-btn">Logout</a>
+  </header>
 
-<br>
+  <main class="student-container">
 
-<a href="/submit-request">Submit New Request</a>
-<br>
-<a href="/student">Back to Dashboard</a>
+    <div class="student-actions">
+      <a href="/submit-request" class="action-btn">
+        Submit New Request
+      </a>
+
+      <a href="/student" class="action-btn secondary">
+        Back to Dashboard
+      </a>
+    </div>
+
+    <div class="student-card">
+
+      <table>
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Student</th>
+            <th>Issue</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody id="requestTable"></tbody>
+      </table>
+
+    </div>
+
+  </main>
 
 <script>
+
 async function loadRequests() {
+
   const response = await fetch("/api/student-requests");
+
   const requests = await response.json();
 
   const table = document.getElementById("requestTable");
+
   table.innerHTML = "";
 
   requests.forEach((r) => {
+
     table.innerHTML += `
       <tr>
         <td>${r.id}</td>
@@ -47,6 +77,7 @@ async function loadRequests() {
 }
 
 loadRequests();
+
 </script>
 
 </body>
