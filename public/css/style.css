@@ -3,40 +3,57 @@ body {
   background: #f4f7fb;
   margin: 0;
   padding: 0;
+  color: #222;
 }
 
+/* Global Container */
 .container {
-  width: 700px;
-  margin: 60px auto;
+  width: 90%;
+  max-width: 1100px;
+  margin: 50px auto;
   background: white;
   padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 0 12px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 }
 
+/* Typography */
 h1 {
   color: #1f3c88;
+  margin-top: 0;
 }
 
 h2 {
   color: #333;
+  margin-bottom: 15px;
 }
 
+p {
+  line-height: 1.6;
+}
+
+/* Forms */
 label {
   display: block;
   margin-top: 15px;
   font-weight: bold;
 }
 
-input {
+input,
+select,
+textarea {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin-top: 6px;
   border: 1px solid #ccc;
   border-radius: 6px;
+  font-size: 15px;
+  box-sizing: border-box;
 }
 
-button {
+/* Buttons */
+button,
+.primary-btn {
   margin-top: 20px;
   width: 100%;
   padding: 12px;
@@ -45,48 +62,96 @@ button {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+  transition: 0.2s ease;
 }
 
-button:hover {
+button:hover,
+.primary-btn:hover {
   background: #162d66;
 }
 
-.card {
-  background: #eef3ff;
-  padding: 15px;
-  margin-top: 15px;
-  border-left: 5px solid #1f3c88;
-  border-radius: 6px;
+/* Cards */
+.card,
+.student-card,
+.staff-card {
+  background: white;
+  padding: 22px;
+  margin-bottom: 22px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
 }
 
-.logout {
+.card {
+  border-left: 5px solid #1f3c88;
+  background: #eef3ff;
+}
+
+/* Logout Button */
+.logout,
+.logout-btn {
   display: inline-block;
-  margin-top: 25px;
+  margin-top: 20px;
   background: #d9534f;
   color: white;
   padding: 10px 18px;
   text-decoration: none;
   border-radius: 6px;
+  font-weight: bold;
+  transition: 0.2s ease;
 }
 
+.logout:hover,
+.logout-btn:hover {
+  background: #b52b27;
+}
+
+/* Messages */
 .error {
-  color: red;
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.success {
+  color: #198754;
   font-weight: bold;
 }
 
 .info {
-  margin-top: 25px;
+  margin-top: 20px;
   background: #f0f0f0;
   padding: 15px;
   border-radius: 6px;
 }
-/* Manav - Student Dashboard and Appointment Booking */
 
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 14px;
+  text-align: left;
+}
+
+th {
+  background: #1f3c88;
+  color: white;
+}
+
+tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+/* Student Dashboard */
 .student-page {
-  margin: 0;
   background: #f4f6f9;
-  font-family: Arial, sans-serif;
-  color: #222;
 }
 
 .student-header {
@@ -98,27 +163,14 @@ button:hover {
   align-items: center;
 }
 
-.student-header h1 {
+.student-header h1,
+.student-header p {
+  color: white;
   margin: 0;
-  font-size: 30px;
 }
 
 .student-header p {
-  margin: 6px 0 0;
-  font-size: 16px;
-}
-
-.logout-btn {
-  background: white;
-  color: #23395d;
-  padding: 10px 18px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.logout-btn:hover {
-  background: #e6eaf2;
+  margin-top: 6px;
 }
 
 .student-container {
@@ -127,24 +179,12 @@ button:hover {
   padding: 0 20px;
 }
 
-.student-card {
-  background: white;
-  padding: 25px;
-  margin-bottom: 25px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-
-.student-card h2 {
-  margin-top: 0;
-  color: #23395d;
-}
-
 .section-text {
   color: #555;
   margin-bottom: 20px;
 }
 
+/* Service Cards */
 .services-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -163,11 +203,7 @@ button:hover {
   color: #23395d;
 }
 
-.service-card p {
-  margin-bottom: 0;
-  line-height: 1.5;
-}
-
+/* Appointment Form */
 .appointment-form {
   display: grid;
   gap: 16px;
@@ -178,73 +214,7 @@ button:hover {
   flex-direction: column;
 }
 
-.form-group label {
-  font-weight: bold;
-  margin-bottom: 6px;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  padding: 11px;
-  border: 1px solid #bbb;
-  border-radius: 6px;
-  font-size: 15px;
-}
-
-.primary-btn {
-  background: #23395d;
-  color: white;
-  border: none;
-  padding: 12px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.primary-btn:hover {
-  background: #1a2c49;
-}
-
-.message {
-  margin-top: 15px;
-  font-weight: bold;
-}
-
-.message.success {
-  color: #198754;
-}
-
-.message.error {
-  color: #dc3545;
-}
-
-.appointment-display {
-  background: #eef3fb;
-  padding: 18px;
-  border-radius: 8px;
-}
-
-.booked-appointment p {
-  margin: 8px 0;
-}
-
-@media (max-width: 768px) {
-  .student-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .services-grid {
-    grid-template-columns: 1fr;
-  }
-}
-.student-header h1,
-.student-header p {
-  color: white;
-}
+/* Student Actions */
 .student-actions {
   display: flex;
   justify-content: flex-end;
@@ -259,7 +229,7 @@ button:hover {
   border-radius: 8px;
   text-decoration: none;
   font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  transition: 0.2s ease;
 }
 
 .action-btn:hover {
@@ -276,19 +246,9 @@ button:hover {
   background-color: #eef3fb;
 }
 
-@media (max-width: 768px) {
-  .student-actions {
-    flex-direction: column;
-  }
-
-  .action-btn {
-    text-align: center;
-  }
-}
+/* Staff Dashboard */
 .staff-page {
-  margin: 0;
   background: #f4f6f9;
-  font-family: Arial, sans-serif;
 }
 
 .staff-header {
@@ -316,17 +276,8 @@ button:hover {
   padding: 0 20px;
 }
 
-.staff-card {
-  background: white;
-  padding: 25px;
-  margin-bottom: 25px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-
 .staff-card h2 {
   color: #1f4f2b;
-  margin-top: 0;
 }
 
 .staff-actions {
@@ -344,9 +295,37 @@ button:hover {
   border-radius: 8px;
   text-decoration: none;
   font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  transition: 0.2s ease;
 }
 
 .staff-action-btn:hover {
   background-color: #163b20;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+
+  .student-header,
+  .staff-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-actions {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    text-align: center;
+  }
+
+  .container {
+    width: 95%;
+    padding: 20px;
+  }
 }

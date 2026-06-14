@@ -1,42 +1,68 @@
 const express = require("express");
 const session = require("express-session");
+const fs = require("fs");
 const path = require("path");
 
 const app = express();
+
 const PORT = 3000;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+
+app.use(express.static("public"));
 
 app.use(
   session({
-    secret: "student-services-secret",
+    secret: "sprint2secret",
     resave: false,
     saveUninitialized: false,
   })
 );
 
+const DATA_FILE = path.join(__dirname, "data", "db.json");
+
+function readData() {
+  const data = fs.readFileSync(DATA_FILE);
+  return JSON.parse(data);
+}
+
+function writeData(data) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
 const users = [
-  { username: "student", password: "student123", role: "student" },
-  { username: "staff", password: "staff123", role: "staff" },
-  { username: "admin", password: "admin123", role: "admin" },
+  {
+    username: "student",
+    password: "123",
+    role: "student",
+  },
+  {
+    username: "staff",
+    password: "123",
+    role: "staff",
+  },
+  {
+    username: "admin",
+    password: "123",
+    role: "admin",
+  },
 ];
 
-const serviceRequests = [];
-
-function requireLogin(req, res, next) {
+function authMiddleware(req, res, next) {
   if (!req.session.user) {
     return res.redirect("/");
   }
+
   next();
 }
 
-function requireRole(role) {
+function roleMiddleware(role) {
   return (req, res, next) => {
     if (!req.session.user || req.session.user.role !== role) {
-      return res.status(403).send("Access Denied: You are not allowed to view this page.");
+      return res.send("Access Denied");
     }
+
     next();
   };
 }
@@ -53,113 +79,132 @@ app.post("/login", (req, res) => {
   );
 
   if (!user) {
-    return res.redirect("/?error=Invalid username or password");
+    return res.send("Invalid Credentials");
   }
 
-  req.session.user = {
-    username: user.username,
-    role: user.role,
-  };
+  req.session.user = user;
 
-  if (user.role === "student") return res.redirect("/student");
-  if (user.role === "staff") return res.redirect("/staff");
-  if (user.role === "admin") return res.redirect("/admin");
+  if (user.role === "student") {
+    return res.redirect("/student");
+  }
+
+  if (user.role === "staff") {
+    return res.redirect("/staff");
+  }
+
+  if (user.role === "admin") {
+    return res.redirect("/admin");
+  }
 });
 
-app.get("/student", requireLogin, requireRole("student"), (req, res) => {
+app.get("/student", authMiddleware, roleMiddleware("student"), (req, res) => {
   res.sendFile(path.join(__dirname, "views", "student.html"));
 });
 
-app.get("/submit-request", requireLogin, requireRole("student"), (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "submit-request.html"));
-});
-
-app.post("/submit-request", requireLogin, requireRole("student"), (req, res) => {
-  const { category, subject, description } = req.body;
-
-  if (!category || !subject || !description) {
-    return res.redirect("/submit-request?error=All fields are required");
-  }
-
-  const requestId = "REQ-" + Date.now();
-
-  serviceRequests.push({
-    requestId,
-    student: req.session.user.username,
-    category,
-    subject,
-    description,
-    status: "Submitted",
-    createdAt: new Date().toLocaleString(),
-  });
-
-  res.redirect(`/track-requests?success=${requestId}`);
-});
-
-app.get("/track-requests", requireLogin, requireRole("student"), (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "track-requests.html"));
-});
-
-app.get("/api/my-requests", requireLogin, requireRole("student"), (req, res) => {
-  const studentRequests = serviceRequests.filter(
-    (request) => request.student === req.session.user.username
-  );
-
-  res.json(studentRequests);
-});
-
-app.get("/staff", requireLogin, requireRole("staff"), (req, res) => {
+app.get("/staff", authMiddleware, roleMiddleware("staff"), (req, res) => {
   res.sendFile(path.join(__dirname, "views", "staff.html"));
 });
 
-app.get("/staff/requests", requireLogin, requireRole("staff"), (req, res) => {
+app.get("/admin", authMiddleware, roleMiddleware("admin"), (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "admin.html"));
+});
+
+app.get(
+  "/submit-request",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    res.sendFile(path.join(__dirname, "views", "submit-request.html"));
+  }
+);
+
+app.post("/submit-request", authMiddleware, (req, res) => {
+  const data = readData();
+
+  const newRequest = {
+    id: Date.now(),
+    student: req.session.user.username,
+    issue: req.body.issue,
+    status: "Pending",
+  };
+
+  data.requests.push(newRequest);
+
+  writeData(data);
+
+  res.redirect("/track-requests");
+});
+
+app.get(
+  "/track-requests",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    res.sendFile(path.join(__dirname, "views", "track-requests.html"));
+  }
+);
+
+app.get("/api/student-requests", authMiddleware, (req, res) => {
+  const data = readData();
+
+  const requests = data.requests.filter(
+    (r) => r.student === req.session.user.username
+  );
+
+  res.json(requests);
+});
+
+app.get("/staff-requests", authMiddleware, roleMiddleware("staff"), (req, res) => {
   res.sendFile(path.join(__dirname, "views", "staff-requests.html"));
 });
 
-// In-memory store for appointments
-const appointments = [
-  { id: 1, student: "student", service: "Academic Advising", date: "2026-06-10", time: "10:00", status: "Scheduled" }
-];
+app.get("/api/all-requests", authMiddleware, roleMiddleware("staff"), (req, res) => {
+  const data = readData();
 
-app.get("/api/all-requests", requireLogin, requireRole("staff"), (req, res) => {
-  res.json(serviceRequests);
+  res.json(data.requests);
 });
 
-app.put("/api/requests/:id", requireLogin, requireRole("staff"), (req, res) => {
-  const requestId = req.params.id;
-  const { status, notes } = req.body;
+app.post("/update-status", authMiddleware, roleMiddleware("staff"), (req, res) => {
+  const data = readData();
 
-  const request = serviceRequests.find((req) => req.requestId === requestId);
-  if (!request) {
-    return res.status(404).json({ error: "Request not found" });
+  const request = data.requests.find(
+    (r) => r.id == req.body.id
+  );
+
+  if (request) {
+    request.status = req.body.status;
   }
 
-  if (status) request.status = status;
-  if (notes !== undefined) request.notes = notes;
+  writeData(data);
 
-  res.json({ message: "Request updated successfully", request });
+  res.redirect("/staff-requests");
 });
 
-app.get("/api/appointments", requireLogin, requireRole("staff"), (req, res) => {
+app.post("/book-appointment", authMiddleware, (req, res) => {
+  const data = readData();
+
+  const appointment = {
+    id: Date.now(),
+    student: req.session.user.username,
+    date: req.body.date,
+    service: req.body.service,
+  };
+
+  data.appointments.push(appointment);
+
+  writeData(data);
+
+  res.send("Appointment Booked Successfully");
+});
+
+app.get("/api/appointments", authMiddleware, (req, res) => {
+  const data = readData();
+
+  const appointments = data.appointments.filter(
+    (a) => a.student === req.session.user.username
+  );
+
   res.json(appointments);
-});
-
-app.put("/api/appointments/:id", requireLogin, requireRole("staff"), (req, res) => {
-  const appointmentId = parseInt(req.params.id, 10);
-  const { status } = req.body;
-
-  const appointment = appointments.find((app) => app.id === appointmentId);
-  if (!appointment) {
-    return res.status(404).json({ error: "Appointment not found" });
-  }
-
-  if (status) appointment.status = status;
-
-  res.json({ message: "Appointment updated successfully", appointment });
-});
-
-app.get("/admin", requireLogin, requireRole("admin"), (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "admin.html"));
 });
 
 app.get("/logout", (req, res) => {
@@ -169,5 +214,5 @@ app.get("/logout", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
