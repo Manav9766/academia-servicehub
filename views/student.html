@@ -1,25 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Student Dashboard</title>
   <link rel="stylesheet" href="/css/style.css">
+  <title>Student Dashboard</title>
 </head>
 <body>
-  <div class="container">
-    <h1>Student Dashboard</h1>
-    <p>Welcome, Student. You can book appointments, submit service requests, and track request status.</p>
 
-    <div class="card">
-      <h2>Appointment Booking</h2>
-      <p>Student can select service, date, time, and notes.</p>
-    </div>
+<h1>Student Dashboard</h1>
 
-    <div class="card">
-      <h2>Service Request Tracking</h2>
-      <p>Student can submit service requests and check status.</p>
-    </div>
+<a href="/submit-request">Submit Request</a>
+<br><br>
 
-    <a href="/logout" class="logout">Logout</a>
-  </div>
+<h2>Book Appointment</h2>
+
+<form action="/book-appointment" method="POST">
+  <input type="date" name="date" required>
+
+  <select name="service">
+    <option>Financial Aid</option>
+    <option>Academic Advising</option>
+    <option>Mental Health</option>
+  </select>
+
+  <button type="submit">Book</button>
+</form>
+
+<h2>Your Appointments</h2>
+
+<ul id="appointments"></ul>
+
+<h2>Your Requests</h2>
+
+<ul id="requests"></ul>
+
+<br>
+
+<a href="/track-requests">Track Requests</a>
+
+<br><br>
+
+<a href="/logout">Logout</a>
+
+<script>
+async function loadAppointments() {
+  const response = await fetch("/api/appointments");
+
+  const appointments = await response.json();
+
+  const list = document.getElementById("appointments");
+
+  list.innerHTML = "";
+
+  appointments.forEach((a) => {
+    list.innerHTML += `
+      <li>
+        ${a.date} - ${a.service}
+      </li>
+    `;
+  });
+}
+
+async function loadRequests() {
+  const response = await fetch("/api/student-requests");
+
+  const requests = await response.json();
+
+  const list = document.getElementById("requests");
+
+  list.innerHTML = "";
+
+  requests.forEach((r) => {
+    list.innerHTML += `
+      <li>
+        ${r.issue} - ${r.status}
+      </li>
+    `;
+  });
+}
+
+loadAppointments();
+loadRequests();
+</script>
+
 </body>
 </html>

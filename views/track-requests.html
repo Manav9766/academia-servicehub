@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Track Requests</title>
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="student-page">
+
+  <header class="student-header">
+    <div>
+      <h1>My Service Requests</h1>
+      <p>Track your submitted requests and their current status</p>
+    </div>
+
+    <a href="/logout" class="logout-btn">Logout</a>
+  </header>
+
+  <main class="student-container">
+
+    <div class="student-actions">
+      <a href="/submit-request" class="action-btn">
+        Submit New Request
+      </a>
+
+      <a href="/student" class="action-btn secondary">
+        Back to Dashboard
+      </a>
+    </div>
+
+    <div class="student-card">
+
+      <table>
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Student</th>
+            <th>Issue</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody id="requestTable"></tbody>
+      </table>
+
+    </div>
+
+  </main>
+
+<script>
+
+async function loadRequests() {
+
+  const response = await fetch("/api/student-requests");
+
+  const requests = await response.json();
+
+  const table = document.getElementById("requestTable");
+
+  table.innerHTML = "";
+
+  requests.forEach((r) => {
+
+    table.innerHTML += `
+      <tr>
+        <td>${r.id}</td>
+        <td>${r.student}</td>
+        <td>${r.issue}</td>
+        <td>${r.status}</td>
+      </tr>
+    `;
+  });
+}
+
+loadRequests();
+
+</script>
+
+</body>
+</html>

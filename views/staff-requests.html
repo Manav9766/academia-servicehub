@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Staff Requests</title>
+</head>
+<body>
+
+<h1>Staff Request Dashboard</h1>
+
+<div id="requests"></div>
+
+<br>
+
+<a href="/logout">Logout</a>
+
+<script>
+
+async function loadRequests() {
+
+  const response = await fetch("/api/all-requests");
+
+  const requests = await response.json();
+
+  const container = document.getElementById("requests");
+
+  container.innerHTML = "";
+
+  requests.forEach((r) => {
+
+    container.innerHTML += `
+      <div style="border:1px solid black; margin:10px; padding:10px;">
+        <p><b>Student:</b> ${r.student}</p>
+        <p><b>Issue:</b> ${r.issue}</p>
+        <p><b>Status:</b> ${r.status}</p>
+
+        <form action="/update-status" method="POST">
+
+          <input type="hidden" name="id" value="${r.id}">
+
+          <select name="status">
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Resolved</option>
+          </select>
+
+          <button type="submit">
+            Update
+          </button>
+
+        </form>
+      </div>
+    `;
+  });
+}
+
+loadRequests();
+
+</script>
+
+</body>
+</html>
