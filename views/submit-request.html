@@ -4,44 +4,29 @@
   <title>Submit Request</title>
 </head>
 <body>
-  <h1>Submit Service Request</h1>
 
-  <p id="error" style="color:red;"></p>
+<h1>Submit Service Request</h1>
 
-  <form method="POST" action="/submit-request">
-    <label>Category</label><br>
-    <select name="category" required>
-      <option value="">Select category</option>
-      <option value="Academic Advising">Academic Advising</option>
-      <option value="Financial Aid">Financial Aid</option>
-      <option value="Registration">Registration</option>
-      <option value="Technical Support">Technical Support</option>
-    </select>
+<form action="/submit-request" method="POST">
 
-    <br><br>
+  <input
+    type="text"
+    name="issue"
+    placeholder="Enter issue"
+    required
+  >
 
-    <label>Subject</label><br>
-    <input type="text" name="subject" placeholder="Enter subject" required>
+  <button type="submit">
+    Submit
+  </button>
 
-    <br><br>
+</form>
 
-    <label>Description</label><br>
-    <textarea name="description" placeholder="Enter request details" required></textarea>
+<br>
 
-    <br><br>
+<a href="/student">
+  Back
+</a>
 
-    <button type="submit">Submit Request</button>
-  </form>
-
-  <br>
-  <a href="/track-requests">Track My Requests</a><br>
-  <a href="/student">Back to Dashboard</a>
-
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("error")) {
-      document.getElementById("error").textContent = params.get("error");
-    }
-  </script>
 </body>
 </html>

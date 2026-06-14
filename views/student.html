@@ -1,110 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Dashboard</title>
-  <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body class="student-page">
+<body>
 
-  <header class="student-header">
-    <div>
-      <h1>Student Dashboard</h1>
-      <p>Welcome, Student</p>
-    </div>
+<h1>Student Dashboard</h1>
 
-    <a href="/logout" class="logout-btn">Logout</a>
-  </header>
+<a href="/submit-request">Submit Request</a>
+<br><br>
 
-  <main class="student-container">
+<h2>Book Appointment</h2>
 
-    <div class="student-actions">
-      <a href="/submit-request" class="action-btn">Submit Request</a>
-      <a href="/track-requests" class="action-btn secondary">Track Requests</a>
-    </div>
+<form action="/book-appointment" method="POST">
+  <input type="date" name="date" required>
 
-    <section class="student-card">
-      <h2>Available Student Services</h2>
-      <p class="section-text">
-        Select a student service to book an appointment with the correct department.
-      </p>
+  <select name="service">
+    <option>Financial Aid</option>
+    <option>Academic Advising</option>
+    <option>Mental Health</option>
+  </select>
 
-      <div class="services-grid">
-        <div class="service-card">
-          <h3>Academic Advising</h3>
-          <p>Support for course planning, academic decisions, and program guidance.</p>
-        </div>
+  <button type="submit">Book</button>
+</form>
 
-        <div class="service-card">
-          <h3>Financial Aid</h3>
-          <p>Help with fees, scholarships, bursaries, and financial support options.</p>
-        </div>
+<h2>Your Appointments</h2>
 
-        <div class="service-card">
-          <h3>Career Support</h3>
-          <p>Guidance for resumes, interviews, co-op preparation, and career planning.</p>
-        </div>
-      </div>
-    </section>
+<ul id="appointments"></ul>
 
-    <section class="student-card">
-      <h2>Book an Appointment</h2>
-      <p class="section-text">
-        Fill out the form below to schedule an appointment with student services.
-      </p>
+<h2>Your Requests</h2>
 
-      <form id="appointmentForm" class="appointment-form">
+<ul id="requests"></ul>
 
-        <div class="form-group">
-          <label for="serviceType">Service Type</label>
-          <select id="serviceType" required>
-            <option value="">Select a service</option>
-            <option value="Academic Advising">Academic Advising</option>
-            <option value="Financial Aid">Financial Aid</option>
-            <option value="Career Support">Career Support</option>
-          </select>
-        </div>
+<br>
 
-        <div class="form-group">
-          <label for="appointmentDate">Appointment Date</label>
-          <input type="date" id="appointmentDate" required />
-        </div>
+<a href="/track-requests">Track Requests</a>
 
-        <div class="form-group">
-          <label for="appointmentTime">Time Slot</label>
-          <select id="appointmentTime" required>
-            <option value="">Select a time</option>
-            <option value="09:00 AM">09:00 AM</option>
-            <option value="10:00 AM">10:00 AM</option>
-            <option value="11:00 AM">11:00 AM</option>
-            <option value="01:00 PM">01:00 PM</option>
-            <option value="02:00 PM">02:00 PM</option>
-            <option value="03:00 PM">03:00 PM</option>
-          </select>
-        </div>
+<br><br>
 
-        <div class="form-group">
-          <label for="notes">Notes</label>
-          <textarea id="notes" rows="4" placeholder="Enter optional notes for staff"></textarea>
-        </div>
+<a href="/logout">Logout</a>
 
-        <button type="submit" class="primary-btn">Book Appointment</button>
-      </form>
+<script>
+async function loadAppointments() {
+  const response = await fetch("/api/appointments");
 
-      <p id="message" class="message"></p>
-    </section>
+  const appointments = await response.json();
 
-    <section class="student-card">
-      <h2>Appointment Details</h2>
+  const list = document.getElementById("appointments");
 
-      <div id="appointmentDisplay" class="appointment-display">
-        <p>No appointment booked yet.</p>
-      </div>
-    </section>
+  list.innerHTML = "";
 
-  </main>
+  appointments.forEach((a) => {
+    list.innerHTML += `
+      <li>
+        ${a.date} - ${a.service}
+      </li>
+    `;
+  });
+}
 
-  <script src="/js/student.js"></script>
+async function loadRequests() {
+  const response = await fetch("/api/student-requests");
+
+  const requests = await response.json();
+
+  const list = document.getElementById("requests");
+
+  list.innerHTML = "";
+
+  requests.forEach((r) => {
+    list.innerHTML += `
+      <li>
+        ${r.issue} - ${r.status}
+      </li>
+    `;
+  });
+}
+
+loadAppointments();
+loadRequests();
+</script>
+
 </body>
 </html>

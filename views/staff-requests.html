@@ -1,64 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Manage Service Requests</title>
+  <title>Staff Requests</title>
 </head>
 <body>
-  <h1>Manage Service Requests</h1>
 
-  <table border="1" cellpadding="10">
-    <thead>
-      <tr>
-        <th>Request ID</th>
-        <th>Student</th>
-        <th>Category</th>
-        <th>Subject</th>
-        <th>Description</th>
-        <th>Status</th>
-        <th>Update Status</th>
-      </tr>
-    </thead>
-    <tbody id="requestTable"></tbody>
-  </table>
+<h1>Staff Request Dashboard</h1>
 
-  <br>
-  <a href="/staff">Back to Staff Dashboard</a>
+<div id="requests"></div>
 
-  <script>
-    fetch("/api/all-requests")
-      .then((res) => res.json())
-      .then((requests) => {
-        const table = document.getElementById("requestTable");
+<br>
 
-        if (requests.length === 0) {
-          table.innerHTML = "<tr><td colspan='7'>No requests found.</td></tr>";
-          return;
-        }
+<a href="/logout">Logout</a>
 
-        requests.forEach((request) => {
-          table.innerHTML += `
-            <tr>
-              <td>${request.requestId}</td>
-              <td>${request.student}</td>
-              <td>${request.category}</td>
-              <td>${request.subject}</td>
-              <td>${request.description}</td>
-              <td>${request.status}</td>
-              <td>
-                <form method="POST" action="/staff/update-request-status">
-                  <input type="hidden" name="requestId" value="${request.requestId}">
-                  <select name="status">
-                    <option value="Submitted" ${request.status === "Submitted" ? "selected" : ""}>Submitted</option>
-                    <option value="In Progress" ${request.status === "In Progress" ? "selected" : ""}>In Progress</option>
-                    <option value="Completed" ${request.status === "Completed" ? "selected" : ""}>Completed</option>
-                  </select>
-                  <button type="submit">Save</button>
-                </form>
-              </td>
-            </tr>
-          `;
-        });
-      });
-  </script>
+<script>
+
+async function loadRequests() {
+
+  const response = await fetch("/api/all-requests");
+
+  const requests = await response.json();
+
+  const container = document.getElementById("requests");
+
+  container.innerHTML = "";
+
+  requests.forEach((r) => {
+
+    container.innerHTML += `
+      <div style="border:1px solid black; margin:10px; padding:10px;">
+        <p><b>Student:</b> ${r.student}</p>
+        <p><b>Issue:</b> ${r.issue}</p>
+        <p><b>Status:</b> ${r.status}</p>
+
+        <form action="/update-status" method="POST">
+
+          <input type="hidden" name="id" value="${r.id}">
+
+          <select name="status">
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Resolved</option>
+          </select>
+
+          <button type="submit">
+            Update
+          </button>
+
+        </form>
+      </div>
+    `;
+  });
+}
+
+loadRequests();
+
+</script>
+
 </body>
 </html>

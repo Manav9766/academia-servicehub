@@ -4,58 +4,50 @@
   <title>Track Requests</title>
 </head>
 <body>
-  <h1>My Service Requests</h1>
 
-  <p id="success" style="color:green;"></p>
+<h1>My Service Requests</h1>
 
-  <table border="1" cellpadding="10">
-    <thead>
+<table border="1" cellpadding="10">
+  <thead>
+    <tr>
+      <th>Request ID</th>
+      <th>Student</th>
+      <th>Issue</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+
+  <tbody id="requestTable"></tbody>
+</table>
+
+<br>
+
+<a href="/submit-request">Submit New Request</a>
+<br>
+<a href="/student">Back to Dashboard</a>
+
+<script>
+async function loadRequests() {
+  const response = await fetch("/api/student-requests");
+  const requests = await response.json();
+
+  const table = document.getElementById("requestTable");
+  table.innerHTML = "";
+
+  requests.forEach((r) => {
+    table.innerHTML += `
       <tr>
-        <th>Request ID</th>
-        <th>Category</th>
-        <th>Subject</th>
-        <th>Description</th>
-        <th>Status</th>
-        <th>Created At</th>
+        <td>${r.id}</td>
+        <td>${r.student}</td>
+        <td>${r.issue}</td>
+        <td>${r.status}</td>
       </tr>
-    </thead>
-    <tbody id="requestTable"></tbody>
-  </table>
+    `;
+  });
+}
 
-  <br>
-  <a href="/submit-request">Submit New Request</a><br>
-  <a href="/student">Back to Dashboard</a>
+loadRequests();
+</script>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("success")) {
-      document.getElementById("success").textContent =
-        "Request submitted successfully. Request ID: " + params.get("success");
-    }
-
-    fetch("/api/my-requests")
-      .then((res) => res.json())
-      .then((requests) => {
-        const table = document.getElementById("requestTable");
-
-        if (requests.length === 0) {
-          table.innerHTML = "<tr><td colspan='6'>No requests found.</td></tr>";
-          return;
-        }
-
-        requests.forEach((request) => {
-          table.innerHTML += `
-            <tr>
-              <td>${request.requestId}</td>
-              <td>${request.category}</td>
-              <td>${request.subject}</td>
-              <td>${request.description}</td>
-              <td>${request.status}</td>
-              <td>${request.createdAt}</td>
-            </tr>
-          `;
-        });
-      });
-  </script>
 </body>
 </html>
