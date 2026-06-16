@@ -1,60 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Staff Requests</title>
+  <meta charset="UTF-8">
+  <title>Manage Service Requests</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
 
-<h1>Staff Request Dashboard</h1>
+<body class="staff-page">
 
-<div id="requests"></div>
+<header class="staff-header">
+  <div>
+    <h1>Manage Service Requests</h1>
+    <p>View and update student request statuses</p>
+  </div>
 
-<br>
+  <a href="/logout" class="logout-btn">Logout</a>
+</header>
 
-<a href="/logout">Logout</a>
+<div class="staff-actions">
+  <a href="/staff" class="staff-action-btn">Back to Dashboard</a>
+</div>
+
+<main class="staff-container">
+  <section class="staff-card">
+    <h2>Submitted Requests</h2>
+    <div id="requests"></div>
+  </section>
+</main>
 
 <script>
-
 async function loadRequests() {
-
   const response = await fetch("/api/all-requests");
-
   const requests = await response.json();
 
   const container = document.getElementById("requests");
-
   container.innerHTML = "";
 
-  requests.forEach((r) => {
+  if (requests.length === 0) {
+    container.innerHTML = `<div class="info">No service requests found.</div>`;
+    return;
+  }
 
+  requests.forEach((request) => {
     container.innerHTML += `
-      <div style="border:1px solid black; margin:10px; padding:10px;">
-        <p><b>Student:</b> ${r.student}</p>
-        <p><b>Issue:</b> ${r.issue}</p>
-        <p><b>Status:</b> ${r.status}</p>
+      <div class="request-card">
+        <div class="request-top">
+          <h3>${request.issue}</h3>
+          <span class="status-badge ${getStatusClass(request.status)}">
+            ${request.status}
+          </span>
+        </div>
 
-        <form action="/update-status" method="POST">
+        <p><strong>Student:</strong> ${request.student}</p>
+        <p><strong>Request ID:</strong> ${request.id}</p>
 
-          <input type="hidden" name="id" value="${r.id}">
+        <form action="/update-status" method="POST" class="status-form">
+          <input type="hidden" name="id" value="${request.id}">
 
+          <label>Update Status</label>
           <select name="status">
-            <option>Pending</option>
-            <option>In Progress</option>
-            <option>Resolved</option>
+            <option ${request.status === "Pending" ? "selected" : ""}>Pending</option>
+            <option ${request.status === "In Progress" ? "selected" : ""}>In Progress</option>
+            <option ${request.status === "Resolved" ? "selected" : ""}>Resolved</option>
           </select>
 
-          <button type="submit">
-            Update
-          </button>
-
+          <button type="submit" class="small-btn">Update</button>
         </form>
       </div>
     `;
   });
 }
 
-loadRequests();
+function getStatusClass(status) {
+  if (status === "In Progress") return "status-inprogress";
+  if (status === "Resolved") return "status-completed";
+  return "status-submitted";
+}
 
+loadRequests();
 </script>
 
 </body>

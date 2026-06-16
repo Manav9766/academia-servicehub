@@ -1,48 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8">
   <title>Student Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
 
-<h1>Student Dashboard</h1>
+<body class="student-page">
 
-<a href="/submit-request">Submit Request</a>
-<br><br>
+<header class="student-header">
+  <div>
+    <h1>Student Dashboard</h1>
+    <p>Welcome to Student Services</p>
+  </div>
 
-<h2>Book Appointment</h2>
+  <a href="/logout" class="logout-btn">Logout</a>
+</header>
 
-<form action="/book-appointment" method="POST">
-  <input type="date" name="date" required>
+<div class="student-container">
 
-  <select name="service">
-    <option>Financial Aid</option>
-    <option>Academic Advising</option>
-    <option>Mental Health</option>
-  </select>
+  <div class="student-actions">
+    <a href="/submit-request" class="action-btn">
+      Submit Service Request
+    </a>
 
-  <button type="submit">Book</button>
-</form>
+    <a href="/track-requests" class="action-btn secondary">
+      Track Requests
+    </a>
+  </div>
 
-<h2>Your Appointments</h2>
+  <div class="student-card">
 
-<ul id="appointments"></ul>
+    <h2>Book Appointment</h2>
 
-<h2>Your Requests</h2>
+    <form action="/book-appointment" method="POST" class="appointment-form">
 
-<ul id="requests"></ul>
+      <input
+        type="date"
+        name="date"
+        required
+      >
 
-<br>
+      <select
+        name="service"
+        required
+      >
+        <option value="">Select Service</option>
+        <option>Financial Aid</option>
+        <option>Academic Advising</option>
+        <option>Mental Health</option>
+      </select>
 
-<a href="/track-requests">Track Requests</a>
+      <button type="submit">
+        Book Appointment
+      </button>
 
-<br><br>
+    </form>
 
-<a href="/logout">Logout</a>
+  </div>
+
+  <div class="student-card">
+
+    <h2>Your Appointments</h2>
+
+    <ul id="appointments"></ul>
+
+  </div>
+
+  <div class="student-card">
+
+    <h2>Your Service Requests</h2>
+
+    <ul id="requests"></ul>
+
+  </div>
+
+</div>
 
 <script>
 async function loadAppointments() {
+
   const response = await fetch("/api/appointments");
 
   const appointments = await response.json();
@@ -51,16 +88,21 @@ async function loadAppointments() {
 
   list.innerHTML = "";
 
-  appointments.forEach((a) => {
+  appointments.forEach(a => {
+
     list.innerHTML += `
-      <li>
-        ${a.date} - ${a.service}
+      <li class="card">
+        📅 ${a.date}<br>
+        🏢 ${a.service}
       </li>
     `;
+
   });
+
 }
 
 async function loadRequests() {
+
   const response = await fetch("/api/student-requests");
 
   const requests = await response.json();
@@ -69,13 +111,17 @@ async function loadRequests() {
 
   list.innerHTML = "";
 
-  requests.forEach((r) => {
+  requests.forEach(r => {
+
     list.innerHTML += `
-      <li>
-        ${r.issue} - ${r.status}
+      <li class="card">
+        <strong>${r.issue}</strong><br>
+        Status: ${r.status}
       </li>
     `;
+
   });
+
 }
 
 loadAppointments();

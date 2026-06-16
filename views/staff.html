@@ -1,85 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Staff Dashboard - Student Services</title>
-
+  <title>Staff Dashboard</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body class="staff-page">
 
-  <header class="staff-header">
+<header class="staff-header">
+  <div>
+    <h1>Staff Dashboard</h1>
+    <p>Manage Student Appointments and Service Requests</p>
+  </div>
 
-    <div>
-      <h1>Staff Dashboard</h1>
+  <a href="/logout" class="logout-btn">Logout</a>
+</header>
 
-      <p>
-        Manage Student Appointments and Service Requests
-      </p>
+<div class="staff-actions">
+  <a href="/staff-requests" class="staff-action-btn">Manage Service Requests</a>
+</div>
+
+<main class="staff-container">
+
+  <section class="staff-card">
+    <h2>Assigned Appointments</h2>
+    <p class="section-text">View student appointments submitted through the system.</p>
+
+    <div class="info">
+      No appointments found.
     </div>
+  </section>
 
-    <a href="/logout" class="logout-btn">
-      Logout
-    </a>
+  <section class="staff-card">
+    <h2>Service Requests</h2>
+    <p class="section-text">Recent student service requests are shown below.</p>
 
-  </header>
+    <div id="dashboardRequests"></div>
+  </section>
 
-  <main class="staff-container">
+</main>
 
-    <div class="staff-actions">
+<script>
+async function loadDashboardRequests() {
+  const response = await fetch("/api/all-requests");
+  const requests = await response.json();
 
-      <a href="/staff-requests" class="staff-action-btn">
-        Manage Service Requests
-      </a>
+  const container = document.getElementById("dashboardRequests");
+  container.innerHTML = "";
 
-    </div>
+  if (requests.length === 0) {
+    container.innerHTML = `<div class="info">No service requests found.</div>`;
+    return;
+  }
 
-    <section class="staff-card">
-
-      <h2>Assigned Appointments</h2>
-
-      <p class="section-text">
-        View student appointments submitted through the system.
-      </p>
-
-      <div id="appointmentsList">
-
-        <div class="info">
-          No appointments found.
+  requests.slice(0, 3).forEach((request) => {
+    container.innerHTML += `
+      <div class="request-card">
+        <div class="request-top">
+          <h3>${request.issue}</h3>
+          <span class="status-badge ${getStatusClass(request.status)}">
+            ${request.status}
+          </span>
         </div>
 
+        <p><strong>Student:</strong> ${request.student}</p>
+        <p><strong>Request ID:</strong> ${request.id}</p>
       </div>
+    `;
+  });
+}
 
-    </section>
+function getStatusClass(status) {
+  if (status === "In Progress") return "status-inprogress";
+  if (status === "Resolved") return "status-completed";
+  return "status-submitted";
+}
 
-    <section class="staff-card">
-
-      <h2>Service Requests</h2>
-
-      <p class="section-text">
-        View and manage submitted student service requests.
-      </p>
-
-      <div class="info">
-
-        Use the
-        <strong>Manage Service Requests</strong>
-        button above to:
-        <ul>
-          <li>View submitted requests</li>
-          <li>Update request status</li>
-          <li>Track student issues</li>
-        </ul>
-
-      </div>
-
-    </section>
-
-  </main>
+loadDashboardRequests();
+</script>
 
 </body>
 </html>

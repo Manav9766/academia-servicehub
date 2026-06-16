@@ -1,11 +1,24 @@
 {
-  "appointments": [],
+  "appointments": [
+    {
+      "id": 1781638933946,
+      "student": "student",
+      "date": "2026-06-17",
+      "service": "Academic Advising"
+    }
+  ],
   "requests": [
     {
       "id": 1781429640505,
       "student": "student",
       "issue": "problem regarding schedule",
       "status": "In Progress"
+    },
+    {
+      "id": 1781638672684,
+      "student": "student",
+      "issue": "Issues with enrolment. ",
+      "status": "Resolved"
     }
   ]
 }
