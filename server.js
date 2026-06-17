@@ -4,12 +4,10 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-
 const PORT = 3000;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 app.use(express.static("public"));
 
 app.use(
@@ -118,7 +116,7 @@ app.get(
   }
 );
 
-app.post("/submit-request", authMiddleware, (req, res) => {
+app.post("/submit-request", authMiddleware, roleMiddleware("student"), (req, res) => {
   const data = readData();
 
   const newRequest = {
@@ -129,7 +127,6 @@ app.post("/submit-request", authMiddleware, (req, res) => {
   };
 
   data.requests.push(newRequest);
-
   writeData(data);
 
   res.redirect("/track-requests");
@@ -144,7 +141,7 @@ app.get(
   }
 );
 
-app.get("/api/student-requests", authMiddleware, (req, res) => {
+app.get("/api/student-requests", authMiddleware, roleMiddleware("student"), (req, res) => {
   const data = readData();
 
   const requests = data.requests.filter(
@@ -160,19 +157,17 @@ app.get("/staff-requests", authMiddleware, roleMiddleware("staff"), (req, res) =
 
 app.get("/api/all-requests", authMiddleware, roleMiddleware("staff"), (req, res) => {
   const data = readData();
-
   res.json(data.requests);
 });
 
 app.post("/update-status", authMiddleware, roleMiddleware("staff"), (req, res) => {
   const data = readData();
 
-  const request = data.requests.find(
-    (r) => r.id == req.body.id
-  );
+  const request = data.requests.find((r) => r.id == req.body.id);
 
   if (request) {
     request.status = req.body.status;
+
     if (req.body.notes !== undefined) {
       request.notes = req.body.notes;
     }
@@ -183,24 +178,35 @@ app.post("/update-status", authMiddleware, roleMiddleware("staff"), (req, res) =
   res.redirect("/staff-requests");
 });
 
-app.post("/book-appointment", authMiddleware, (req, res) => {
+/*
+  Manav - Sprint 2
+  Persistent appointment booking:
+  Student books appointment -> saved in data/db.json
+*/
+app.post("/book-appointment", authMiddleware, roleMiddleware("student"), (req, res) => {
   const data = readData();
 
   const appointment = {
     id: Date.now(),
     student: req.session.user.username,
-    date: req.body.date,
     service: req.body.service,
+    date: req.body.date,
+    time: req.body.time,
+    notes: req.body.notes || "",
+    status: "Scheduled",
   };
 
   data.appointments.push(appointment);
-
   writeData(data);
 
-  res.send("Appointment Booked Successfully");
+  res.redirect("/student");
 });
 
-app.get("/api/appointments", authMiddleware, (req, res) => {
+/*
+  Student appointment history:
+  Student only sees their own appointments.
+*/
+app.get("/api/appointments", authMiddleware, roleMiddleware("student"), (req, res) => {
   const data = readData();
 
   const appointments = data.appointments.filter(
@@ -208,6 +214,15 @@ app.get("/api/appointments", authMiddleware, (req, res) => {
   );
 
   res.json(appointments);
+});
+
+/*
+  Staff appointment view:
+  Staff can see all booked appointments from students.
+*/
+app.get("/api/all-appointments", authMiddleware, roleMiddleware("staff"), (req, res) => {
+  const data = readData();
+  res.json(data.appointments);
 });
 
 app.get("/logout", (req, res) => {
