@@ -173,6 +173,9 @@ app.post("/update-status", authMiddleware, roleMiddleware("staff"), (req, res) =
 
   if (request) {
     request.status = req.body.status;
+    if (req.body.notes !== undefined) {
+      request.notes = req.body.notes;
+    }
   }
 
   writeData(data);

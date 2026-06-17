@@ -64,7 +64,10 @@ async function loadRequests() {
             <option ${request.status === "Resolved" ? "selected" : ""}>Resolved</option>
           </select>
 
-          <button type="submit" class="small-btn">Update</button>
+          <label style="margin-top: 10px; display: block;">Staff Notes / Comments</label>
+          <textarea name="notes" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Add a note...">${request.notes || ""}</textarea>
+
+          <button type="submit" class="small-btn" style="margin-top: 10px;">Update</button>
         </form>
       </div>
     `;
