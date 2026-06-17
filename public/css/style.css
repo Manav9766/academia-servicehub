@@ -413,3 +413,70 @@ ul {
 .small-btn:hover {
   background: #163b20;
 }
+/* Manav - Sprint 2 Appointment Persistence and Staff Appointment View */
+
+.appointment-form .form-group {
+  margin-bottom: 15px;
+}
+
+.appointment-form textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+#appointments {
+  list-style: none;
+  padding-left: 0;
+}
+
+#appointments .card {
+  margin-bottom: 15px;
+  line-height: 1.7;
+}
+
+#staffAppointments {
+  margin-top: 20px;
+}
+
+.request-card {
+  background: #eef3ff;
+  border-left: 5px solid #1f3c88;
+  padding: 18px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.request-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.request-top h3 {
+  margin: 0;
+  color: #1f3c88;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.status-submitted {
+  background: #e7f1ff;
+  color: #084298;
+}
+
+.status-inprogress {
+  background: #fff3cd;
+  color: #664d03;
+}
+
+.status-completed {
+  background: #d1e7dd;
+  color: #0f5132;
+}

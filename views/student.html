@@ -30,98 +30,121 @@
   </div>
 
   <div class="student-card">
-
     <h2>Book Appointment</h2>
+    <p class="section-text">
+      Select a service, date, time slot, and optional notes to book an appointment.
+    </p>
 
     <form action="/book-appointment" method="POST" class="appointment-form">
 
-      <input
-        type="date"
-        name="date"
-        required
-      >
+      <div class="form-group">
+        <label for="service">Service</label>
+        <select name="service" id="service" required>
+          <option value="">Select Service</option>
+          <option value="Financial Aid">Financial Aid</option>
+          <option value="Academic Advising">Academic Advising</option>
+          <option value="Career Support">Career Support</option>
+          <option value="Mental Health">Mental Health</option>
+        </select>
+      </div>
 
-      <select
-        name="service"
-        required
-      >
-        <option value="">Select Service</option>
-        <option>Financial Aid</option>
-        <option>Academic Advising</option>
-        <option>Mental Health</option>
-      </select>
+      <div class="form-group">
+        <label for="date">Appointment Date</label>
+        <input type="date" name="date" id="date" required>
+      </div>
+
+      <div class="form-group">
+        <label for="time">Time Slot</label>
+        <select name="time" id="time" required>
+          <option value="">Select Time</option>
+          <option value="09:00 AM">09:00 AM</option>
+          <option value="10:00 AM">10:00 AM</option>
+          <option value="11:00 AM">11:00 AM</option>
+          <option value="01:00 PM">01:00 PM</option>
+          <option value="02:00 PM">02:00 PM</option>
+          <option value="03:00 PM">03:00 PM</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea
+          name="notes"
+          id="notes"
+          rows="4"
+          placeholder="Optional notes for staff"
+        ></textarea>
+      </div>
 
       <button type="submit">
         Book Appointment
       </button>
 
     </form>
-
   </div>
 
   <div class="student-card">
-
-    <h2>Your Appointments</h2>
+    <h2>Your Appointment History</h2>
+    <p class="section-text">
+      Your saved appointments are displayed below and remain available after refresh.
+    </p>
 
     <ul id="appointments"></ul>
-
   </div>
 
   <div class="student-card">
-
     <h2>Your Service Requests</h2>
-
     <ul id="requests"></ul>
-
   </div>
 
 </div>
 
 <script>
 async function loadAppointments() {
-
   const response = await fetch("/api/appointments");
-
   const appointments = await response.json();
 
   const list = document.getElementById("appointments");
-
   list.innerHTML = "";
 
-  appointments.forEach(a => {
+  if (appointments.length === 0) {
+    list.innerHTML = `<li class="info">No appointments booked yet.</li>`;
+    return;
+  }
 
+  appointments.forEach((a) => {
     list.innerHTML += `
       <li class="card">
-        📅 ${a.date}<br>
-        🏢 ${a.service}
+        <strong>Service:</strong> ${a.service}<br>
+        <strong>Date:</strong> ${a.date}<br>
+        <strong>Time:</strong> ${a.time || "Not selected"}<br>
+        <strong>Status:</strong> ${a.status || "Scheduled"}<br>
+        <strong>Notes:</strong> ${a.notes || "No notes provided"}
       </li>
     `;
-
   });
-
 }
 
 async function loadRequests() {
-
   const response = await fetch("/api/student-requests");
-
   const requests = await response.json();
 
   const list = document.getElementById("requests");
-
   list.innerHTML = "";
 
-  requests.forEach(r => {
+  if (requests.length === 0) {
+    list.innerHTML = `<li class="info">No service requests submitted yet.</li>`;
+    return;
+  }
 
+  requests.forEach((r) => {
     list.innerHTML += `
       <li class="card">
         <strong>${r.issue}</strong><br>
         Status: ${r.status}
       </li>
     `;
-
   });
-
 }
 
 loadAppointments();

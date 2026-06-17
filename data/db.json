@@ -5,6 +5,15 @@
       "student": "student",
       "date": "2026-06-17",
       "service": "Academic Advising"
+    },
+    {
+      "id": 1781716903853,
+      "student": "student",
+      "service": "Financial Aid",
+      "date": "2026-06-18",
+      "time": "10:00 AM",
+      "notes": "l",
+      "status": "Scheduled"
     }
   ],
   "requests": [
