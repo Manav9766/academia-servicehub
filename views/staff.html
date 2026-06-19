@@ -18,12 +18,13 @@
 </header>
 
 <div class="staff-actions">
+  <a href="/staff-appointments" class="staff-action-btn">Manage Appointments</a>
   <a href="/staff-requests" class="staff-action-btn">Manage Service Requests</a>
 </div>
 
 <main class="staff-container">
 
-  <section class="staff-card">
+  <section class="staff-card" id="appointmentsSection">
     <h2>Assigned Appointments</h2>
     <p class="section-text">
       View student appointments submitted through the system.
@@ -32,7 +33,7 @@
     <div id="staffAppointments"></div>
   </section>
 
-  <section class="staff-card">
+  <section class="staff-card" id="serviceRequestsSection">
     <h2>Service Requests</h2>
     <p class="section-text">Recent student service requests are shown below.</p>
 
@@ -59,7 +60,7 @@ async function loadStaffAppointments() {
       <div class="request-card">
         <div class="request-top">
           <h3>${appointment.service}</h3>
-          <span class="status-badge status-submitted">
+          <span class="status-badge ${getAppointmentStatusClass(appointment.status)}">
             ${appointment.status || "Scheduled"}
           </span>
         </div>
@@ -67,7 +68,8 @@ async function loadStaffAppointments() {
         <p><strong>Student:</strong> ${appointment.student}</p>
         <p><strong>Date:</strong> ${appointment.date}</p>
         <p><strong>Time:</strong> ${appointment.time || "Not selected"}</p>
-        <p><strong>Notes:</strong> ${appointment.notes || "No notes provided"}</p>
+        <p><strong>Student Notes:</strong> ${appointment.notes || "No notes provided"}</p>
+        <p><strong>Staff Notes:</strong> ${appointment.staffNotes || "No staff notes added"}</p>
         <p><strong>Appointment ID:</strong> ${appointment.id}</p>
       </div>
     `;
@@ -106,6 +108,14 @@ async function loadDashboardRequests() {
 function getStatusClass(status) {
   if (status === "In Progress") return "status-inprogress";
   if (status === "Resolved") return "status-completed";
+  return "status-submitted";
+}
+
+function getAppointmentStatusClass(status) {
+  if (status === "Completed") return "status-completed";
+  if (status === "Cancelled") return "status-cancelled";
+  if (status === "Confirmed") return "status-inprogress";
+  if (status === "Rescheduled") return "status-inprogress";
   return "status-submitted";
 }
 

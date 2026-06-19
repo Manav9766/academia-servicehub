@@ -4,7 +4,9 @@
       "id": 1781638933946,
       "student": "student",
       "date": "2026-06-17",
-      "service": "Academic Advising"
+      "service": "Academic Advising",
+      "status": "Cancelled",
+      "staffNotes": ""
     },
     {
       "id": 1781716903853,
@@ -13,6 +15,64 @@
       "date": "2026-06-18",
       "time": "10:00 AM",
       "notes": "l",
+      "status": "Scheduled"
+    },
+    {
+      "id": 1781833432742,
+      "student": "student",
+      "service": "Career Support",
+      "date": "2026-06-25",
+      "time": "11:00 AM",
+      "notes": "t",
+      "status": "Scheduled"
+    },
+    {
+      "id": 1781833895031,
+      "student": "student",
+      "service": "Academic Advising",
+      "date": "2026-06-20",
+      "time": "11:00 AM",
+      "notes": "f",
+      "status": "Scheduled"
+    },
+    {
+      "id": 1781835800081,
+      "student": "student",
+      "service": "Academic Advising",
+      "date": "2026-06-27",
+      "time": "10:00 AM",
+      "notes": "tif",
+      "staffNotes": "",
+      "status": "Scheduled"
+    },
+    {
+      "id": 1781835961160,
+      "student": "student",
+      "service": "Financial Aid",
+      "date": "2026-06-14",
+      "time": "10:00 AM",
+      "notes": "r",
+      "staffNotes": "",
+      "status": "Scheduled"
+    },
+    {
+      "id": 1781836057080,
+      "student": "student",
+      "service": "Financial Aid",
+      "date": "2026-06-20",
+      "time": "10:00 AM",
+      "notes": "r",
+      "staffNotes": "",
+      "status": "Scheduled"
+    },
+    {
+      "id": 1781836170318,
+      "student": "student",
+      "service": "Financial Aid",
+      "date": "2026-06-27",
+      "time": "09:00 AM",
+      "notes": "d",
+      "staffNotes": "",
       "status": "Scheduled"
     }
   ],
@@ -28,6 +88,13 @@
       "student": "student",
       "issue": "Issues with enrolment. ",
       "status": "Resolved"
+    },
+    {
+      "id": 1781833501749,
+      "student": "student",
+      "issue": "5",
+      "status": "Resolved",
+      "notes": ""
     }
   ]
 }

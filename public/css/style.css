@@ -480,3 +480,56 @@ ul {
   background: #d1e7dd;
   color: #0f5132;
 }
+.request-update-form {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.request-update-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.request-update-form select {
+  min-width: 160px;
+  padding: 12px;
+  border: 1px solid #c8ccd4;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.request-update-form textarea {
+  min-width: 420px;
+  min-height: 70px;
+  padding: 12px;
+  border: 1px solid #c8ccd4;
+  border-radius: 6px;
+  font-size: 15px;
+  resize: vertical;
+}
+
+.update-btn {
+  background-color: #12451f;
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 24px;
+}
+
+.update-btn:hover {
+  background-color: #0d3518;
+}
+
+.status-cancelled {
+  background-color: #f5d6d6;
+  color: #8a1f1f;
+}

@@ -15,14 +15,40 @@ app.use(
     secret: "sprint2secret",
     resave: false,
     saveUninitialized: false,
+    rolling: true,
+    cookie: {
+      maxAge: 1000 * 60 * 60,
+      httpOnly: true,
+    },
   })
 );
 
 const DATA_FILE = path.join(__dirname, "data", "db.json");
 
 function readData() {
+  if (!fs.existsSync(DATA_FILE)) {
+    const defaultData = {
+      appointments: [],
+      requests: [],
+    };
+
+    fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
+    fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
+    return defaultData;
+  }
+
   const data = fs.readFileSync(DATA_FILE);
-  return JSON.parse(data);
+  const parsedData = JSON.parse(data);
+
+  if (!parsedData.appointments) {
+    parsedData.appointments = [];
+  }
+
+  if (!parsedData.requests) {
+    parsedData.requests = [];
+  }
+
+  return parsedData;
 }
 
 function writeData(data) {
@@ -47,6 +73,26 @@ const users = [
   },
 ];
 
+function redirectByRole(req, res) {
+  if (!req.session.user) {
+    return res.redirect("/");
+  }
+
+  if (req.session.user.role === "student") {
+    return res.redirect("/student");
+  }
+
+  if (req.session.user.role === "staff") {
+    return res.redirect("/staff");
+  }
+
+  if (req.session.user.role === "admin") {
+    return res.redirect("/admin");
+  }
+
+  return res.redirect("/");
+}
+
 function authMiddleware(req, res, next) {
   if (!req.session.user) {
     return res.redirect("/");
@@ -66,6 +112,10 @@ function roleMiddleware(role) {
 }
 
 app.get("/", (req, res) => {
+  if (req.session.user) {
+    return redirectByRole(req, res);
+  }
+
   res.sendFile(path.join(__dirname, "views", "login.html"));
 });
 
@@ -80,19 +130,18 @@ app.post("/login", (req, res) => {
     return res.send("Invalid Credentials");
   }
 
-  req.session.user = user;
+  req.session.user = {
+    username: user.username,
+    role: user.role,
+  };
 
-  if (user.role === "student") {
-    return res.redirect("/student");
-  }
+  req.session.save((err) => {
+    if (err) {
+      return res.send("Login session error");
+    }
 
-  if (user.role === "staff") {
-    return res.redirect("/staff");
-  }
-
-  if (user.role === "admin") {
-    return res.redirect("/admin");
-  }
+    return redirectByRole(req, res);
+  });
 });
 
 app.get("/student", authMiddleware, roleMiddleware("student"), (req, res) => {
@@ -103,18 +152,17 @@ app.get("/staff", authMiddleware, roleMiddleware("staff"), (req, res) => {
   res.sendFile(path.join(__dirname, "views", "staff.html"));
 });
 
+app.get("/staff-appointments", authMiddleware, roleMiddleware("staff"), (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "staff-appointments.html"));
+});
+
 app.get("/admin", authMiddleware, roleMiddleware("admin"), (req, res) => {
   res.sendFile(path.join(__dirname, "views", "admin.html"));
 });
 
-app.get(
-  "/submit-request",
-  authMiddleware,
-  roleMiddleware("student"),
-  (req, res) => {
-    res.sendFile(path.join(__dirname, "views", "submit-request.html"));
-  }
-);
+app.get("/submit-request", authMiddleware, roleMiddleware("student"), (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "submit-request.html"));
+});
 
 app.post("/submit-request", authMiddleware, roleMiddleware("student"), (req, res) => {
   const data = readData();
@@ -124,6 +172,7 @@ app.post("/submit-request", authMiddleware, roleMiddleware("student"), (req, res
     student: req.session.user.username,
     issue: req.body.issue,
     status: "Pending",
+    notes: "",
   };
 
   data.requests.push(newRequest);
@@ -132,14 +181,9 @@ app.post("/submit-request", authMiddleware, roleMiddleware("student"), (req, res
   res.redirect("/track-requests");
 });
 
-app.get(
-  "/track-requests",
-  authMiddleware,
-  roleMiddleware("student"),
-  (req, res) => {
-    res.sendFile(path.join(__dirname, "views", "track-requests.html"));
-  }
-);
+app.get("/track-requests", authMiddleware, roleMiddleware("student"), (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "track-requests.html"));
+});
 
 app.get("/api/student-requests", authMiddleware, roleMiddleware("student"), (req, res) => {
   const data = readData();
@@ -178,11 +222,6 @@ app.post("/update-status", authMiddleware, roleMiddleware("staff"), (req, res) =
   res.redirect("/staff-requests");
 });
 
-/*
-  Manav - Sprint 2
-  Persistent appointment booking:
-  Student books appointment -> saved in data/db.json
-*/
 app.post("/book-appointment", authMiddleware, roleMiddleware("student"), (req, res) => {
   const data = readData();
 
@@ -193,6 +232,7 @@ app.post("/book-appointment", authMiddleware, roleMiddleware("student"), (req, r
     date: req.body.date,
     time: req.body.time,
     notes: req.body.notes || "",
+    staffNotes: "",
     status: "Scheduled",
   };
 
@@ -202,10 +242,6 @@ app.post("/book-appointment", authMiddleware, roleMiddleware("student"), (req, r
   res.redirect("/student");
 });
 
-/*
-  Student appointment history:
-  Student only sees their own appointments.
-*/
 app.get("/api/appointments", authMiddleware, roleMiddleware("student"), (req, res) => {
   const data = readData();
 
@@ -216,17 +252,32 @@ app.get("/api/appointments", authMiddleware, roleMiddleware("student"), (req, re
   res.json(appointments);
 });
 
-/*
-  Staff appointment view:
-  Staff can see all booked appointments from students.
-*/
 app.get("/api/all-appointments", authMiddleware, roleMiddleware("staff"), (req, res) => {
   const data = readData();
   res.json(data.appointments);
 });
 
+app.post("/update-appointment-status", authMiddleware, roleMiddleware("staff"), (req, res) => {
+  const data = readData();
+
+  const appointment = data.appointments.find((a) => a.id == req.body.id);
+
+  if (appointment) {
+    appointment.status = req.body.status;
+
+    if (req.body.staffNotes !== undefined) {
+      appointment.staffNotes = req.body.staffNotes;
+    }
+  }
+
+  writeData(data);
+
+  res.redirect("/staff-appointments");
+});
+
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
+    res.clearCookie("connect.sid");
     res.redirect("/");
   });
 });

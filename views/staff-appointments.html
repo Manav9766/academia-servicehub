@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Appointments</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="staff-page">
+
+<header class="staff-header">
+  <div>
+    <h1>Manage Appointments</h1>
+    <p>View and update student appointment bookings</p>
+  </div>
+
+  <a href="/logout" class="logout-btn">Logout</a>
+</header>
+
+<div class="staff-actions">
+  <a href="/staff" class="staff-action-btn">Back to Dashboard</a>
+  <a href="/staff-requests" class="staff-action-btn">Manage Service Requests</a>
+</div>
+
+<main class="staff-container">
+
+  <section class="staff-card">
+    <h2>Booked Appointments</h2>
+    <p class="section-text">
+      Staff can view booked appointments, update appointment status, and add staff notes.
+    </p>
+
+    <div id="appointmentsContainer"></div>
+  </section>
+
+</main>
+
+<script>
+async function loadAppointments() {
+  const response = await fetch("/api/all-appointments");
+  const appointments = await response.json();
+
+  const container = document.getElementById("appointmentsContainer");
+  container.innerHTML = "";
+
+  if (appointments.length === 0) {
+    container.innerHTML = `<div class="info">No appointments found.</div>`;
+    return;
+  }
+
+  appointments.forEach((appointment) => {
+    container.innerHTML += `
+      <div class="request-card">
+        <div class="request-top">
+          <h3>${appointment.service}</h3>
+          <span class="status-badge ${getAppointmentStatusClass(appointment.status)}">
+            ${appointment.status || "Scheduled"}
+          </span>
+        </div>
+
+        <p><strong>Student:</strong> ${appointment.student}</p>
+        <p><strong>Date:</strong> ${appointment.date}</p>
+        <p><strong>Time:</strong> ${appointment.time || "Not selected"}</p>
+        <p><strong>Student Notes:</strong> ${appointment.notes || "No notes provided"}</p>
+        <p><strong>Appointment ID:</strong> ${appointment.id}</p>
+
+        <form action="/update-appointment-status" method="POST" class="request-update-form">
+          <input type="hidden" name="id" value="${appointment.id}">
+
+          <label>
+            <strong>Update Status</strong>
+            <select name="status">
+              <option value="Scheduled" ${appointment.status === "Scheduled" ? "selected" : ""}>Scheduled</option>
+              <option value="Confirmed" ${appointment.status === "Confirmed" ? "selected" : ""}>Confirmed</option>
+              <option value="Completed" ${appointment.status === "Completed" ? "selected" : ""}>Completed</option>
+              <option value="Cancelled" ${appointment.status === "Cancelled" ? "selected" : ""}>Cancelled</option>
+              <option value="Rescheduled" ${appointment.status === "Rescheduled" ? "selected" : ""}>Rescheduled</option>
+            </select>
+          </label>
+
+          <label>
+            <strong>Staff Notes / Comments</strong>
+            <textarea name="staffNotes" placeholder="Add staff note...">${appointment.staffNotes || ""}</textarea>
+          </label>
+
+          <button type="submit" class="update-btn">Update</button>
+        </form>
+      </div>
+    `;
+  });
+}
+
+function getAppointmentStatusClass(status) {
+  if (status === "Completed") return "status-completed";
+  if (status === "Cancelled") return "status-cancelled";
+  if (status === "Confirmed") return "status-inprogress";
+  if (status === "Rescheduled") return "status-inprogress";
+  return "status-submitted";
+}
+
+loadAppointments();
+</script>
+
+</body>
+</html>
