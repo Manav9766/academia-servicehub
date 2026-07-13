@@ -1,4 +1,34 @@
 {
+  "users": [
+    {
+      "id": 1,
+      "username": "student",
+      "password": "123",
+      "role": "student",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "username": "staff",
+      "password": "123",
+      "role": "staff",
+      "status": "active"
+    },
+    {
+      "id": 3,
+      "username": "admin",
+      "password": "123",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "id": 1783982818045,
+      "username": "student2",
+      "password": "456",
+      "role": "staff",
+      "status": "disabled"
+    }
+  ],
   "appointments": [],
   "requests": [
     {
