@@ -27,28 +27,55 @@
   <section class="staff-card">
     <h2>Booked Appointments</h2>
     <p class="section-text">
-      Staff can view booked appointments, update appointment status, and add staff notes.
-    </p>
-
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+      <input type="text" id="searchAppt" placeholder="Search student or service..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px;">
+      <select id="filterApptStatus" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <option value="">All Statuses</option>
+        <option value="Scheduled">Scheduled</option>
+        <option value="Confirmed">Confirmed</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+        <option value="Rescheduled">Rescheduled</option>
+      </select>
+      <input type="date" id="filterApptDate" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
     <div id="appointmentsContainer"></div>
   </section>
 
 </main>
 
 <script>
-async function loadAppointments() {
-  const response = await fetch("/api/all-appointments");
-  const appointments = await response.json();
+let allAppointments = [];
 
+async function fetchAppointments() {
+  const response = await fetch("/api/all-appointments");
+  allAppointments = await response.json();
+  renderAppointments();
+}
+
+function renderAppointments() {
   const container = document.getElementById("appointmentsContainer");
   container.innerHTML = "";
 
-  if (appointments.length === 0) {
-    container.innerHTML = `<div class="info">No appointments found.</div>`;
+  const searchAppt = document.getElementById("searchAppt").value.toLowerCase();
+  const filterApptStatus = document.getElementById("filterApptStatus").value;
+  const filterApptDate = document.getElementById("filterApptDate").value;
+
+  const filtered = allAppointments.filter(appointment => {
+    const matchesKeyword = (appointment.student || "").toLowerCase().includes(searchAppt) ||
+                           (appointment.service || "").toLowerCase().includes(searchAppt);
+    const matchesStatus = filterApptStatus ? appointment.status === filterApptStatus : true;
+    const matchesDate = filterApptDate ? appointment.date === filterApptDate : true;
+
+    return matchesKeyword && matchesStatus && matchesDate;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="info">No appointments found matching the criteria.</div>`;
     return;
   }
 
-  appointments.forEach((appointment) => {
+  filtered.forEach((appointment) => {
     container.innerHTML += `
       <div class="request-card">
         <div class="request-top">
@@ -90,6 +117,11 @@ async function loadAppointments() {
   });
 }
 
+document.getElementById("searchAppt").addEventListener("input", renderAppointments);
+document.getElementById("filterApptStatus").addEventListener("change", renderAppointments);
+document.getElementById("filterApptDate").addEventListener("change", renderAppointments);
+
+
 function getAppointmentStatusClass(status) {
   if (status === "Completed") return "status-completed";
   if (status === "Cancelled") return "status-cancelled";
@@ -98,7 +130,7 @@ function getAppointmentStatusClass(status) {
   return "status-submitted";
 }
 
-loadAppointments();
+fetchAppointments();
 </script>
 
 </body>

@@ -23,35 +23,74 @@
 
 <main class="staff-container">
   <section class="staff-card">
-    <h2>Submitted Requests</h2>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+      <input type="text" id="searchKeyword" placeholder="Search keyword..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px;">
+      <select id="filterStatus" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <option value="">All Statuses</option>
+        <option value="Pending">Pending</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Resolved">Resolved</option>
+      </select>
+      <select id="filterCategory" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <option value="">All Categories</option>
+        <option value="Academic Advising">Academic Advising</option>
+        <option value="Financial Aid">Financial Aid</option>
+        <option value="IT Support">IT Support</option>
+        <option value="General">General</option>
+      </select>
+    </div>
     <div id="requests"></div>
   </section>
 </main>
 
 <script>
-async function loadRequests() {
-  const response = await fetch("/api/all-requests");
-  const requests = await response.json();
+let allRequests = [];
 
+async function fetchRequests() {
+  const response = await fetch("/api/all-requests");
+  allRequests = await response.json();
+  renderRequests();
+}
+
+function renderRequests() {
   const container = document.getElementById("requests");
   container.innerHTML = "";
 
-  if (requests.length === 0) {
-    container.innerHTML = `<div class="info">No service requests found.</div>`;
+  const searchKeyword = document.getElementById("searchKeyword").value.toLowerCase();
+  const filterStatus = document.getElementById("filterStatus").value;
+  const filterCategory = document.getElementById("filterCategory").value;
+
+  const filtered = allRequests.filter(req => {
+    const matchesKeyword = (req.subject || "").toLowerCase().includes(searchKeyword) || 
+                           (req.issue || "").toLowerCase().includes(searchKeyword) ||
+                           (req.student || "").toLowerCase().includes(searchKeyword);
+    const matchesStatus = filterStatus ? req.status === filterStatus : true;
+    const matchesCategory = filterCategory ? req.category === filterCategory : true;
+    
+    return matchesKeyword && matchesStatus && matchesCategory;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="info">No service requests found matching the criteria.</div>`;
     return;
   }
 
-  requests.forEach((request) => {
+  filtered.forEach((request) => {
+    const attachmentHtml = request.attachment ? `<p><strong>Attachment:</strong> <a href="${request.attachment}" target="_blank">View File</a></p>` : '';
+    
     container.innerHTML += `
       <div class="request-card">
         <div class="request-top">
-          <h3>${request.issue}</h3>
+          <h3>${request.subject || request.issue.substring(0, 20) + "..."}</h3>
           <span class="status-badge ${getStatusClass(request.status)}">
             ${request.status}
           </span>
         </div>
 
         <p><strong>Student:</strong> ${request.student}</p>
+        <p><strong>Category:</strong> ${request.category || "General"}</p>
+        <p><strong>Description:</strong> ${request.issue}</p>
+        ${attachmentHtml}
         <p><strong>Request ID:</strong> ${request.id}</p>
 
         <form action="/update-status" method="POST" class="status-form">
@@ -74,13 +113,18 @@ async function loadRequests() {
   });
 }
 
+document.getElementById("searchKeyword").addEventListener("input", renderRequests);
+document.getElementById("filterStatus").addEventListener("change", renderRequests);
+document.getElementById("filterCategory").addEventListener("change", renderRequests);
+
+
 function getStatusClass(status) {
   if (status === "In Progress") return "status-inprogress";
   if (status === "Resolved") return "status-completed";
   return "status-submitted";
 }
 
-loadRequests();
+fetchRequests();
 </script>
 
 </body>

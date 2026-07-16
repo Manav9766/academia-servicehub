@@ -2,8 +2,10 @@ const express = require("express");
 const session = require("express-session");
 const fs = require("fs");
 const path = require("path");
+const multer = require("multer");
 
 const app = express();
+const upload = multer({ dest: path.join(__dirname, "public", "uploads") });
 const PORT = 3000;
 
 app.use(express.urlencoded({ extended: true }));
@@ -164,13 +166,16 @@ app.get("/submit-request", authMiddleware, roleMiddleware("student"), (req, res)
   res.sendFile(path.join(__dirname, "views", "submit-request.html"));
 });
 
-app.post("/submit-request", authMiddleware, roleMiddleware("student"), (req, res) => {
+app.post("/submit-request", authMiddleware, roleMiddleware("student"), upload.single("attachment"), (req, res) => {
   const data = readData();
 
   const newRequest = {
     id: Date.now(),
     student: req.session.user.username,
+    category: req.body.category || "General",
+    subject: req.body.subject || "No Subject",
     issue: req.body.issue,
+    attachment: req.file ? `/uploads/${req.file.filename}` : null,
     status: "Pending",
     notes: "",
   };
