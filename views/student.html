@@ -162,7 +162,7 @@
         <h2>Your Appointment History</h2>
 
         <p class="section-text">
-            Your booked appointments are shown below.
+            Your booked appointments are shown below. You can cancel or reschedule active appointments.
         </p>
 
         <ul id="appointments"></ul>
@@ -211,6 +211,85 @@ async function loadAppointments(){
 
         appointments.forEach(a=>{
 
+            const canModify =
+                a.status !== "Cancelled" &&
+                a.status !== "Completed";
+
+            let appointmentActions = "";
+
+            if(canModify){
+
+                appointmentActions = `
+
+                <div class="appointment-actions">
+
+                    <form
+                    action="/cancel-appointment"
+                    method="POST"
+                    class="inline-appointment-form">
+
+                        <input
+                        type="hidden"
+                        name="id"
+                        value="${a.id}">
+
+                        <button
+                        type="submit"
+                        class="cancel-btn">
+                        Cancel Appointment
+                        </button>
+
+                    </form>
+
+                    <form
+                    action="/reschedule-appointment"
+                    method="POST"
+                    class="reschedule-form">
+
+                        <input
+                        type="hidden"
+                        name="id"
+                        value="${a.id}">
+
+                        <label>
+                            New Date
+
+                            <input
+                            type="date"
+                            name="date"
+                            required>
+                        </label>
+
+                        <label>
+                            New Time
+
+                            <select
+                            name="time"
+                            required>
+                                <option value="">Select Time</option>
+                                <option>09:00 AM</option>
+                                <option>10:00 AM</option>
+                                <option>11:00 AM</option>
+                                <option>01:00 PM</option>
+                                <option>02:00 PM</option>
+                                <option>03:00 PM</option>
+                            </select>
+                        </label>
+
+                        <button
+                        type="submit"
+                        class="reschedule-btn">
+                        Reschedule
+                        </button>
+
+                    </form>
+
+                </div>
+
+                `;
+
+            }
+
             list.innerHTML += `
 
             <li class="card">
@@ -231,12 +310,21 @@ async function loadAppointments(){
             <br>
 
             <strong>Status:</strong>
+            <span class="status-badge ${getAppointmentStatusClass(a.status)}">
             ${a.status || "Scheduled"}
+            </span>
 
             <br>
 
             <strong>Notes:</strong>
             ${a.notes || "None"}
+
+            <br>
+
+            <strong>Staff Notes:</strong>
+            ${a.staffNotes || "No staff notes added"}
+
+            ${appointmentActions}
 
             </li>
 
@@ -356,6 +444,24 @@ function getStatusClass(status){
         return "status-completed";
 
     if(status==="In Progress")
+        return "status-inprogress";
+
+    if(status==="Cancelled")
+        return "status-cancelled";
+
+    return "status-submitted";
+
+}
+
+function getAppointmentStatusClass(status){
+
+    if(status==="Completed")
+        return "status-completed";
+
+    if(status==="Confirmed")
+        return "status-inprogress";
+
+    if(status==="Rescheduled")
         return "status-inprogress";
 
     if(status==="Cancelled")

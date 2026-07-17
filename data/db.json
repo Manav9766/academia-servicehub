@@ -73,7 +73,32 @@
       "time": "09:00 AM",
       "notes": "d",
       "staffNotes": "",
-      "status": "Scheduled"
+      "status": "Cancelled",
+      "updatedAt": "2026-07-17T01:38:57.454Z"
+    },
+    {
+      "id": 1784252232425,
+      "student": "student",
+      "service": "Academic Advising",
+      "date": "2026-07-30",
+      "time": "03:00 PM",
+      "notes": "Ye",
+      "staffNotes": "",
+      "status": "Cancelled",
+      "createdAt": "2026-07-17T01:37:12.425Z",
+      "updatedAt": "2026-07-17T01:58:56.730Z"
+    },
+    {
+      "id": 1784253431293,
+      "student": "student",
+      "service": "Financial Aid",
+      "date": "2026-07-31",
+      "time": "09:00 AM",
+      "notes": "Kanye",
+      "staffNotes": "",
+      "status": "Rescheduled",
+      "createdAt": "2026-07-17T01:57:11.293Z",
+      "updatedAt": "2026-07-17T01:59:09.321Z"
     }
   ],
   "requests": [
@@ -113,6 +138,18 @@
       "notes": "Working on the issue for your account.",
       "createdAt": "2026-07-17T00:54:28.605Z",
       "updatedAt": "2026-07-17T00:55:46.286Z"
+    },
+    {
+      "id": 1784253490824,
+      "student": "student",
+      "category": "Registration & Enrollment",
+      "subject": "Doja",
+      "issue": "123456789-",
+      "attachment": null,
+      "status": "Cancelled",
+      "notes": "",
+      "createdAt": "2026-07-17T01:58:10.824Z",
+      "updatedAt": "2026-07-17T01:59:36.924Z"
     }
   ]
 }

@@ -287,6 +287,24 @@ function renderRequests(){
 
         }
 
+        let updatedHTML="";
+
+        if(request.updatedAt){
+
+            updatedHTML=`
+
+            <p>
+
+            <strong>Last Updated:</strong>
+
+            ${new Date(request.updatedAt).toLocaleString()}
+
+            </p>
+
+            `;
+
+        }
+
         container.innerHTML += `
 
         <div class="request-card">
@@ -295,7 +313,7 @@ function renderRequests(){
 
             <h3>
 
-            ${request.subject}
+            ${escapeHTML(request.subject || "No Subject")}
 
             </h3>
 
@@ -312,7 +330,7 @@ function renderRequests(){
 
         <strong>Student:</strong>
 
-        ${request.student}
+        ${escapeHTML(request.student || "-")}
 
         </p>
 
@@ -320,17 +338,19 @@ function renderRequests(){
 
         <strong>Category:</strong>
 
-        ${request.category}
+        ${escapeHTML(request.category || "General")}
 
         </p>
 
         ${createdHTML}
 
+        ${updatedHTML}
+
         <p>
 
         <strong>Description:</strong>
 
-        ${request.issue}
+        ${escapeHTML(request.issue || "-")}
 
         </p>
 
@@ -354,7 +374,7 @@ function renderRequests(){
         name="id"
         value="${request.id}">
 
-                <label>
+        <label>
 
             Update Status
 
@@ -391,7 +411,7 @@ function renderRequests(){
             <textarea
             name="notes"
             rows="4"
-            placeholder="Enter comments for the student...">${request.notes || ""}</textarea>
+            placeholder="Enter comments for the student...">${escapeHTML(request.notes || "")}</textarea>
 
         </label>
 
@@ -449,6 +469,17 @@ function getStatusClass(status){
     }
 
     return "status-submitted";
+
+}
+
+function escapeHTML(value){
+
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 
 }
 

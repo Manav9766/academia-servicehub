@@ -37,7 +37,6 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
-
 fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
 fs.mkdirSync(UPLOAD_DIRECTORY, { recursive: true });
 
@@ -63,7 +62,6 @@ const storage = multer.diskStorage({
     callback(null, uniqueName);
   },
 });
-
 
 function attachmentFileFilter(req, file, callback) {
   const extension = path.extname(file.originalname).toLowerCase();
@@ -108,7 +106,6 @@ app.use(
   })
 );
 
-
 function readData() {
   if (!fs.existsSync(DATA_FILE)) {
     const defaultData = {
@@ -148,11 +145,13 @@ function readData() {
   }
 }
 
-
 function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf8");
 }
 
+function sortNewestFirst(items) {
+  return [...items].sort((a, b) => Number(b.id) - Number(a.id));
+}
 
 function removeUploadedFile(file) {
   if (!file || !file.path) {
@@ -263,7 +262,6 @@ function roleMiddleware(role) {
   };
 }
 
-
 app.get("/", (req, res) => {
   if (req.session.user) {
     return redirectByRole(req, res);
@@ -278,8 +276,7 @@ app.post("/login", (req, res) => {
 
   const user = users.find(
     (existingUser) =>
-      existingUser.username === username &&
-      existingUser.password === password
+      existingUser.username === username && existingUser.password === password
   );
 
   if (!user) {
@@ -301,16 +298,9 @@ app.post("/login", (req, res) => {
   });
 });
 
-
-
-app.get(
-  "/student",
-  authMiddleware,
-  roleMiddleware("student"),
-  (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "student.html"));
-  }
-);
+app.get("/student", authMiddleware, roleMiddleware("student"), (req, res) => {
+  return res.sendFile(path.join(__dirname, "views", "student.html"));
+});
 
 app.get("/staff", authMiddleware, roleMiddleware("staff"), (req, res) => {
   return res.sendFile(path.join(__dirname, "views", "staff.html"));
@@ -321,9 +311,7 @@ app.get(
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "staff-appointments.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "staff-appointments.html"));
   }
 );
 
@@ -331,18 +319,14 @@ app.get("/admin", authMiddleware, roleMiddleware("admin"), (req, res) => {
   return res.sendFile(path.join(__dirname, "views", "admin.html"));
 });
 
-
 app.get(
   "/submit-request",
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "submit-request.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "submit-request.html"));
   }
 );
-
 
 app.post(
   "/submit-request",
@@ -473,9 +457,7 @@ app.get(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "track-requests.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "track-requests.html"));
   }
 );
 
@@ -490,7 +472,111 @@ app.get(
       (request) => request.student === req.session.user.username
     );
 
-    return res.json(requests);
+    return res.json(sortNewestFirst(requests));
+  }
+);
+
+/*
+  Sprint 3 - Student can cancel their own service request.
+*/
+app.post(
+  "/cancel-service-request",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const requestId = String(req.body.id || "").trim();
+
+    if (!requestId) {
+      return res.status(400).send("Request ID is required.");
+    }
+
+    const data = readData();
+
+    const request = data.requests.find(
+      (existingRequest) =>
+        String(existingRequest.id) === requestId &&
+        existingRequest.student === req.session.user.username
+    );
+
+    if (!request) {
+      return res.status(404).send("Service request not found.");
+    }
+
+    if (request.status === "Resolved") {
+      return res.status(400).send("Resolved requests cannot be cancelled.");
+    }
+
+    request.status = "Cancelled";
+    request.updatedAt = new Date().toISOString();
+
+    writeData(data);
+
+    return res.redirect("/track-requests");
+  }
+);
+
+/*
+  Sprint 3 - Student can edit their own active service request.
+*/
+app.post(
+  "/edit-service-request",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const requestId = String(req.body.id || "").trim();
+    const category = String(req.body.category || "").trim();
+    const subject = String(req.body.subject || "").trim();
+    const issue = String(req.body.issue || "").trim();
+
+    if (!requestId || !category || !subject || !issue) {
+      return res
+        .status(400)
+        .send("Request ID, category, subject, and description are required.");
+    }
+
+    if (!REQUEST_CATEGORIES.includes(category)) {
+      return res.status(400).send("Invalid service request category.");
+    }
+
+    if (subject.length < 3 || subject.length > 120) {
+      return res
+        .status(400)
+        .send("Subject must be between 3 and 120 characters.");
+    }
+
+    if (issue.length < 10 || issue.length > 3000) {
+      return res
+        .status(400)
+        .send("Description must be between 10 and 3000 characters.");
+    }
+
+    const data = readData();
+
+    const request = data.requests.find(
+      (existingRequest) =>
+        String(existingRequest.id) === requestId &&
+        existingRequest.student === req.session.user.username
+    );
+
+    if (!request) {
+      return res.status(404).send("Service request not found.");
+    }
+
+    if (request.status === "Cancelled" || request.status === "Resolved") {
+      return res
+        .status(400)
+        .send("Cancelled or resolved requests cannot be edited.");
+    }
+
+    request.category = category;
+    request.subject = subject;
+    request.issue = issue;
+    request.status = "Pending";
+    request.updatedAt = new Date().toISOString();
+
+    writeData(data);
+
+    return res.redirect("/track-requests");
   }
 );
 
@@ -499,9 +585,7 @@ app.get(
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "staff-requests.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "staff-requests.html"));
   }
 );
 
@@ -511,7 +595,7 @@ app.get(
   roleMiddleware("staff"),
   (req, res) => {
     const data = readData();
-    return res.json(data.requests);
+    return res.json(sortNewestFirst(data.requests));
   }
 );
 
@@ -555,23 +639,32 @@ app.post(
   }
 );
 
-
 app.post(
   "/book-appointment",
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
+    const service = String(req.body.service || "").trim();
+    const date = String(req.body.date || "").trim();
+    const time = String(req.body.time || "").trim();
+    const notes = String(req.body.notes || "").trim();
+
+    if (!service || !date || !time) {
+      return res.status(400).send("Service, date, and time are required.");
+    }
+
     const data = readData();
 
     const appointment = {
       id: Date.now(),
       student: req.session.user.username,
-      service: req.body.service,
-      date: req.body.date,
-      time: req.body.time,
-      notes: req.body.notes || "",
+      service,
+      date,
+      time,
+      notes,
       staffNotes: "",
       status: "Scheduled",
+      createdAt: new Date().toISOString(),
     };
 
     data.appointments.push(appointment);
@@ -589,15 +682,98 @@ app.get(
     const data = readData();
 
     const appointments = data.appointments.filter(
-      (appointment) =>
-        appointment.student === req.session.user.username
+      (appointment) => appointment.student === req.session.user.username
     );
 
-    return res.json(appointments);
+    return res.json(sortNewestFirst(appointments));
   }
 );
 
+/*
+  Sprint 3 - Issue #26
+  Student can cancel their own appointment.
+*/
+app.post(
+  "/cancel-appointment",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const appointmentId = String(req.body.id || "").trim();
 
+    if (!appointmentId) {
+      return res.status(400).send("Appointment ID is required.");
+    }
+
+    const data = readData();
+
+    const appointment = data.appointments.find(
+      (existingAppointment) =>
+        String(existingAppointment.id) === appointmentId &&
+        existingAppointment.student === req.session.user.username
+    );
+
+    if (!appointment) {
+      return res.status(404).send("Appointment not found.");
+    }
+
+    if (appointment.status === "Completed") {
+      return res.status(400).send("Completed appointments cannot be cancelled.");
+    }
+
+    appointment.status = "Cancelled";
+    appointment.updatedAt = new Date().toISOString();
+
+    writeData(data);
+
+    return res.redirect("/student");
+  }
+);
+
+/*
+  Sprint 3 - Issue #27
+  Student can reschedule their own appointment.
+*/
+app.post(
+  "/reschedule-appointment",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const appointmentId = String(req.body.id || "").trim();
+    const newDate = String(req.body.date || "").trim();
+    const newTime = String(req.body.time || "").trim();
+
+    if (!appointmentId || !newDate || !newTime) {
+      return res.status(400).send("Appointment ID, date, and time are required.");
+    }
+
+    const data = readData();
+
+    const appointment = data.appointments.find(
+      (existingAppointment) =>
+        String(existingAppointment.id) === appointmentId &&
+        existingAppointment.student === req.session.user.username
+    );
+
+    if (!appointment) {
+      return res.status(404).send("Appointment not found.");
+    }
+
+    if (appointment.status === "Cancelled" || appointment.status === "Completed") {
+      return res
+        .status(400)
+        .send("Cancelled or completed appointments cannot be rescheduled.");
+    }
+
+    appointment.date = newDate;
+    appointment.time = newTime;
+    appointment.status = "Rescheduled";
+    appointment.updatedAt = new Date().toISOString();
+
+    writeData(data);
+
+    return res.redirect("/student");
+  }
+);
 
 app.get(
   "/api/all-appointments",
@@ -605,7 +781,7 @@ app.get(
   roleMiddleware("staff"),
   (req, res) => {
     const data = readData();
-    return res.json(data.appointments);
+    return res.json(sortNewestFirst(data.appointments));
   }
 );
 
@@ -614,20 +790,35 @@ app.post(
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
+    const allowedStatuses = [
+      "Scheduled",
+      "Confirmed",
+      "Completed",
+      "Cancelled",
+      "Rescheduled",
+    ];
+
+    const appointmentId = String(req.body.id || "").trim();
+    const status = String(req.body.status || "").trim();
+    const staffNotes = String(req.body.staffNotes || "").trim();
+
+    if (!appointmentId || !allowedStatuses.includes(status)) {
+      return res.status(400).send("Invalid appointment status update.");
+    }
+
     const data = readData();
 
     const appointment = data.appointments.find(
-      (existingAppointment) =>
-        existingAppointment.id == req.body.id
+      (existingAppointment) => String(existingAppointment.id) === appointmentId
     );
 
-    if (appointment) {
-      appointment.status = req.body.status;
-
-      if (req.body.staffNotes !== undefined) {
-        appointment.staffNotes = req.body.staffNotes;
-      }
+    if (!appointment) {
+      return res.status(404).send("Appointment not found.");
     }
+
+    appointment.status = status;
+    appointment.staffNotes = staffNotes;
+    appointment.updatedAt = new Date().toISOString();
 
     writeData(data);
 
@@ -655,8 +846,6 @@ app.use((error, req, res, next) => {
 
   return res.status(500).send("An unexpected server error occurred.");
 });
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
