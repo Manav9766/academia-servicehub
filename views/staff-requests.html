@@ -342,6 +342,14 @@ function renderRequests(){
 
         </p>
 
+        <p>
+
+        <strong>Assigned To:</strong>
+
+        ${escapeHTML(request.assignedTo || "Unassigned")}
+
+        </p>
+
         ${createdHTML}
 
         ${updatedHTML}
@@ -399,6 +407,21 @@ function renderRequests(){
                 ${request.status==="Cancelled"?"selected":""}>
                 Cancelled
                 </option>
+
+            </select>
+
+        </label>
+
+        <label>
+
+            Assign To
+
+            <select name="assignedTo">
+
+                <option value="Unassigned" ${request.assignedTo === "Unassigned" || !request.assignedTo ? "selected" : ""}>Unassigned</option>
+                <option value="IT Department" ${request.assignedTo === "IT Department" ? "selected" : ""}>IT Department</option>
+                <option value="Financial Aid Dept" ${request.assignedTo === "Financial Aid Dept" ? "selected" : ""}>Financial Aid Dept</option>
+                <option value="Academic Advising Dept" ${request.assignedTo === "Academic Advising Dept" ? "selected" : ""}>Academic Advising Dept</option>
 
             </select>
 

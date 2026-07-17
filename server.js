@@ -660,6 +660,7 @@ app.post(
       issue,
       attachment,
       status: "Pending",
+      assignedTo: "Unassigned",
       notes: "",
       createdAt: new Date().toISOString(),
     };
@@ -847,6 +848,11 @@ app.post(
 
     request.status = status;
     request.notes = notes;
+    
+    if (req.body.assignedTo !== undefined) {
+      request.assignedTo = req.body.assignedTo;
+    }
+    
     request.updatedAt = new Date().toISOString();
 
     writeData(data);
