@@ -95,6 +95,24 @@
       "issue": "5",
       "status": "Resolved",
       "notes": ""
+    },
+    {
+      "id": 1784249668605,
+      "student": "student",
+      "category": "IT Support",
+      "subject": "Microsoft outlook getting logged out everytime.",
+      "issue": "I cannot load messages, even if i logged in just 2-3 minutes ago.",
+      "attachment": {
+        "path": "/uploads/1784249668598-692138-Screenshot-2026-07-16-at-8-53-05-PM.png",
+        "originalName": "Screenshot 2026-07-16 at 8.53.05â¯PM.png",
+        "storedName": "1784249668598-692138-Screenshot-2026-07-16-at-8-53-05-PM.png",
+        "mimeType": "image/png",
+        "size": 519910
+      },
+      "status": "In Progress",
+      "notes": "Working on the issue for your account.",
+      "createdAt": "2026-07-17T00:54:28.605Z",
+      "updatedAt": "2026-07-17T00:55:46.286Z"
     }
   ]
 }

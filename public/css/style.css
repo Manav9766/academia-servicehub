@@ -533,3 +533,109 @@ ul {
   background-color: #f5d6d6;
   color: #8a1f1f;
 }
+
+
+.request-card a{
+  color:#1f3c88;
+  font-weight:600;
+  text-decoration:none;
+}
+
+.request-card a:hover{
+  text-decoration:underline;
+}
+
+.request-update-form{
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+  align-items:flex-start;
+}
+
+.request-update-form label{
+  flex:1;
+  min-width:220px;
+}
+
+.request-update-form textarea{
+  width:100%;
+  min-height:90px;
+}
+
+.request-update-form select{
+  width:100%;
+}
+
+.update-btn{
+  width:auto;
+  padding:12px 22px;
+}
+
+.status-badge{
+  white-space:nowrap;
+}
+
+.info{
+  text-align:center;
+}
+
+table td{
+  vertical-align:top;
+}
+
+table td a{
+  color:#1f3c88;
+  font-weight:600;
+}
+
+table td a:hover{
+  text-decoration:underline;
+}
+
+.student-card ul{
+  margin:0;
+  padding:0;
+}
+
+.student-card .card{
+  line-height:1.8;
+}
+
+.request-card p{
+  margin:8px 0;
+  word-break:break-word;
+}
+
+textarea{
+  resize:vertical;
+}
+
+input[type="file"]{
+  padding:8px;
+  background:#fff;
+}
+
+@media (max-width:900px){
+
+  .request-update-form{
+      flex-direction:column;
+  }
+
+  .request-update-form label{
+      width:100%;
+  }
+
+  .request-update-form textarea{
+      min-width:100%;
+  }
+
+  .request-update-form select{
+      min-width:100%;
+  }
+
+  table{
+      display:block;
+      overflow-x:auto;
+  }
+
+}

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Track Requests</title>
 
@@ -11,71 +12,184 @@
 
 <body class="student-page">
 
-  <header class="student-header">
-    <div>
-      <h1>My Service Requests</h1>
-      <p>Track your submitted requests and their current status</p>
-    </div>
+<header class="student-header">
 
-    <a href="/logout" class="logout-btn">Logout</a>
-  </header>
+  <div>
+    <h1>My Service Requests</h1>
+    <p>Track your submitted requests and their current status</p>
+  </div>
 
-  <main class="student-container">
+  <a href="/logout" class="logout-btn">
+    Logout
+  </a>
 
-    <div class="student-actions">
-      <a href="/submit-request" class="action-btn">
-        Submit New Request
-      </a>
+</header>
 
-      <a href="/student" class="action-btn secondary">
-        Back to Dashboard
-      </a>
-    </div>
+<main class="student-container">
 
-    <div class="student-card">
+<div class="student-actions">
 
-      <table>
-        <thead>
-          <tr>
-            <th>Request ID</th>
-            <th>Student</th>
-            <th>Issue</th>
-            <th>Status</th>
-            <th>Staff Notes</th>
-          </tr>
-        </thead>
+  <a href="/submit-request" class="action-btn">
+    Submit New Request
+  </a>
 
-        <tbody id="requestTable"></tbody>
-      </table>
+  <a href="/student" class="action-btn secondary">
+    Back to Dashboard
+  </a>
 
-    </div>
+</div>
 
-  </main>
+<div class="student-card">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>ID</th>
+<th>Subject</th>
+<th>Category</th>
+<th>Description</th>
+<th>Attachment</th>
+<th>Status</th>
+<th>Staff Notes</th>
+<th>Submitted</th>
+
+</tr>
+
+</thead>
+
+<tbody id="requestTable"></tbody>
+
+</table>
+
+</div>
+
+</main>
 
 <script>
 
-async function loadRequests() {
+async function loadRequests(){
 
-  const response = await fetch("/api/student-requests");
+    try{
 
-  const requests = await response.json();
+        const response = await fetch("/api/student-requests");
 
-  const table = document.getElementById("requestTable");
+        const requests = await response.json();
 
-  table.innerHTML = "";
+        const table = document.getElementById("requestTable");
 
-  requests.forEach((r) => {
+        table.innerHTML="";
 
-    table.innerHTML += `
-      <tr>
-        <td>${r.id}</td>
-        <td>${r.student}</td>
-        <td>${r.issue}</td>
-        <td>${r.status}</td>
-        <td>${r.notes || "None"}</td>
-      </tr>
-    `;
-  });
+        if(requests.length===0){
+
+            table.innerHTML=`
+
+            <tr>
+
+            <td colspan="8" style="text-align:center;padding:20px;">
+
+            No service requests submitted yet.
+
+            </td>
+
+            </tr>
+
+            `;
+
+            return;
+
+        }
+
+        requests.forEach(r=>{
+
+            let attachmentHTML="None";
+
+            if(r.attachment){
+
+                if(typeof r.attachment==="string"){
+
+                    attachmentHTML=`
+                    <a href="${r.attachment}" target="_blank">
+                    View File
+                    </a>
+                    `;
+
+                }else{
+
+                    attachmentHTML=`
+                    <a href="${r.attachment.path}" target="_blank">
+                    📎 ${r.attachment.originalName}
+                    </a>
+                    `;
+
+                }
+
+            }
+
+            const submitted =
+                r.createdAt
+                ? new Date(r.createdAt).toLocaleString()
+                : "-";
+
+            table.innerHTML += `
+
+            <tr>
+
+            <td>${r.id}</td>
+
+            <td>${r.subject || "-"}</td>
+
+            <td>${r.category || "General"}</td>
+
+            <td>${r.issue}</td>
+
+            <td>${attachmentHTML}</td>
+
+            <td>
+
+                <span class="status-badge ${getStatusClass(r.status)}">
+
+                ${r.status}
+
+                </span>
+
+            </td>
+
+            <td>${r.notes || "No notes yet"}</td>
+
+            <td>${submitted}</td>
+
+            </tr>
+
+            `;
+
+        });
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
+function getStatusClass(status){
+
+    if(status==="Resolved")
+        return "status-completed";
+
+    if(status==="In Progress")
+        return "status-inprogress";
+
+    if(status==="Cancelled")
+        return "status-cancelled";
+
+    return "status-submitted";
+
 }
 
 loadRequests();
@@ -83,4 +197,5 @@ loadRequests();
 </script>
 
 </body>
+
 </html>

@@ -1,155 +1,376 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Student Dashboard</title>
-  <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body class="student-page">
 
 <header class="student-header">
-  <div>
-    <h1>Student Dashboard</h1>
-    <p>Welcome to Student Services</p>
-  </div>
 
-  <a href="/logout" class="logout-btn">Logout</a>
+    <div>
+        <h1>Student Dashboard</h1>
+        <p>Welcome to Student Services</p>
+    </div>
+
+    <a href="/logout" class="logout-btn">
+        Logout
+    </a>
+
 </header>
 
 <div class="student-container">
 
-  <div class="student-actions">
-    <a href="/submit-request" class="action-btn">
-      Submit Service Request
-    </a>
+    <div class="student-actions">
 
-    <a href="/track-requests" class="action-btn secondary">
-      Track Requests
-    </a>
-  </div>
+        <a href="/submit-request" class="action-btn">
+            Submit Service Request
+        </a>
 
-  <div class="student-card">
-    <h2>Book Appointment</h2>
-    <p class="section-text">
-      Select a service, date, time slot, and optional notes to book an appointment.
-    </p>
+        <a href="/track-requests" class="action-btn secondary">
+            Track Requests
+        </a>
 
-    <form action="/book-appointment" method="POST" class="appointment-form">
+    </div>
 
-      <div class="form-group">
-        <label for="service">Service</label>
-        <select name="service" id="service" required>
-          <option value="">Select Service</option>
-          <option value="Financial Aid">Financial Aid</option>
-          <option value="Academic Advising">Academic Advising</option>
-          <option value="Career Support">Career Support</option>
-          <option value="Mental Health">Mental Health</option>
-        </select>
-      </div>
+    <div class="student-card">
 
-      <div class="form-group">
-        <label for="date">Appointment Date</label>
-        <input type="date" name="date" id="date" required>
-      </div>
+        <h2>Book Appointment</h2>
 
-      <div class="form-group">
-        <label for="time">Time Slot</label>
-        <select name="time" id="time" required>
-          <option value="">Select Time</option>
-          <option value="09:00 AM">09:00 AM</option>
-          <option value="10:00 AM">10:00 AM</option>
-          <option value="11:00 AM">11:00 AM</option>
-          <option value="01:00 PM">01:00 PM</option>
-          <option value="02:00 PM">02:00 PM</option>
-          <option value="03:00 PM">03:00 PM</option>
-        </select>
-      </div>
+        <p class="section-text">
+            Select a service, appointment date, preferred time, and optional notes.
+        </p>
 
-      <div class="form-group">
-        <label for="notes">Notes</label>
-        <textarea
-          name="notes"
-          id="notes"
-          rows="4"
-          placeholder="Optional notes for staff"
-        ></textarea>
-      </div>
+        <form
+        action="/book-appointment"
+        method="POST"
+        class="appointment-form">
 
-      <button type="submit">
-        Book Appointment
-      </button>
+            <div class="form-group">
 
-    </form>
-  </div>
+                <label for="service">Service</label>
 
-  <div class="student-card">
-    <h2>Your Appointment History</h2>
-    <p class="section-text">
-      Your saved appointments are displayed below and remain available after refresh.
-    </p>
+                <select
+                id="service"
+                name="service"
+                required>
 
-    <ul id="appointments"></ul>
-  </div>
+                    <option value="">
+                        Select Service
+                    </option>
 
-  <div class="student-card">
-    <h2>Your Service Requests</h2>
-    <ul id="requests"></ul>
-  </div>
+                    <option>
+                        Academic Advising
+                    </option>
+
+                    <option>
+                        Registration & Enrollment
+                    </option>
+
+                    <option>
+                        Financial Aid
+                    </option>
+
+                    <option>
+                        IT Support
+                    </option>
+
+                    <option>
+                        Career Services
+                    </option>
+
+                    <option>
+                        Mental Health
+                    </option>
+
+                    <option>
+                        General
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="date">
+                    Appointment Date
+                </label>
+
+                <input
+                type="date"
+                id="date"
+                name="date"
+                required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="time">
+                    Time Slot
+                </label>
+
+                <select
+                id="time"
+                name="time"
+                required>
+
+                    <option value="">
+                        Select Time
+                    </option>
+
+                    <option>09:00 AM</option>
+                    <option>10:00 AM</option>
+                    <option>11:00 AM</option>
+                    <option>01:00 PM</option>
+                    <option>02:00 PM</option>
+                    <option>03:00 PM</option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="notes">
+                    Notes
+                </label>
+
+                <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                maxlength="500"
+                placeholder="Optional notes for staff..."></textarea>
+
+            </div>
+
+            <button type="submit">
+                Book Appointment
+            </button>
+
+        </form>
+
+    </div>
+
+    <div class="student-card">
+
+        <h2>Your Appointment History</h2>
+
+        <p class="section-text">
+            Your booked appointments are shown below.
+        </p>
+
+        <ul id="appointments"></ul>
+
+    </div>
+
+    <div class="student-card">
+
+        <h2>Your Recent Service Requests</h2>
+
+        <p class="section-text">
+            Latest requests submitted to Student Services.
+        </p>
+
+        <ul id="requests"></ul>
+
+    </div>
 
 </div>
 
 <script>
-async function loadAppointments() {
-  const response = await fetch("/api/appointments");
-  const appointments = await response.json();
 
-  const list = document.getElementById("appointments");
-  list.innerHTML = "";
+async function loadAppointments(){
 
-  if (appointments.length === 0) {
-    list.innerHTML = `<li class="info">No appointments booked yet.</li>`;
-    return;
-  }
+    try{
 
-  appointments.forEach((a) => {
-    list.innerHTML += `
-      <li class="card">
-        <strong>Service:</strong> ${a.service}<br>
-        <strong>Date:</strong> ${a.date}<br>
-        <strong>Time:</strong> ${a.time || "Not selected"}<br>
-        <strong>Status:</strong> ${a.status || "Scheduled"}<br>
-        <strong>Notes:</strong> ${a.notes || "No notes provided"}
-      </li>
-    `;
-  });
+        const response = await fetch("/api/appointments");
+
+        const appointments = await response.json();
+
+        const list = document.getElementById("appointments");
+
+        list.innerHTML="";
+
+        if(appointments.length===0){
+
+            list.innerHTML=`
+            <li class="info">
+            No appointments booked yet.
+            </li>
+            `;
+
+            return;
+
+        }
+
+        appointments.forEach(a=>{
+
+            list.innerHTML += `
+
+            <li class="card">
+
+            <strong>Service:</strong>
+            ${a.service}
+
+            <br>
+
+            <strong>Date:</strong>
+            ${a.date}
+
+            <br>
+
+            <strong>Time:</strong>
+            ${a.time || "-"}
+
+            <br>
+
+            <strong>Status:</strong>
+            ${a.status || "Scheduled"}
+
+            <br>
+
+            <strong>Notes:</strong>
+            ${a.notes || "None"}
+
+            </li>
+
+            `;
+
+        });
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+    }
+
 }
 
-async function loadRequests() {
-  const response = await fetch("/api/student-requests");
-  const requests = await response.json();
+async function loadRequests(){
 
-  const list = document.getElementById("requests");
-  list.innerHTML = "";
+    try{
 
-  if (requests.length === 0) {
-    list.innerHTML = `<li class="info">No service requests submitted yet.</li>`;
-    return;
-  }
+        const response = await fetch("/api/student-requests");
 
-  requests.forEach((r) => {
-    list.innerHTML += `
-      <li class="card">
-        <strong>${r.issue}</strong><br>
-        Status: ${r.status}
-      </li>
-    `;
-  });
+        const requests = await response.json();
+
+        const list = document.getElementById("requests");
+
+        list.innerHTML="";
+
+        if(requests.length===0){
+
+            list.innerHTML=`
+            <li class="info">
+            No service requests submitted yet.
+            </li>
+            `;
+
+            return;
+
+        }
+
+        requests
+        .slice(0,5)
+        .forEach(r=>{
+
+            let attachment="";
+
+            if(r.attachment){
+
+                if(typeof r.attachment==="string"){
+
+                    attachment=`
+                    <br>
+                    <strong>Attachment:</strong>
+                    <a href="${r.attachment}" target="_blank">
+                    View File
+                    </a>
+                    `;
+
+                }else{
+
+                    attachment=`
+                    <br>
+                    <strong>Attachment:</strong>
+                    <a href="${r.attachment.path}" target="_blank">
+                    📎 ${r.attachment.originalName}
+                    </a>
+                    `;
+
+                }
+
+            }
+
+            list.innerHTML += `
+
+            <li class="card">
+
+            <strong>${r.subject || "No Subject"}</strong>
+
+            <br>
+
+            Category:
+            ${r.category || "General"}
+
+            <br>
+
+            Status:
+            <span class="status-badge ${getStatusClass(r.status)}">
+            ${r.status}
+            </span>
+
+            <br>
+
+            ${r.issue}
+
+            ${attachment}
+
+            </li>
+
+            `;
+
+        });
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+    }
+
+}
+
+function getStatusClass(status){
+
+    if(status==="Resolved")
+        return "status-completed";
+
+    if(status==="In Progress")
+        return "status-inprogress";
+
+    if(status==="Cancelled")
+        return "status-cancelled";
+
+    return "status-submitted";
+
 }
 
 loadAppointments();
+
 loadRequests();
+
 </script>
 
 </body>
+
 </html>

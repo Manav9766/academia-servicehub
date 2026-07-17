@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Submit Request</title>
+  <title>Submit Service Request</title>
 
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -39,50 +39,132 @@
       <h2>Request Details</h2>
 
       <p class="section-text">
-        Submit your issue and staff members will review your request.
+        Complete the form below. Required fields are marked with *.
       </p>
 
       <form
+        id="requestForm"
         action="/submit-request"
         method="POST"
         class="appointment-form"
         enctype="multipart/form-data"
       >
 
-        <div class="form-group">
-          <label for="category">Category</label>
-          <select id="category" name="category" required>
-            <option value="Academic Advising">Academic Advising</option>
-            <option value="Financial Aid">Financial Aid</option>
-            <option value="IT Support">IT Support</option>
-            <option value="General">General</option>
-          </select>
-        </div>
+        <!-- Category -->
 
         <div class="form-group">
-          <label for="subject">Subject</label>
-          <input type="text" id="subject" name="subject" required placeholder="Brief subject..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-        </div>
 
-        <div class="form-group">
-          <label for="issue">
-            Describe Your Issue
+          <label for="category">
+            Category *
           </label>
+
+          <select
+            id="category"
+            name="category"
+            required
+          >
+            <option value="">
+              -- Select Category --
+            </option>
+
+            <option value="Academic Advising">
+              Academic Advising
+            </option>
+
+            <option value="Registration & Enrollment">
+              Registration & Enrollment
+            </option>
+
+            <option value="Financial Aid">
+              Financial Aid
+            </option>
+
+            <option value="IT Support">
+              IT Support
+            </option>
+
+            <option value="Career Services">
+              Career Services
+            </option>
+
+            <option value="Mental Health">
+              Mental Health
+            </option>
+
+            <option value="General">
+              General
+            </option>
+
+          </select>
+
+        </div>
+
+        <!-- Subject -->
+
+        <div class="form-group">
+
+          <label for="subject">
+            Subject *
+          </label>
+
+          <input
+            type="text"
+            id="subject"
+            name="subject"
+            maxlength="120"
+            required
+            placeholder="Example: Unable to access Blackboard"
+          >
+
+        </div>
+
+        <!-- Description -->
+
+        <div class="form-group">
+
+          <label for="issue">
+            Detailed Description *
+          </label>
+
           <textarea
             id="issue"
             name="issue"
-            rows="6"
-            placeholder="Enter your issue here..."
+            rows="7"
+            minlength="10"
+            maxlength="3000"
             required
+            placeholder="Describe your issue in detail. Include any error messages, dates, or other information that may help staff resolve your request."
           ></textarea>
+
         </div>
+
+        <!-- Attachment -->
 
         <div class="form-group">
-          <label for="attachment">Upload Attachment (Optional)</label>
-          <input type="file" id="attachment" name="attachment" style="margin-top: 5px;">
+
+          <label for="attachment">
+            Supporting Attachment (Optional)
+          </label>
+
+          <input
+            type="file"
+            id="attachment"
+            name="attachment"
+            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+          >
+
+          <small style="color:#666; margin-top:6px;">
+            Accepted formats:
+            PDF, DOC, DOCX, PNG, JPG, JPEG
+            (Maximum file size: 5 MB)
+          </small>
+
         </div>
 
-        <button type="submit" class="primary-btn">
+        <button
+          type="submit"
+          class="primary-btn"
+        >
           Submit Request
         </button>
 
@@ -91,6 +173,70 @@
     </div>
 
   </main>
+
+<script>
+
+const form = document.getElementById("requestForm");
+
+form.addEventListener("submit", function(event){
+
+    const category = document.getElementById("category").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+    const issue = document.getElementById("issue").value.trim();
+    const attachment = document.getElementById("attachment").files[0];
+
+    if(category === ""){
+        alert("Please select a request category.");
+        event.preventDefault();
+        return;
+    }
+
+    if(subject.length < 3){
+        alert("Subject must contain at least 3 characters.");
+        event.preventDefault();
+        return;
+    }
+
+    if(issue.length < 10){
+        alert("Please provide a more detailed description.");
+        event.preventDefault();
+        return;
+    }
+
+    if(attachment){
+
+        const allowedExtensions = [
+            "pdf",
+            "doc",
+            "docx",
+            "png",
+            "jpg",
+            "jpeg"
+        ];
+
+        const extension =
+            attachment.name
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+        if(!allowedExtensions.includes(extension)){
+            alert("Unsupported file type.");
+            event.preventDefault();
+            return;
+        }
+
+        if(attachment.size > (5 * 1024 * 1024)){
+            alert("Attachment must be smaller than 5 MB.");
+            event.preventDefault();
+            return;
+        }
+
+    }
+
+});
+
+</script>
 
 </body>
 </html>

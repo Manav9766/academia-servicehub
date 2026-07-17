@@ -1,131 +1,461 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Manage Service Requests</title>
-  <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <title>Manage Service Requests</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body class="staff-page">
 
 <header class="staff-header">
-  <div>
-    <h1>Manage Service Requests</h1>
-    <p>View and update student request statuses</p>
-  </div>
 
-  <a href="/logout" class="logout-btn">Logout</a>
+    <div>
+        <h1>Manage Service Requests</h1>
+        <p>View and update student request statuses</p>
+    </div>
+
+    <a href="/logout" class="logout-btn">
+        Logout
+    </a>
+
 </header>
 
 <div class="staff-actions">
-  <a href="/staff" class="staff-action-btn">Back to Dashboard</a>
+
+    <a href="/staff" class="staff-action-btn">
+        Back to Dashboard
+    </a>
+
 </div>
 
 <main class="staff-container">
-  <section class="staff-card">
-    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-      <input type="text" id="searchKeyword" placeholder="Search keyword..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px;">
-      <select id="filterStatus" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-        <option value="">All Statuses</option>
-        <option value="Pending">Pending</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Resolved">Resolved</option>
-      </select>
-      <select id="filterCategory" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-        <option value="">All Categories</option>
-        <option value="Academic Advising">Academic Advising</option>
-        <option value="Financial Aid">Financial Aid</option>
-        <option value="IT Support">IT Support</option>
-        <option value="General">General</option>
-      </select>
-    </div>
-    <div id="requests"></div>
-  </section>
+
+<section class="staff-card">
+
+<div
+style="
+display:flex;
+gap:10px;
+margin-bottom:20px;
+flex-wrap:wrap;
+">
+
+<input
+id="searchKeyword"
+type="text"
+placeholder="Search student, subject or description..."
+style="
+padding:10px;
+flex:1;
+border:1px solid #ccc;
+border-radius:4px;
+">
+
+<select
+id="filterStatus"
+style="
+padding:10px;
+border:1px solid #ccc;
+border-radius:4px;
+">
+
+<option value="">
+All Statuses
+</option>
+
+<option value="Pending">
+Pending
+</option>
+
+<option value="In Progress">
+In Progress
+</option>
+
+<option value="Resolved">
+Resolved
+</option>
+
+<option value="Cancelled">
+Cancelled
+</option>
+
+</select>
+
+<select
+id="filterCategory"
+style="
+padding:10px;
+border:1px solid #ccc;
+border-radius:4px;
+">
+
+<option value="">
+All Categories
+</option>
+
+<option>
+Academic Advising
+</option>
+
+<option>
+Registration & Enrollment
+</option>
+
+<option>
+Financial Aid
+</option>
+
+<option>
+IT Support
+</option>
+
+<option>
+Career Services
+</option>
+
+<option>
+Mental Health
+</option>
+
+<option>
+General
+</option>
+
+</select>
+
+</div>
+
+<div id="requests"></div>
+
+</section>
+
 </main>
 
 <script>
+
 let allRequests = [];
 
-async function fetchRequests() {
-  const response = await fetch("/api/all-requests");
-  allRequests = await response.json();
-  renderRequests();
+async function fetchRequests(){
+
+    const response = await fetch("/api/all-requests");
+
+    allRequests = await response.json();
+
+    renderRequests();
+
 }
 
-function renderRequests() {
-  const container = document.getElementById("requests");
-  container.innerHTML = "";
+function renderRequests(){
 
-  const searchKeyword = document.getElementById("searchKeyword").value.toLowerCase();
-  const filterStatus = document.getElementById("filterStatus").value;
-  const filterCategory = document.getElementById("filterCategory").value;
+    const container = document.getElementById("requests");
 
-  const filtered = allRequests.filter(req => {
-    const matchesKeyword = (req.subject || "").toLowerCase().includes(searchKeyword) || 
-                           (req.issue || "").toLowerCase().includes(searchKeyword) ||
-                           (req.student || "").toLowerCase().includes(searchKeyword);
-    const matchesStatus = filterStatus ? req.status === filterStatus : true;
-    const matchesCategory = filterCategory ? req.category === filterCategory : true;
-    
-    return matchesKeyword && matchesStatus && matchesCategory;
-  });
+    container.innerHTML = "";
 
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="info">No service requests found matching the criteria.</div>`;
-    return;
-  }
+    const keyword =
+        document
+        .getElementById("searchKeyword")
+        .value
+        .toLowerCase();
 
-  filtered.forEach((request) => {
-    const attachmentHtml = request.attachment ? `<p><strong>Attachment:</strong> <a href="${request.attachment}" target="_blank">View File</a></p>` : '';
-    
-    container.innerHTML += `
-      <div class="request-card">
+    const status =
+        document
+        .getElementById("filterStatus")
+        .value;
+
+    const category =
+        document
+        .getElementById("filterCategory")
+        .value;
+
+    const filtered = allRequests.filter(request=>{
+
+        const matchesKeyword =
+
+            (request.student || "")
+            .toLowerCase()
+            .includes(keyword)
+
+            ||
+
+            (request.subject || "")
+            .toLowerCase()
+            .includes(keyword)
+
+            ||
+
+            (request.issue || "")
+            .toLowerCase()
+            .includes(keyword);
+
+        const matchesStatus =
+            status
+            ? request.status===status
+            : true;
+
+        const matchesCategory =
+            category
+            ? request.category===category
+            : true;
+
+        return matchesKeyword &&
+               matchesStatus &&
+               matchesCategory;
+
+    });
+
+    if(filtered.length===0){
+
+        container.innerHTML=`
+        <div class="info">
+            No service requests found.
+        </div>
+        `;
+
+        return;
+
+    }
+
+    filtered.forEach(request=>{
+
+        let attachmentHTML = "";
+
+        if(request.attachment){
+
+            if(typeof request.attachment==="string"){
+
+                attachmentHTML=`
+
+                <p>
+
+                <strong>Attachment:</strong>
+
+                <a
+                href="${request.attachment}"
+                target="_blank">
+
+                View Attachment
+
+                </a>
+
+                </p>
+
+                `;
+
+            }
+
+            else{
+
+                attachmentHTML=`
+
+                <p>
+
+                <strong>Attachment:</strong>
+
+                <a
+                href="${request.attachment.path}"
+                target="_blank">
+
+                📎 ${request.attachment.originalName}
+
+                </a>
+
+                </p>
+
+                `;
+
+            }
+
+        }
+
+        let createdHTML="";
+
+        if(request.createdAt){
+
+            createdHTML=`
+
+            <p>
+
+            <strong>Submitted:</strong>
+
+            ${new Date(request.createdAt).toLocaleString()}
+
+            </p>
+
+            `;
+
+        }
+
+        container.innerHTML += `
+
+        <div class="request-card">
+
         <div class="request-top">
-          <h3>${request.subject || request.issue.substring(0, 20) + "..."}</h3>
-          <span class="status-badge ${getStatusClass(request.status)}">
+
+            <h3>
+
+            ${request.subject}
+
+            </h3>
+
+            <span
+            class="status-badge ${getStatusClass(request.status)}">
+
             ${request.status}
-          </span>
+
+            </span>
+
         </div>
 
-        <p><strong>Student:</strong> ${request.student}</p>
-        <p><strong>Category:</strong> ${request.category || "General"}</p>
-        <p><strong>Description:</strong> ${request.issue}</p>
-        ${attachmentHtml}
-        <p><strong>Request ID:</strong> ${request.id}</p>
+        <p>
 
-        <form action="/update-status" method="POST" class="status-form">
-          <input type="hidden" name="id" value="${request.id}">
+        <strong>Student:</strong>
 
-          <label>Update Status</label>
-          <select name="status">
-            <option ${request.status === "Pending" ? "selected" : ""}>Pending</option>
-            <option ${request.status === "In Progress" ? "selected" : ""}>In Progress</option>
-            <option ${request.status === "Resolved" ? "selected" : ""}>Resolved</option>
-          </select>
+        ${request.student}
 
-          <label style="margin-top: 10px; display: block;">Staff Notes / Comments</label>
-          <textarea name="notes" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Add a note...">${request.notes || ""}</textarea>
+        </p>
 
-          <button type="submit" class="small-btn" style="margin-top: 10px;">Update</button>
+        <p>
+
+        <strong>Category:</strong>
+
+        ${request.category}
+
+        </p>
+
+        ${createdHTML}
+
+        <p>
+
+        <strong>Description:</strong>
+
+        ${request.issue}
+
+        </p>
+
+        ${attachmentHTML}
+
+        <p>
+
+        <strong>Request ID:</strong>
+
+        ${request.id}
+
+        </p>
+
+        <form
+        action="/update-status"
+        method="POST"
+        class="request-update-form">
+
+        <input
+        type="hidden"
+        name="id"
+        value="${request.id}">
+
+                <label>
+
+            Update Status
+
+            <select name="status">
+
+                <option value="Pending"
+                ${request.status==="Pending"?"selected":""}>
+                Pending
+                </option>
+
+                <option value="In Progress"
+                ${request.status==="In Progress"?"selected":""}>
+                In Progress
+                </option>
+
+                <option value="Resolved"
+                ${request.status==="Resolved"?"selected":""}>
+                Resolved
+                </option>
+
+                <option value="Cancelled"
+                ${request.status==="Cancelled"?"selected":""}>
+                Cancelled
+                </option>
+
+            </select>
+
+        </label>
+
+        <label>
+
+            Staff Notes
+
+            <textarea
+            name="notes"
+            rows="4"
+            placeholder="Enter comments for the student...">${request.notes || ""}</textarea>
+
+        </label>
+
+        <button
+        type="submit"
+        class="update-btn">
+
+        Save Changes
+
+        </button>
+
         </form>
-      </div>
-    `;
-  });
+
+        </div>
+
+        `;
+
+    });
+
 }
 
-document.getElementById("searchKeyword").addEventListener("input", renderRequests);
-document.getElementById("filterStatus").addEventListener("change", renderRequests);
-document.getElementById("filterCategory").addEventListener("change", renderRequests);
+document
+.getElementById("searchKeyword")
+.addEventListener(
+    "input",
+    renderRequests
+);
 
+document
+.getElementById("filterStatus")
+.addEventListener(
+    "change",
+    renderRequests
+);
 
-function getStatusClass(status) {
-  if (status === "In Progress") return "status-inprogress";
-  if (status === "Resolved") return "status-completed";
-  return "status-submitted";
+document
+.getElementById("filterCategory")
+.addEventListener(
+    "change",
+    renderRequests
+);
+
+function getStatusClass(status){
+
+    if(status==="Resolved"){
+        return "status-completed";
+    }
+
+    if(status==="In Progress"){
+        return "status-inprogress";
+    }
+
+    if(status==="Cancelled"){
+        return "status-cancelled";
+    }
+
+    return "status-submitted";
+
 }
 
 fetchRequests();
+
 </script>
 
 </body>
+
 </html>
