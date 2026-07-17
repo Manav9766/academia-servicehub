@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Manage Users</title>
+
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    .message {
+      margin: 15px 0;
+      padding: 12px;
+      border-radius: 5px;
+      display: none;
+    }
+
+    .success-message {
+      background-color: #dff0d8;
+      color: #2f6627;
+    }
+
+    .error-message {
+      background-color: #f8d7da;
+      color: #842029;
+    }
+
+    .user-table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    .user-table th,
+    .user-table td {
+      padding: 10px;
+      border: 1px solid #cccccc;
+      text-align: left;
+    }
+
+    .user-table th {
+      background-color: #f2f2f2;
+    }
+
+    .user-table input,
+    .user-table select {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .actions {
+      min-width: 160px;
+    }
+
+    .actions form {
+      display: inline-block;
+      margin: 3px;
+    }
+
+    .status-active {
+      color: green;
+      font-weight: bold;
+      text-transform: capitalize;
+    }
+
+    .status-disabled {
+      color: red;
+      font-weight: bold;
+      text-transform: capitalize;
+    }
+
+    .disabled-row {
+      background-color: #f5f5f5;
+    }
+
+    .create-user-section {
+      margin-top: 20px;
+      margin-bottom: 30px;
+    }
+
+    .navigation-links {
+      margin-top: 25px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Manage Users</h1>
+
+    <p>
+      Create new accounts, update user information and roles,
+      or disable inactive accounts.
+    </p>
+
+    <div id="successMessage" class="message success-message"></div>
+    <div id="errorMessage" class="message error-message"></div>
+
+    <div class="card create-user-section">
+      <h2>Create New User</h2>
+
+      <form action="/admin/users/create" method="POST">
+        <label for="newUsername">Username</label>
+
+        <input
+          id="newUsername"
+          type="text"
+          name="username"
+          required
+        >
+
+        <label for="newPassword">Password</label>
+
+        <input
+          id="newPassword"
+          type="password"
+          name="password"
+          required
+        >
+
+        <label for="newRole">Role</label>
+
+        <select id="newRole" name="role" required>
+          <option value="student">Student</option>
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+
+        <br><br>
+
+        <button type="submit">Create User</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Existing Users</h2>
+
+      <div style="overflow-x: auto;">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Save Changes</th>
+              <th>Account Action</th>
+            </tr>
+          </thead>
+
+          <tbody id="userTableBody">
+            <tr>
+              <td colspan="5">Loading users...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="navigation-links">
+      <a href="/admin">Back to Admin Dashboard</a>
+      |
+      <a href="/logout" class="logout">Logout</a>
+    </div>
+  </div>
+
+  <script>
+    const tableBody = document.getElementById("userTableBody");
+    const successMessage = document.getElementById("successMessage");
+    const errorMessage = document.getElementById("errorMessage");
+
+    function showQueryMessage() {
+      const params = new URLSearchParams(window.location.search);
+      const success = params.get("success");
+      const error = params.get("error");
+
+      if (success) {
+        successMessage.textContent = success;
+        successMessage.style.display = "block";
+      }
+
+      if (error) {
+        errorMessage.textContent = error;
+        errorMessage.style.display = "block";
+      }
+    }
+
+    function createRoleOptions(currentRole) {
+      const roles = ["student", "staff", "admin"];
+
+      return roles
+        .map((role) => {
+          const selected = role === currentRole ? "selected" : "";
+
+          return `
+            <option value="${role}" ${selected}>
+              ${role.charAt(0).toUpperCase() + role.slice(1)}
+            </option>
+          `;
+        })
+        .join("");
+    }
+
+    async function loadUsers() {
+      try {
+        const response = await fetch("/api/users");
+
+        if (!response.ok) {
+          throw new Error("Unable to load users.");
+        }
+
+        const users = await response.json();
+
+        if (users.length === 0) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="5">No users were found.</td>
+            </tr>
+          `;
+
+          return;
+        }
+
+        tableBody.innerHTML = users
+          .map((user) => {
+            const isDisabled = user.status === "disabled";
+            const rowClass = isDisabled ? "disabled-row" : "";
+            const statusClass = isDisabled
+              ? "status-disabled"
+              : "status-active";
+
+            const actionText = isDisabled ? "Enable" : "Disable";
+
+            return `
+              <tr class="${rowClass}">
+                <td>
+                  <form
+                    id="edit-form-${user.id}"
+                    action="/admin/users/${user.id}/edit"
+                    method="POST"
+                  >
+                    <input
+                      type="text"
+                      name="username"
+                      value="${escapeHtml(user.username)}"
+                      required
+                    >
+                  </form>
+                </td>
+
+                <td>
+                  <select
+                    name="role"
+                    form="edit-form-${user.id}"
+                    required
+                  >
+                    ${createRoleOptions(user.role)}
+                  </select>
+                </td>
+
+                <td class="${statusClass}">
+                  ${escapeHtml(user.status)}
+                </td>
+
+                <td>
+                  <button
+                    type="submit"
+                    form="edit-form-${user.id}"
+                  >
+                    Save
+                  </button>
+                </td>
+
+                <td class="actions">
+                  <form
+                    action="/admin/users/${user.id}/toggle-status"
+                    method="POST"
+                    onsubmit="return confirmStatusChange(
+                      '${escapeJavaScript(user.username)}',
+                      '${actionText}'
+                    )"
+                  >
+                    <button type="submit">
+                      ${actionText}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      } catch (error) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              Unable to load user accounts.
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function confirmStatusChange(username, action) {
+      return confirm(
+        `${action} the account for "${username}"?`
+      );
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeJavaScript(value) {
+      return String(value)
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'");
+    }
+
+    showQueryMessage();
+    loadUsers();
+  </script>
+</body>
+</html>

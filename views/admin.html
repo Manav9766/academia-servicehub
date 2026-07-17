@@ -1,18 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Admin Dashboard</title>
+
   <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
   <div class="container">
     <h1>Admin Dashboard</h1>
-    <p>Welcome, Admin. You can monitor the system, manage users, and maintain overall system control.</p>
+
+    <p>
+      Welcome, Admin. You can monitor the system, manage users,
+      and maintain overall system control.
+    </p>
 
     <div class="card">
       <h2>User Management</h2>
-      <p>Admin can manage users and roles.</p>
+
+      <p>
+        Create users, edit usernames and roles, and disable
+        inactive accounts.
+      </p>
+
+      <a href="/manage-users">
+        <button type="button">Manage Users</button>
+      </a>
     </div>
+
+    <br>
 
     <a href="/logout" class="logout">Logout</a>
   </div>
