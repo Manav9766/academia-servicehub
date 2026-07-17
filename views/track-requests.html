@@ -16,7 +16,7 @@
 
   <div>
     <h1>My Service Requests</h1>
-    <p>Track your submitted requests and their current status</p>
+    <p>Track, edit, or cancel your submitted requests</p>
   </div>
 
   <a href="/logout" class="logout-btn">
@@ -41,28 +41,7 @@
 
 <div class="student-card">
 
-<table>
-
-<thead>
-
-<tr>
-
-<th>ID</th>
-<th>Subject</th>
-<th>Category</th>
-<th>Description</th>
-<th>Attachment</th>
-<th>Status</th>
-<th>Staff Notes</th>
-<th>Submitted</th>
-
-</tr>
-
-</thead>
-
-<tbody id="requestTable"></tbody>
-
-</table>
+<div id="requestCards"></div>
 
 </div>
 
@@ -78,23 +57,19 @@ async function loadRequests(){
 
         const requests = await response.json();
 
-        const table = document.getElementById("requestTable");
+        const container = document.getElementById("requestCards");
 
-        table.innerHTML="";
+        container.innerHTML="";
 
         if(requests.length===0){
 
-            table.innerHTML=`
+            container.innerHTML=`
 
-            <tr>
-
-            <td colspan="8" style="text-align:center;padding:20px;">
+            <div class="info" style="text-align:center;padding:20px;">
 
             No service requests submitted yet.
 
-            </td>
-
-            </tr>
+            </div>
 
             `;
 
@@ -133,35 +108,178 @@ async function loadRequests(){
                 ? new Date(r.createdAt).toLocaleString()
                 : "-";
 
-            table.innerHTML += `
+            const updated =
+                r.updatedAt
+                ? new Date(r.updatedAt).toLocaleString()
+                : "-";
 
-            <tr>
+            const canModify =
+                r.status !== "Cancelled" &&
+                r.status !== "Resolved";
 
-            <td>${r.id}</td>
+            let studentActions = "";
 
-            <td>${r.subject || "-"}</td>
+            if(canModify){
 
-            <td>${r.category || "General"}</td>
+                studentActions = `
 
-            <td>${r.issue}</td>
+                <div class="service-request-actions">
 
-            <td>${attachmentHTML}</td>
+                    <form
+                    action="/cancel-service-request"
+                    method="POST"
+                    class="inline-appointment-form">
 
-            <td>
+                        <input
+                        type="hidden"
+                        name="id"
+                        value="${r.id}">
 
-                <span class="status-badge ${getStatusClass(r.status)}">
+                        <button
+                        type="submit"
+                        class="cancel-btn">
+                        Cancel Request
+                        </button>
 
-                ${r.status}
+                    </form>
 
-                </span>
+                    <form
+                    action="/edit-service-request"
+                    method="POST"
+                    class="edit-request-form">
 
-            </td>
+                        <input
+                        type="hidden"
+                        name="id"
+                        value="${r.id}">
 
-            <td>${r.notes || "No notes yet"}</td>
+                        <label>
+                            Category
 
-            <td>${submitted}</td>
+                            <select
+                            name="category"
+                            required>
 
-            </tr>
+                                <option ${r.category==="Academic Advising" ? "selected" : ""}>
+                                Academic Advising
+                                </option>
+
+                                <option ${r.category==="Registration & Enrollment" ? "selected" : ""}>
+                                Registration & Enrollment
+                                </option>
+
+                                <option ${r.category==="Financial Aid" ? "selected" : ""}>
+                                Financial Aid
+                                </option>
+
+                                <option ${r.category==="IT Support" ? "selected" : ""}>
+                                IT Support
+                                </option>
+
+                                <option ${r.category==="Career Services" ? "selected" : ""}>
+                                Career Services
+                                </option>
+
+                                <option ${r.category==="Mental Health" ? "selected" : ""}>
+                                Mental Health
+                                </option>
+
+                                <option ${r.category==="General" ? "selected" : ""}>
+                                General
+                                </option>
+
+                            </select>
+                        </label>
+
+                        <label>
+                            Subject
+
+                            <input
+                            type="text"
+                            name="subject"
+                            value="${escapeHTML(r.subject || "")}"
+                            minlength="3"
+                            maxlength="120"
+                            required>
+                        </label>
+
+                        <label>
+                            Description
+
+                            <textarea
+                            name="issue"
+                            rows="4"
+                            minlength="10"
+                            maxlength="3000"
+                            required>${escapeHTML(r.issue || "")}</textarea>
+                        </label>
+
+                        <button
+                        type="submit"
+                        class="reschedule-btn">
+                        Save Request Changes
+                        </button>
+
+                    </form>
+
+                </div>
+
+                `;
+
+            }
+
+            container.innerHTML += `
+
+            <div class="request-card">
+
+                <div class="request-top">
+
+                    <h3>${escapeHTML(r.subject || "No Subject")}</h3>
+
+                    <span class="status-badge ${getStatusClass(r.status)}">
+                    ${r.status}
+                    </span>
+
+                </div>
+
+                <p>
+                <strong>Request ID:</strong>
+                ${r.id}
+                </p>
+
+                <p>
+                <strong>Category:</strong>
+                ${escapeHTML(r.category || "General")}
+                </p>
+
+                <p>
+                <strong>Description:</strong>
+                ${escapeHTML(r.issue || "-")}
+                </p>
+
+                <p>
+                <strong>Attachment:</strong>
+                ${attachmentHTML}
+                </p>
+
+                <p>
+                <strong>Staff Notes:</strong>
+                ${escapeHTML(r.notes || "No notes yet")}
+                </p>
+
+                <p>
+                <strong>Submitted:</strong>
+                ${submitted}
+                </p>
+
+                <p>
+                <strong>Last Updated:</strong>
+                ${updated}
+                </p>
+
+                ${studentActions}
+
+            </div>
 
             `;
 
@@ -189,6 +307,17 @@ function getStatusClass(status){
         return "status-cancelled";
 
     return "status-submitted";
+
+}
+
+function escapeHTML(value){
+
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 
 }
 

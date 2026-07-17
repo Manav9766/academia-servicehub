@@ -1,40 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Services Login</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
-  <div class="container">
-    <h1>Student Services Appointment and Case Management System</h1>
-    <h2>Login</h2>
 
-    <p id="error" class="error"></p>
+<body class="login-page">
 
-    <form action="/login" method="POST">
-      <label>Username</label>
-      <input type="text" name="username" required>
+  <main class="login-wrapper">
 
-      <label>Password</label>
-      <input type="password" name="password" required>
+    <section class="login-hero">
 
-      <button type="submit">Login</button>
-    </form>
-    <!--
-    <div class="info">
-      <p><b>Student:</b> student / student123</p>
-      <p><b>Staff:</b> staff / staff123</p>
-      <p><b>Admin:</b> admin / admin123</p>
-    </div>
--->
-  </div>
+      <div class="login-badge">
+        Student Services Portal
+      </div>
+
+      <h1>
+        Student Services Appointment and Case Management System
+      </h1>
+
+      <p class="login-subtitle">
+        Book appointments, submit service requests, track progress, and manage student support cases through one centralized platform.
+      </p>
+
+      <div class="login-features">
+
+        <div class="login-feature">
+          <span>✓</span>
+          <p>Book and manage appointments</p>
+        </div>
+
+        <div class="login-feature">
+          <span>✓</span>
+          <p>Submit and track service requests</p>
+        </div>
+
+        <div class="login-feature">
+          <span>✓</span>
+          <p>Role-based access for students, staff, and admins</p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="login-card">
+
+      <h2>Welcome Back</h2>
+
+      <p class="login-card-text">
+        Login to continue to your dashboard.
+      </p>
+
+      <p id="error" class="error"></p>
+
+      <form action="/login" method="POST" class="login-form">
+
+        <label for="username">
+          Username
+        </label>
+
+        <input
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Enter username"
+          required>
+
+        <label for="password">
+          Password
+        </label>
+
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Enter password"
+          required>
+
+        <button type="submit">
+          Login
+        </button>
+
+      </form>
+
+      <div class="demo-credentials">
+
+        <p class="demo-title">
+          Demo Accounts
+        </p>
+
+        <div class="credential-row">
+          <span>Student</span>
+          <strong>student / 123</strong>
+        </div>
+
+        <div class="credential-row">
+          <span>Staff</span>
+          <strong>staff / 123</strong>
+        </div>
+
+        <div class="credential-row">
+          <span>Admin</span>
+          <strong>admin / 123</strong>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
 
   <script>
     const params = new URLSearchParams(window.location.search);
     const error = params.get("error");
+
     if (error) {
       document.getElementById("error").textContent = error;
     }
   </script>
+
 </body>
 </html>

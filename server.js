@@ -20,6 +20,30 @@ const REQUEST_CATEGORIES = [
   "General",
 ];
 
+const DEFAULT_USERS = [
+  {
+    id: 1,
+    username: "student",
+    password: "123",
+    role: "student",
+    status: "active",
+  },
+  {
+    id: 2,
+    username: "staff",
+    password: "123",
+    role: "staff",
+    status: "active",
+  },
+  {
+    id: 3,
+    username: "admin",
+    password: "123",
+    role: "admin",
+    status: "active",
+  },
+];
+
 const ALLOWED_FILE_EXTENSIONS = new Set([
   ".png",
   ".jpg",
@@ -36,7 +60,6 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
-
 
 fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
 fs.mkdirSync(UPLOAD_DIRECTORY, { recursive: true });
@@ -63,7 +86,6 @@ const storage = multer.diskStorage({
     callback(null, uniqueName);
   },
 });
-
 
 function attachmentFileFilter(req, file, callback) {
   const extension = path.extname(file.originalname).toLowerCase();
@@ -108,11 +130,10 @@ app.use(
   })
 );
 
-
 function readData() {
-
   if (!fs.existsSync(DATA_FILE)) {
     const defaultData = {
+      users: DEFAULT_USERS,
       appointments: [],
       requests: [],
     };
@@ -123,12 +144,18 @@ function readData() {
 
   try {
     const fileContent = fs.readFileSync(DATA_FILE, "utf8");
+
     const parsedData = fileContent.trim()
       ? JSON.parse(fileContent)
       : {
+          users: DEFAULT_USERS,
           appointments: [],
           requests: [],
         };
+
+    if (!Array.isArray(parsedData.users)) {
+      parsedData.users = DEFAULT_USERS;
+    }
 
     if (!Array.isArray(parsedData.appointments)) {
       parsedData.appointments = [];
@@ -143,21 +170,20 @@ function readData() {
     console.error("Unable to read data file:", error);
 
     return {
+      users: DEFAULT_USERS,
       appointments: [],
       requests: [],
     };
   }
-
-  const data = fs.readFileSync(DATA_FILE, "utf8");
-  return JSON.parse(data);
-
 }
-
 
 function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf8");
 }
 
+function sortNewestFirst(items) {
+  return [...items].sort((a, b) => Number(b.id) - Number(a.id));
+}
 
 function removeUploadedFile(file) {
   if (!file || !file.path) {
@@ -212,25 +238,6 @@ function sendRequestError(res, message, statusCode = 400) {
   `);
 }
 
-
-const users = [
-  {
-    username: "student",
-    password: "123",
-    role: "student",
-  },
-  {
-    username: "staff",
-    password: "123",
-    role: "staff",
-  },
-  {
-    username: "admin",
-    password: "123",
-    role: "admin",
-  },
-];
-
 function redirectByRole(req, res) {
   if (!req.session.user) {
     return res.redirect("/");
@@ -251,7 +258,6 @@ function redirectByRole(req, res) {
   return res.redirect("/");
 }
 
-
 function authMiddleware(req, res, next) {
   if (!req.session.user) {
     return res.redirect("/");
@@ -270,7 +276,6 @@ function roleMiddleware(role) {
   };
 }
 
- 
 /* ---------------- LOGIN ---------------- */
 
 app.get("/", (req, res) => {
@@ -289,8 +294,7 @@ app.post("/login", (req, res) => {
 
   const user = data.users.find(
     (existingUser) =>
-      existingUser.username === username &&
-      existingUser.password === password
+      existingUser.username === username && existingUser.password === password
   );
 
   if (!user) {
@@ -324,20 +328,11 @@ app.post("/login", (req, res) => {
   });
 });
 
-app.get(
-  "/student",
-  authMiddleware,
-  roleMiddleware("student"),
-  (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "student.html"));
-  }
-);
 /* ---------------- DASHBOARDS ---------------- */
 
 app.get("/student", authMiddleware, roleMiddleware("student"), (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "student.html"));
+  return res.sendFile(path.join(__dirname, "views", "student.html"));
 });
-
 
 app.get("/staff", authMiddleware, roleMiddleware("staff"), (req, res) => {
   return res.sendFile(path.join(__dirname, "views", "staff.html"));
@@ -348,17 +343,13 @@ app.get(
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "staff-appointments.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "staff-appointments.html"));
   }
 );
 
 app.get("/admin", authMiddleware, roleMiddleware("admin"), (req, res) => {
   return res.sendFile(path.join(__dirname, "views", "admin.html"));
 });
-
-
 
 /* ---------------- ADMIN USER MANAGEMENT ---------------- */
 
@@ -367,14 +358,10 @@ app.get(
   authMiddleware,
   roleMiddleware("admin"),
   (req, res) => {
-    res.sendFile(path.join(__dirname, "views", "manage-users.html"));
+    return res.sendFile(path.join(__dirname, "views", "manage-users.html"));
   }
 );
 
-/*
-  Returns all users to the admin page.
-  Passwords are intentionally not returned.
-*/
 app.get(
   "/api/users",
   authMiddleware,
@@ -389,14 +376,10 @@ app.get(
       status: user.status || "active",
     }));
 
-    res.json(safeUsers);
+    return res.json(safeUsers);
   }
 );
 
-/*
-  Task #23:
-  Admin creates a student, staff, or admin account.
-*/
 app.post(
   "/admin/users/create",
   authMiddleware,
@@ -404,9 +387,9 @@ app.post(
   (req, res) => {
     const data = readData();
 
-    const username = req.body.username?.trim();
-    const password = req.body.password?.trim();
-    const role = req.body.role;
+    const username = String(req.body.username || "").trim();
+    const password = String(req.body.password || "").trim();
+    const role = String(req.body.role || "").trim();
 
     const allowedRoles = ["student", "staff", "admin"];
 
@@ -446,10 +429,6 @@ app.post(
   }
 );
 
-/*
-  Task #24:
-  Admin edits a user's username or role.
-*/
 app.post(
   "/admin/users/:id/edit",
   authMiddleware,
@@ -458,8 +437,8 @@ app.post(
     const data = readData();
 
     const userId = Number(req.params.id);
-    const username = req.body.username?.trim();
-    const role = req.body.role;
+    const username = String(req.body.username || "").trim();
+    const role = String(req.body.role || "").trim();
 
     const allowedRoles = ["student", "staff", "admin"];
     const user = data.users.find((existingUser) => existingUser.id === userId);
@@ -494,9 +473,6 @@ app.post(
     user.username = username;
     user.role = role;
 
-    /*
-      If the admin edits their own account, update the current session too.
-    */
     if (req.session.user.id === user.id) {
       req.session.user.username = user.username;
       req.session.user.role = user.role;
@@ -504,10 +480,6 @@ app.post(
 
     writeData(data);
 
-    /*
-      If the current admin changes their own role, they no longer have
-      permission to stay in the admin section.
-    */
     if (req.session.user.role !== "admin") {
       if (req.session.user.role === "student") {
         return res.redirect("/student");
@@ -525,10 +497,6 @@ app.post(
   }
 );
 
-/*
-  Task #25:
-  Admin disables or re-enables a user account.
-*/
 app.post(
   "/admin/users/:id/toggle-status",
   authMiddleware,
@@ -546,9 +514,6 @@ app.post(
       );
     }
 
-    /*
-      Prevent an admin from disabling the account currently being used.
-    */
     if (req.session.user.id === user.id) {
       return res.redirect(
         "/manage-users?error=" +
@@ -556,8 +521,7 @@ app.post(
       );
     }
 
-    user.status =
-      user.status === "disabled" ? "active" : "disabled";
+    user.status = user.status === "disabled" ? "active" : "disabled";
 
     writeData(data);
 
@@ -573,6 +537,15 @@ app.post(
 );
 
 /* ---------------- STUDENT REQUESTS ---------------- */
+
+app.get(
+  "/submit-request",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    return res.sendFile(path.join(__dirname, "views", "submit-request.html"));
+  }
+);
 
 app.post(
   "/submit-request",
@@ -669,10 +642,6 @@ app.post(
 
     const data = readData();
 
-    if (!Array.isArray(data.requests)) {
-      data.requests = [];
-    }
-
     const attachment = req.file
       ? {
           path: `/uploads/${req.file.filename}`,
@@ -707,9 +676,7 @@ app.get(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "track-requests.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "track-requests.html"));
   }
 );
 
@@ -720,22 +687,120 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    const requests = (data.requests || []).filter(
+    const requests = data.requests.filter(
       (request) => request.student === req.session.user.username
     );
 
-    return res.json(requests);
+    return res.json(sortNewestFirst(requests));
   }
 );
+
+app.post(
+  "/cancel-service-request",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const requestId = String(req.body.id || "").trim();
+
+    if (!requestId) {
+      return res.status(400).send("Request ID is required.");
+    }
+
+    const data = readData();
+
+    const request = data.requests.find(
+      (existingRequest) =>
+        String(existingRequest.id) === requestId &&
+        existingRequest.student === req.session.user.username
+    );
+
+    if (!request) {
+      return res.status(404).send("Service request not found.");
+    }
+
+    if (request.status === "Resolved") {
+      return res.status(400).send("Resolved requests cannot be cancelled.");
+    }
+
+    request.status = "Cancelled";
+    request.updatedAt = new Date().toISOString();
+
+    writeData(data);
+
+    return res.redirect("/track-requests");
+  }
+);
+
+app.post(
+  "/edit-service-request",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const requestId = String(req.body.id || "").trim();
+    const category = String(req.body.category || "").trim();
+    const subject = String(req.body.subject || "").trim();
+    const issue = String(req.body.issue || "").trim();
+
+    if (!requestId || !category || !subject || !issue) {
+      return res
+        .status(400)
+        .send("Request ID, category, subject, and description are required.");
+    }
+
+    if (!REQUEST_CATEGORIES.includes(category)) {
+      return res.status(400).send("Invalid service request category.");
+    }
+
+    if (subject.length < 3 || subject.length > 120) {
+      return res
+        .status(400)
+        .send("Subject must be between 3 and 120 characters.");
+    }
+
+    if (issue.length < 10 || issue.length > 3000) {
+      return res
+        .status(400)
+        .send("Description must be between 10 and 3000 characters.");
+    }
+
+    const data = readData();
+
+    const request = data.requests.find(
+      (existingRequest) =>
+        String(existingRequest.id) === requestId &&
+        existingRequest.student === req.session.user.username
+    );
+
+    if (!request) {
+      return res.status(404).send("Service request not found.");
+    }
+
+    if (request.status === "Cancelled" || request.status === "Resolved") {
+      return res
+        .status(400)
+        .send("Cancelled or resolved requests cannot be edited.");
+    }
+
+    request.category = category;
+    request.subject = subject;
+    request.issue = issue;
+    request.status = "Pending";
+    request.updatedAt = new Date().toISOString();
+
+    writeData(data);
+
+    return res.redirect("/track-requests");
+  }
+);
+
+/* ---------------- STAFF REQUESTS ---------------- */
 
 app.get(
   "/staff-requests",
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "staff-requests.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "staff-requests.html"));
   }
 );
 
@@ -746,7 +811,7 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    return res.json(data.requests || []);
+    return res.json(sortNewestFirst(data.requests));
   }
 );
 
@@ -772,7 +837,7 @@ app.post(
 
     const data = readData();
 
-    const request = (data.requests || []).find(
+    const request = data.requests.find(
       (existingRequest) => String(existingRequest.id) === requestId
     );
 
@@ -790,77 +855,6 @@ app.post(
   }
 );
 
-app.post(
-  "/book-appointment",
-  authMiddleware,
-  roleMiddleware("student"),
-  (req, res) => {
-    const data = readData();
-
-    if (!Array.isArray(data.appointments)) {
-      data.appointments = [];
-    }
-
-    const appointment = {
-      id: Date.now(),
-      student: req.session.user.username,
-      service: req.body.service,
-      date: req.body.date,
-      time: req.body.time,
-      notes: req.body.notes || "",
-      staffNotes: "",
-      status: "Scheduled",
-      createdAt: new Date().toISOString(),
-    };
-
-    data.appointments.push(appointment);
-    writeData(data);
-
-    return res.redirect("/student");
-  }
-);
-
-/* ---------------- STAFF REQUESTS ---------------- */
-
-app.get(
-  "/staff-requests",
-  authMiddleware,
-  roleMiddleware("staff"),
-  (req, res) => {
-    res.sendFile(path.join(__dirname, "views", "staff-requests.html"));
-  }
-);
-
-app.get(
-  "/api/all-requests",
-  authMiddleware,
-  roleMiddleware("staff"),
-  (req, res) => {
-    const data = readData();
-    res.json(data.requests);
-  }
-);
-
-app.post(
-  "/update-status",
-  authMiddleware,
-  roleMiddleware("staff"),
-  (req, res) => {
-    const data = readData();
-
-    const request = data.requests.find(
-      (existingRequest) => existingRequest.id == req.body.id
-    );
-
-    if (request) {
-      request.status = req.body.status;
-    }
-
-    writeData(data);
-    res.redirect("/staff-requests");
-  }
-);
-
 /* ---------------- APPOINTMENTS ---------------- */
 
 app.post(
@@ -868,19 +862,24 @@ app.post(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    const data = readData();
+    const service = String(req.body.service || "").trim();
+    const date = String(req.body.date || "").trim();
+    const time = String(req.body.time || "").trim();
+    const notes = String(req.body.notes || "").trim();
 
-    if (!Array.isArray(data.appointments)) {
-      data.appointments = [];
+    if (!service || !date || !time) {
+      return res.status(400).send("Service, date, and time are required.");
     }
+
+    const data = readData();
 
     const appointment = {
       id: Date.now(),
       student: req.session.user.username,
-      date: req.body.date,
-      time: req.body.time,
-      service: req.body.service,
-      notes: req.body.notes || "",
+      service,
+      date,
+      time,
+      notes,
       staffNotes: "",
       status: "Scheduled",
       createdAt: new Date().toISOString(),
@@ -900,12 +899,89 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    const appointments = (data.appointments || []).filter(
-      (appointment) =>
-        appointment.student === req.session.user.username
+    const appointments = data.appointments.filter(
+      (appointment) => appointment.student === req.session.user.username
     );
 
-    return res.json(appointments);
+    return res.json(sortNewestFirst(appointments));
+  }
+);
+
+app.post(
+  "/cancel-appointment",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const appointmentId = String(req.body.id || "").trim();
+
+    if (!appointmentId) {
+      return res.status(400).send("Appointment ID is required.");
+    }
+
+    const data = readData();
+
+    const appointment = data.appointments.find(
+      (existingAppointment) =>
+        String(existingAppointment.id) === appointmentId &&
+        existingAppointment.student === req.session.user.username
+    );
+
+    if (!appointment) {
+      return res.status(404).send("Appointment not found.");
+    }
+
+    if (appointment.status === "Completed") {
+      return res.status(400).send("Completed appointments cannot be cancelled.");
+    }
+
+    appointment.status = "Cancelled";
+    appointment.updatedAt = new Date().toISOString();
+
+    writeData(data);
+
+    return res.redirect("/student");
+  }
+);
+
+app.post(
+  "/reschedule-appointment",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const appointmentId = String(req.body.id || "").trim();
+    const newDate = String(req.body.date || "").trim();
+    const newTime = String(req.body.time || "").trim();
+
+    if (!appointmentId || !newDate || !newTime) {
+      return res.status(400).send("Appointment ID, date, and time are required.");
+    }
+
+    const data = readData();
+
+    const appointment = data.appointments.find(
+      (existingAppointment) =>
+        String(existingAppointment.id) === appointmentId &&
+        existingAppointment.student === req.session.user.username
+    );
+
+    if (!appointment) {
+      return res.status(404).send("Appointment not found.");
+    }
+
+    if (appointment.status === "Cancelled" || appointment.status === "Completed") {
+      return res
+        .status(400)
+        .send("Cancelled or completed appointments cannot be rescheduled.");
+    }
+
+    appointment.date = newDate;
+    appointment.time = newTime;
+    appointment.status = "Rescheduled";
+    appointment.updatedAt = new Date().toISOString();
+
+    writeData(data);
+
+    return res.redirect("/student");
   }
 );
 
@@ -916,7 +992,7 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    return res.json(data.appointments || []);
+    return res.json(sortNewestFirst(data.appointments));
   }
 );
 
@@ -925,23 +1001,34 @@ app.post(
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
+    const allowedStatuses = [
+      "Scheduled",
+      "Confirmed",
+      "Completed",
+      "Cancelled",
+      "Rescheduled",
+    ];
+
+    const appointmentId = String(req.body.id || "").trim();
+    const status = String(req.body.status || "").trim();
+    const staffNotes = String(req.body.staffNotes || "").trim();
+
+    if (!appointmentId || !allowedStatuses.includes(status)) {
+      return res.status(400).send("Invalid appointment status update.");
+    }
+
     const data = readData();
 
-    const appointment = (data.appointments || []).find(
-      (existingAppointment) =>
-        String(existingAppointment.id) === String(req.body.id)
+    const appointment = data.appointments.find(
+      (existingAppointment) => String(existingAppointment.id) === appointmentId
     );
 
     if (!appointment) {
       return res.status(404).send("Appointment not found.");
     }
 
-    appointment.status = req.body.status;
-
-    if (req.body.staffNotes !== undefined) {
-      appointment.staffNotes = req.body.staffNotes;
-    }
-
+    appointment.status = status;
+    appointment.staffNotes = staffNotes;
     appointment.updatedAt = new Date().toISOString();
 
     writeData(data);
@@ -949,6 +1036,7 @@ app.post(
     return res.redirect("/staff-appointments");
   }
 );
+
 /* ---------------- LOGOUT ---------------- */
 
 app.get("/logout", (req, res) => {
@@ -971,8 +1059,6 @@ app.use((error, req, res, next) => {
 
   return res.status(500).send("An unexpected server error occurred.");
 });
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
