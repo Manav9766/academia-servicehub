@@ -282,29 +282,18 @@ app.get("/", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
- 
   const username = String(req.body.username || "").trim();
   const password = String(req.body.password || "");
 
-  const user = users.find(
-
-  const { username, password } = req.body;
   const data = readData();
 
   const user = data.users.find(
-
     (existingUser) =>
       existingUser.username === username &&
       existingUser.password === password
   );
 
   if (!user) {
-
-    return res.status(401).send("Invalid Credentials");
-  }
-
-  req.session.user = {
-
     return res.redirect(
       "/?error=" + encodeURIComponent("Invalid username or password.")
     );
@@ -321,7 +310,6 @@ app.post("/login", (req, res) => {
 
   req.session.user = {
     id: user.id,
-
     username: user.username,
     role: user.role,
   };
@@ -332,12 +320,9 @@ app.post("/login", (req, res) => {
       return res.status(500).send("Login session error");
     }
 
-
     return redirectByRole(req, res);
   });
 });
-
-
 
 app.get(
   "/student",
@@ -347,20 +332,6 @@ app.get(
     return res.sendFile(path.join(__dirname, "views", "student.html"));
   }
 );
-
-  if (user.role === "staff") {
-    return res.redirect("/staff");
-  }
-
-  if (user.role === "admin") {
-    return res.redirect("/admin");
-  }
-
-  return res.redirect(
-    "/?error=" + encodeURIComponent("Invalid user role.")
-  );
-});
-
 /* ---------------- DASHBOARDS ---------------- */
 
 app.get("/student", authMiddleware, roleMiddleware("student"), (req, res) => {
@@ -603,20 +574,6 @@ app.post(
 
 /* ---------------- STUDENT REQUESTS ---------------- */
 
-
-app.get(
-  "/submit-request",
-  authMiddleware,
-  roleMiddleware("student"),
-  (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "submit-request.html")
-    );
-  }
-);
-
-
-
 app.post(
   "/submit-request",
   authMiddleware,
@@ -712,6 +669,10 @@ app.post(
 
     const data = readData();
 
+    if (!Array.isArray(data.requests)) {
+      data.requests = [];
+    }
+
     const attachment = req.file
       ? {
           path: `/uploads/${req.file.filename}`,
@@ -738,26 +699,6 @@ app.post(
     writeData(data);
 
     return res.redirect("/track-requests");
-
-app.post(
-  "/submit-request",
-  authMiddleware,
-  roleMiddleware("student"),
-  (req, res) => {
-    const data = readData();
-
-    const newRequest = {
-      id: Date.now(),
-      student: req.session.user.username,
-      issue: req.body.issue,
-      status: "Pending",
-    };
-
-    data.requests.push(newRequest);
-    writeData(data);
-
-    res.redirect("/track-requests");
-
   }
 );
 
@@ -779,10 +720,9 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    const requests = data.requests.filter(
+    const requests = (data.requests || []).filter(
       (request) => request.student === req.session.user.username
     );
-
 
     return res.json(requests);
   }
@@ -805,7 +745,8 @@ app.get(
   roleMiddleware("staff"),
   (req, res) => {
     const data = readData();
-    return res.json(data.requests);
+
+    return res.json(data.requests || []);
   }
 );
 
@@ -831,7 +772,7 @@ app.post(
 
     const data = readData();
 
-    const request = data.requests.find(
+    const request = (data.requests || []).find(
       (existingRequest) => String(existingRequest.id) === requestId
     );
 
@@ -849,13 +790,16 @@ app.post(
   }
 );
 
-
 app.post(
   "/book-appointment",
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
     const data = readData();
+
+    if (!Array.isArray(data.appointments)) {
+      data.appointments = [];
+    }
 
     const appointment = {
       id: Date.now(),
@@ -866,8 +810,13 @@ app.post(
       notes: req.body.notes || "",
       staffNotes: "",
       status: "Scheduled",
+      createdAt: new Date().toISOString(),
+    };
 
-    res.json(requests);
+    data.appointments.push(appointment);
+    writeData(data);
+
+    return res.redirect("/student");
   }
 );
 
@@ -921,22 +870,26 @@ app.post(
   (req, res) => {
     const data = readData();
 
+    if (!Array.isArray(data.appointments)) {
+      data.appointments = [];
+    }
+
     const appointment = {
       id: Date.now(),
       student: req.session.user.username,
       date: req.body.date,
+      time: req.body.time,
       service: req.body.service,
-
+      notes: req.body.notes || "",
+      staffNotes: "",
+      status: "Scheduled",
+      createdAt: new Date().toISOString(),
     };
 
     data.appointments.push(appointment);
     writeData(data);
 
-
     return res.redirect("/student");
-
-    res.send("Appointment Booked Successfully");
-
   }
 );
 
@@ -947,17 +900,14 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    const appointments = data.appointments.filter(
+    const appointments = (data.appointments || []).filter(
       (appointment) =>
         appointment.student === req.session.user.username
     );
 
-
     return res.json(appointments);
   }
 );
-
-
 
 app.get(
   "/api/all-appointments",
@@ -965,7 +915,8 @@ app.get(
   roleMiddleware("staff"),
   (req, res) => {
     const data = readData();
-    return res.json(data.appointments);
+
+    return res.json(data.appointments || []);
   }
 );
 
@@ -976,29 +927,28 @@ app.post(
   (req, res) => {
     const data = readData();
 
-    const appointment = data.appointments.find(
+    const appointment = (data.appointments || []).find(
       (existingAppointment) =>
-        existingAppointment.id == req.body.id
+        String(existingAppointment.id) === String(req.body.id)
     );
 
-    if (appointment) {
-      appointment.status = req.body.status;
-
-      if (req.body.staffNotes !== undefined) {
-        appointment.staffNotes = req.body.staffNotes;
-      }
+    if (!appointment) {
+      return res.status(404).send("Appointment not found.");
     }
+
+    appointment.status = req.body.status;
+
+    if (req.body.staffNotes !== undefined) {
+      appointment.staffNotes = req.body.staffNotes;
+    }
+
+    appointment.updatedAt = new Date().toISOString();
 
     writeData(data);
 
     return res.redirect("/staff-appointments");
   }
 );
-
-    res.json(appointments);
-  }
-);
-
 /* ---------------- LOGOUT ---------------- */
 
 app.get("/logout", (req, res) => {
