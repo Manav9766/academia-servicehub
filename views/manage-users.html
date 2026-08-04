@@ -136,6 +136,34 @@
     <div class="card">
       <h2>Existing Users</h2>
 
+      <div style="margin:20px 0; display:flex; gap:10px; flex-wrap:wrap;">
+
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Search username..."
+    style="padding:8px;"
+  >
+
+  <select id="roleFilter">
+    <option value="">All Roles</option>
+    <option value="student">Student</option>
+    <option value="staff">Staff</option>
+    <option value="admin">Admin</option>
+  </select>
+
+  <select id="statusFilter">
+    <option value="">All Status</option>
+    <option value="active">Active</option>
+    <option value="disabled">Disabled</option>
+  </select>
+
+  <button onclick="clearFilters()">
+    Clear Filters
+  </button>
+
+</div>
+
       <div style="overflow-x: auto;">
         <table class="user-table">
           <thead>
@@ -168,6 +196,7 @@
     const tableBody = document.getElementById("userTableBody");
     const successMessage = document.getElementById("successMessage");
     const errorMessage = document.getElementById("errorMessage");
+    let allUsers = [];
 
     function showQueryMessage() {
       const params = new URLSearchParams(window.location.search);
@@ -202,103 +231,199 @@
     }
 
     async function loadUsers() {
-      try {
-        const response = await fetch("/api/users");
+  try {
+    const response = await fetch("/api/users");
 
-        if (!response.ok) {
-          throw new Error("Unable to load users.");
-        }
-
-        const users = await response.json();
-
-        if (users.length === 0) {
-          tableBody.innerHTML = `
-            <tr>
-              <td colspan="5">No users were found.</td>
-            </tr>
-          `;
-
-          return;
-        }
-
-        tableBody.innerHTML = users
-          .map((user) => {
-            const isDisabled = user.status === "disabled";
-            const rowClass = isDisabled ? "disabled-row" : "";
-            const statusClass = isDisabled
-              ? "status-disabled"
-              : "status-active";
-
-            const actionText = isDisabled ? "Enable" : "Disable";
-
-            return `
-              <tr class="${rowClass}">
-                <td>
-                  <form
-                    id="edit-form-${user.id}"
-                    action="/admin/users/${user.id}/edit"
-                    method="POST"
-                  >
-                    <input
-                      type="text"
-                      name="username"
-                      value="${escapeHtml(user.username)}"
-                      required
-                    >
-                  </form>
-                </td>
-
-                <td>
-                  <select
-                    name="role"
-                    form="edit-form-${user.id}"
-                    required
-                  >
-                    ${createRoleOptions(user.role)}
-                  </select>
-                </td>
-
-                <td class="${statusClass}">
-                  ${escapeHtml(user.status)}
-                </td>
-
-                <td>
-                  <button
-                    type="submit"
-                    form="edit-form-${user.id}"
-                  >
-                    Save
-                  </button>
-                </td>
-
-                <td class="actions">
-                  <form
-                    action="/admin/users/${user.id}/toggle-status"
-                    method="POST"
-                    onsubmit="return confirmStatusChange(
-                      '${escapeJavaScript(user.username)}',
-                      '${actionText}'
-                    )"
-                  >
-                    <button type="submit">
-                      ${actionText}
-                    </button>
-                  </form>
-                </td>
-              </tr>
-            `;
-          })
-          .join("");
-      } catch (error) {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="5">
-              Unable to load user accounts.
-            </td>
-          </tr>
-        `;
-      }
+    if (!response.ok) {
+      throw new Error("Unable to load users.");
     }
+
+    allUsers = await response.json();
+
+    displayUsers(allUsers);
+
+  } catch (error) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5">
+          Unable to load user accounts.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+    function displayUsers(users) {
+
+  const search = document
+    .getElementById("searchInput")
+    .value
+    .toLowerCase();
+
+  const role = document
+    .getElementById("roleFilter")
+    .value;
+
+  const status = document
+    .getElementById("statusFilter")
+    .value;
+
+  users = users.filter(user => {
+
+    const usernameMatch =
+      user.username.toLowerCase().includes(search);
+
+    const roleMatch =
+      role === "" || user.role === role;
+
+    const statusMatch =
+      status === "" || user.status === status;
+
+    return usernameMatch &&
+           roleMatch &&
+           statusMatch;
+  });
+
+  if (users.length === 0) {
+
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5">
+          No users found.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  tableBody.innerHTML = users
+    .map((user) => {
+
+      const isDisabled =
+        user.status === "disabled";
+
+      const rowClass =
+        isDisabled ? "disabled-row" : "";
+
+      const statusClass =
+        isDisabled
+          ? "status-disabled"
+          : "status-active";
+
+      const actionText =
+        isDisabled
+          ? "Enable"
+          : "Disable";
+
+      return `
+        <tr class="${rowClass}">
+          <td>
+            <form
+              id="edit-form-${user.id}"
+              action="/admin/users/${user.id}/edit"
+              method="POST">
+
+              <input
+                type="text"
+                name="username"
+                value="${escapeHtml(user.username)}"
+                required>
+
+            </form>
+          </td>
+
+          <td>
+
+            <select
+              name="role"
+              form="edit-form-${user.id}"
+              required>
+
+              ${createRoleOptions(user.role)}
+
+            </select>
+
+          </td>
+
+          <td class="${statusClass}">
+            ${escapeHtml(user.status)}
+          </td>
+
+          <td>
+
+            <button
+              type="submit"
+              form="edit-form-${user.id}">
+
+              Save
+
+            </button>
+
+          </td>
+
+          <td class="actions">
+
+  <form
+    action="/admin/users/${user.id}/toggle-status"
+    method="POST"
+    onsubmit="return confirmStatusChange(
+      '${escapeJavaScript(user.username)}',
+      '${actionText}'
+    )">
+
+    <button type="submit">
+      ${actionText}
+    </button>
+
+  </form>
+
+  <button
+    type="button"
+    onclick="resetPassword(${user.id}, '${escapeJavaScript(user.username)}')">
+    Reset Password
+  </button>
+
+</td>
+
+        </tr>
+
+      `;
+
+    })
+    .join("");
+
+}
+    function resetPassword(userId, username) {
+
+  const password = prompt(
+    `Enter a new password for "${username}":`
+  );
+
+  if (password === null) {
+    return;
+  }
+
+  if (password.trim().length < 3) {
+    alert("Password must be at least 3 characters.");
+    return;
+  }
+
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = `/admin/users/${userId}/reset-password`;
+
+  const input = document.createElement("input");
+  input.type = "hidden";
+  input.name = "password";
+  input.value = password;
+
+  form.appendChild(input);
+
+  document.body.appendChild(form);
+
+  form.submit();
+}
 
     function confirmStatusChange(username, action) {
       return confirm(
@@ -320,7 +445,47 @@
         .replaceAll("\\", "\\\\")
         .replaceAll("'", "\\'");
     }
+    document
+.getElementById("searchInput")
+.addEventListener("input", () => {
 
+  displayUsers(allUsers);
+
+});
+
+document
+.getElementById("roleFilter")
+.addEventListener("change", () => {
+
+  displayUsers(allUsers);
+
+});
+
+document
+.getElementById("statusFilter")
+.addEventListener("change", () => {
+
+  displayUsers(allUsers);
+
+});
+
+function clearFilters(){
+
+  document
+  .getElementById("searchInput")
+  .value = "";
+
+  document
+  .getElementById("roleFilter")
+  .value = "";
+
+  document
+  .getElementById("statusFilter")
+  .value = "";
+
+  displayUsers(allUsers);
+
+}
     showQueryMessage();
     loadUsers();
   </script>

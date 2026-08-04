@@ -1,108 +1,30 @@
 {
-
   "appointments": [
     {
-      "id": 1781638933946,
+      "id": 1784255968725,
       "student": "student",
-      "date": "2026-06-17",
-      "service": "Academic Advising",
-      "status": "Cancelled",
-      "staffNotes": ""
-    },
-    {
-      "id": 1781716903853,
-      "student": "student",
-      "service": "Financial Aid",
-      "date": "2026-06-18",
-      "time": "10:00 AM",
-      "notes": "l",
-      "status": "Scheduled"
-    },
-    {
-      "id": 1781833432742,
-      "student": "student",
-      "service": "Career Support",
-      "date": "2026-06-25",
+      "service": "Registration & Enrollment",
+      "date": "2004-12-15",
       "time": "11:00 AM",
-      "notes": "t",
-      "status": "Scheduled"
-    },
-    {
-      "id": 1781833895031,
-      "student": "student",
-      "service": "Academic Advising",
-      "date": "2026-06-20",
-      "time": "11:00 AM",
-      "notes": "f",
-      "status": "Scheduled"
-    },
-    {
-      "id": 1781835800081,
-      "student": "student",
-      "service": "Academic Advising",
-      "date": "2026-06-27",
-      "time": "10:00 AM",
-      "notes": "tif",
-      "staffNotes": "",
-      "status": "Scheduled"
-    },
-    {
-      "id": 1781835961160,
-      "student": "student",
-      "service": "Financial Aid",
-      "date": "2026-06-14",
-      "time": "10:00 AM",
-      "notes": "r",
-      "staffNotes": "",
-      "status": "Scheduled"
-    },
-    {
-      "id": 1781836057080,
-      "student": "student",
-      "service": "Financial Aid",
-      "date": "2026-06-20",
-      "time": "10:00 AM",
-      "notes": "r",
-      "staffNotes": "",
-      "status": "Scheduled"
-    },
-    {
-      "id": 1781836170318,
-      "student": "student",
-      "service": "Financial Aid",
-      "date": "2026-06-27",
-      "time": "09:00 AM",
-      "notes": "d",
+      "notes": "book",
       "staffNotes": "",
       "status": "Cancelled",
-      "updatedAt": "2026-07-17T01:38:57.454Z"
+      "createdAt": "2026-07-17T02:39:28.725Z",
+      "updatedAt": "2026-07-17T02:44:31.765Z"
     },
     {
-      "id": 1784252232425,
+      "id": 1784256021578,
       "student": "student",
-      "service": "Academic Advising",
-      "date": "2026-07-30",
-      "time": "03:00 PM",
-      "notes": "Ye",
-      "staffNotes": "",
-      "status": "Cancelled",
-      "createdAt": "2026-07-17T01:37:12.425Z",
-      "updatedAt": "2026-07-17T01:58:56.730Z"
-    },
-    {
-      "id": 1784253431293,
-      "student": "student",
-      "service": "Financial Aid",
-      "date": "2026-07-31",
-      "time": "09:00 AM",
-      "notes": "Kanye",
+      "service": "Mental Health",
+      "date": "2026-07-06",
+      "time": "10:00 AM",
+      "notes": "",
       "staffNotes": "",
       "status": "Rescheduled",
-      "createdAt": "2026-07-17T01:57:11.293Z",
-      "updatedAt": "2026-07-17T01:59:09.321Z"
+      "createdAt": "2026-07-17T02:40:21.578Z",
+      "updatedAt": "2026-07-17T02:45:04.452Z"
     }
   ],
-
   "users": [
     {
       "id": 1,
@@ -128,13 +50,18 @@
     {
       "id": 1783982818045,
       "username": "student2",
+      "password": "789",
+      "role": "staff",
+      "status": "active"
+    },
+    {
+      "id": 1784255170959,
+      "username": "student3",
       "password": "456",
       "role": "staff",
       "status": "disabled"
     }
   ],
-  "appointments": [],
-
   "requests": [
     {
       "id": 1781429640505,
@@ -184,6 +111,30 @@
       "notes": "",
       "createdAt": "2026-07-17T01:58:10.824Z",
       "updatedAt": "2026-07-17T01:59:36.924Z"
+    },
+    {
+      "id": 1784256136302,
+      "student": "student",
+      "category": "Academic Advising",
+      "subject": "honey",
+      "issue": "honeyhjfkuyfk",
+      "attachment": null,
+      "status": "Cancelled",
+      "notes": "",
+      "createdAt": "2026-07-17T02:42:16.302Z",
+      "updatedAt": "2026-07-17T02:46:08.434Z"
+    },
+    {
+      "id": 1784256162850,
+      "student": "student",
+      "category": "Registration & Enrollment",
+      "subject": "imposter",
+      "issue": "manav is a imposter and has been found by jay",
+      "attachment": null,
+      "status": "Cancelled",
+      "notes": "",
+      "createdAt": "2026-07-17T02:42:42.850Z",
+      "updatedAt": "2026-07-17T02:46:05.649Z"
     }
   ]
 }

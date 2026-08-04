@@ -497,8 +497,11 @@ app.post(
   }
 );
 
+
 app.post(
   "/admin/users/:id/toggle-status",
+
+  
   authMiddleware,
   roleMiddleware("admin"),
   (req, res) => {
@@ -532,6 +535,72 @@ app.post(
 
     return res.redirect(
       "/manage-users?success=" + encodeURIComponent(message)
+    );
+  }
+);
+
+
+
+app.get(
+  "/api/admin/statistics",
+  authMiddleware,
+  roleMiddleware("admin"),
+  (req, res) => {
+    const data = readData();
+
+    const statistics = {
+      totalStudents: data.users.filter(
+        (user) => user.role === "student"
+      ).length,
+
+      totalStaff: data.users.filter(
+        (user) => user.role === "staff"
+      ).length,
+
+      totalAppointments: data.appointments.length,
+
+      totalRequests: data.requests.length,
+    };
+
+    return res.json(statistics);
+  }
+);
+
+app.post(
+  "/admin/users/:id/reset-password",
+  authMiddleware,
+  roleMiddleware("admin"),
+  (req, res) => {
+    const data = readData();
+
+    const userId = Number(req.params.id);
+    const newPassword = String(req.body.password || "").trim();
+
+    const user = data.users.find(
+      (existingUser) => existingUser.id === userId
+    );
+
+    if (!user) {
+      return res.redirect(
+        "/manage-users?error=" +
+          encodeURIComponent("User account was not found.")
+      );
+    }
+
+    if (newPassword.length < 3) {
+      return res.redirect(
+        "/manage-users?error=" +
+          encodeURIComponent("Password must be at least 3 characters.")
+      );
+    }
+
+    user.password = newPassword;
+
+    writeData(data);
+
+    return res.redirect(
+      "/manage-users?success=" +
+        encodeURIComponent("Password reset successfully.")
     );
   }
 );
