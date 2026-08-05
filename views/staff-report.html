@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Staff Summary Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .print-btn {
+      display: block;
+      width: 200px;
+      margin: 20px auto;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .report-section {
+      margin-top: 40px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+      color: #333;
+    }
+    @media print {
+      .print-btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Staff Summary Report</h1>
+  <p style="text-align: center;" id="reportDate"></p>
+
+  <button class="print-btn" onclick="window.print()">Print Report</button>
+
+  <div class="report-section">
+    <h2>Pending & In-Progress Service Requests</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Student</th>
+          <th>Category</th>
+          <th>Subject</th>
+          <th>Status</th>
+          <th>Assigned To</th>
+        </tr>
+      </thead>
+      <tbody id="requestsTableBody">
+        <tr><td colspan="6">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="report-section">
+    <h2>Upcoming Scheduled Appointments</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Student</th>
+          <th>Service</th>
+          <th>Date & Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="appointmentsTableBody">
+        <tr><td colspan="5">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    document.getElementById("reportDate").innerText = "Generated on: " + new Date().toLocaleString();
+
+    async function loadReportData() {
+      try {
+        const [requestsRes, appointmentsRes] = await Promise.all([
+          fetch("/api/all-requests"),
+          fetch("/api/all-appointments")
+        ]);
+
+        const requests = await requestsRes.json();
+        const appointments = await appointmentsRes.json();
+
+        // Render Requests
+        const activeRequests = requests.filter(r => r.status === "Pending" || r.status === "In Progress");
+        const reqTbody = document.getElementById("requestsTableBody");
+        reqTbody.innerHTML = "";
+        if (activeRequests.length === 0) {
+          reqTbody.innerHTML = `<tr><td colspan="6" style="text-align: center;">No active requests.</td></tr>`;
+        } else {
+          activeRequests.forEach(req => {
+            reqTbody.innerHTML += `
+              <tr>
+                <td>${req.id}</td>
+                <td>${req.student}</td>
+                <td>${req.category || 'General'}</td>
+                <td>${req.subject || '-'}</td>
+                <td>${req.status}</td>
+                <td>${req.assignedTo || 'Unassigned'}</td>
+              </tr>
+            `;
+          });
+        }
+
+        // Render Appointments
+        const activeAppointments = appointments.filter(a => a.status === "Scheduled" || a.status === "Confirmed" || a.status === "Rescheduled");
+        const apptTbody = document.getElementById("appointmentsTableBody");
+        apptTbody.innerHTML = "";
+        if (activeAppointments.length === 0) {
+          apptTbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No upcoming appointments.</td></tr>`;
+        } else {
+          activeAppointments.forEach(appt => {
+            apptTbody.innerHTML += `
+              <tr>
+                <td>${appt.id}</td>
+                <td>${appt.student}</td>
+                <td>${appt.service}</td>
+                <td>${appt.date} at ${appt.time || 'TBD'}</td>
+                <td>${appt.status}</td>
+              </tr>
+            `;
+          });
+        }
+
+        // Trigger print dialog automatically when loaded
+        setTimeout(() => window.print(), 500);
+
+      } catch (e) {
+        console.error("Failed to load report data", e);
+      }
+    }
+
+    loadReportData();
+  </script>
+
+</body>
+</html>

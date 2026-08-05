@@ -866,6 +866,15 @@ app.post(
 /* ---------------- STAFF REQUESTS ---------------- */
 
 app.get(
+  "/staff-report",
+  authMiddleware,
+  roleMiddleware("staff"),
+  (req, res) => {
+    return res.sendFile(path.join(__dirname, "views", "staff-report.html"));
+  }
+);
+
+app.get(
   "/staff-requests",
   authMiddleware,
   roleMiddleware("staff"),
