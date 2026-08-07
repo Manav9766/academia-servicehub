@@ -23,6 +23,30 @@
       "status": "Rescheduled",
       "createdAt": "2026-07-17T02:40:21.578Z",
       "updatedAt": "2026-07-17T02:45:04.452Z"
+    },
+    {
+      "id": 1786095673458,
+      "student": "student",
+      "service": "Financial Aid",
+      "date": "2026-08-07",
+      "time": "11:00 AM",
+      "notes": "Aid",
+      "staffNotes": "",
+      "status": "Cancelled",
+      "createdAt": "2026-08-07T09:41:13.459Z",
+      "updatedAt": "2026-08-07T09:41:52.044Z"
+    },
+    {
+      "id": 1786095738169,
+      "student": "student",
+      "service": "IT Support",
+      "date": "2026-08-08",
+      "time": "10:00 AM",
+      "notes": "ITS",
+      "staffNotes": "its donne",
+      "status": "Completed",
+      "createdAt": "2026-08-07T09:42:18.169Z",
+      "updatedAt": "2026-08-07T09:45:08.607Z"
     }
   ],
   "users": [
@@ -67,20 +91,86 @@
       "id": 1781429640505,
       "student": "student",
       "issue": "problem regarding schedule",
-      "status": "In Progress"
+      "status": "In Progress",
+      "history": [
+        {
+          "id": "1781429640505-submission",
+          "type": "submission",
+          "title": "Request Submitted",
+          "description": "Service request was submitted by the student.",
+          "status": "Submitted",
+          "actor": "student",
+          "note": "",
+          "date": "2026-06-14T09:34:00.505Z"
+        },
+        {
+          "id": "1781429640505-legacy-status-In Progress",
+          "type": "status",
+          "title": "Status: In Progress",
+          "description": "Current request status is In Progress.",
+          "status": "In Progress",
+          "actor": "System",
+          "note": "",
+          "date": "2026-06-14T09:34:00.505Z"
+        }
+      ]
     },
     {
       "id": 1781638672684,
       "student": "student",
       "issue": "Issues with enrolment. ",
-      "status": "Resolved"
+      "status": "Completed",
+      "history": [
+        {
+          "id": "1781638672684-submission",
+          "type": "submission",
+          "title": "Request Submitted",
+          "description": "Service request was submitted by the student.",
+          "status": "Submitted",
+          "actor": "student",
+          "note": "",
+          "date": "2026-06-16T19:37:52.684Z"
+        },
+        {
+          "id": "1781638672684-legacy-status-Completed",
+          "type": "status",
+          "title": "Status: Completed",
+          "description": "Current request status is Completed.",
+          "status": "Completed",
+          "actor": "System",
+          "note": "",
+          "date": "2026-06-16T19:37:52.684Z"
+        }
+      ]
     },
     {
       "id": 1781833501749,
       "student": "student",
       "issue": "5",
-      "status": "Resolved",
-      "notes": ""
+      "status": "Completed",
+      "notes": "",
+      "history": [
+        {
+          "id": "1781833501749-submission",
+          "type": "submission",
+          "title": "Request Submitted",
+          "description": "Service request was submitted by the student.",
+          "status": "Submitted",
+          "actor": "student",
+          "note": "",
+          "date": "2026-06-19T01:45:01.749Z"
+        },
+        {
+          "id": "1781833501749-legacy-status-Completed",
+          "type": "status",
+          "title": "Status: Completed",
+          "description": "Current request status is Completed.",
+          "status": "Completed",
+          "actor": "System",
+          "note": "",
+          "date": "2026-06-19T01:45:01.749Z"
+        }
+      ]
     },
     {
       "id": 1784249668605,
@@ -98,7 +188,29 @@
       "status": "In Progress",
       "notes": "Working on the issue for your account.",
       "createdAt": "2026-07-17T00:54:28.605Z",
-      "updatedAt": "2026-07-17T00:55:46.286Z"
+      "updatedAt": "2026-07-17T00:55:46.286Z",
+      "history": [
+        {
+          "id": "1784249668605-submission",
+          "type": "submission",
+          "title": "Request Submitted",
+          "description": "Service request was submitted by the student.",
+          "status": "Submitted",
+          "actor": "student",
+          "note": "",
+          "date": "2026-07-17T00:54:28.605Z"
+        },
+        {
+          "id": "1784249668605-legacy-status-In Progress",
+          "type": "status",
+          "title": "Status: In Progress",
+          "description": "Current request status is In Progress.",
+          "status": "In Progress",
+          "actor": "System",
+          "note": "Working on the issue for your account.",
+          "date": "2026-07-17T00:55:46.286Z"
+        }
+      ]
     },
     {
       "id": 1784253490824,
@@ -110,7 +222,29 @@
       "status": "Cancelled",
       "notes": "",
       "createdAt": "2026-07-17T01:58:10.824Z",
-      "updatedAt": "2026-07-17T01:59:36.924Z"
+      "updatedAt": "2026-07-17T01:59:36.924Z",
+      "history": [
+        {
+          "id": "1784253490824-submission",
+          "type": "submission",
+          "title": "Request Submitted",
+          "description": "Service request was submitted by the student.",
+          "status": "Submitted",
+          "actor": "student",
+          "note": "",
+          "date": "2026-07-17T01:58:10.824Z"
+        },
+        {
+          "id": "1784253490824-legacy-status-Cancelled",
+          "type": "status",
+          "title": "Status: Cancelled",
+          "description": "Current request status is Cancelled.",
+          "status": "Cancelled",
+          "actor": "System",
+          "note": "",
+          "date": "2026-07-17T01:59:36.924Z"
+        }
+      ]
     },
     {
       "id": 1784256136302,
@@ -122,7 +256,29 @@
       "status": "Cancelled",
       "notes": "",
       "createdAt": "2026-07-17T02:42:16.302Z",
-      "updatedAt": "2026-07-17T02:46:08.434Z"
+      "updatedAt": "2026-07-17T02:46:08.434Z",
+      "history": [
+        {
+          "id": "1784256136302-submission",
+          "type": "submission",
+          "title": "Request Submitted",
+          "description": "Service request was submitted by the student.",
+          "status": "Submitted",
+          "actor": "student",
+          "note": "",
+          "date": "2026-07-17T02:42:16.302Z"
+        },
+        {
+          "id": "1784256136302-legacy-status-Cancelled",
+          "type": "status",
+          "title": "Status: Cancelled",
+          "description": "Current request status is Cancelled.",
+          "status": "Cancelled",
+          "actor": "System",
+          "note": "",
+          "date": "2026-07-17T02:46:08.434Z"
+        }
+      ]
     },
     {
       "id": 1784256162850,
@@ -134,7 +290,110 @@
       "status": "Cancelled",
       "notes": "",
       "createdAt": "2026-07-17T02:42:42.850Z",
-      "updatedAt": "2026-07-17T02:46:05.649Z"
+      "updatedAt": "2026-07-17T02:46:05.649Z",
+      "history": [
+        {
+          "id": "1784256162850-submission",
+          "type": "submission",
+          "title": "Request Submitted",
+          "description": "Service request was submitted by the student.",
+          "status": "Submitted",
+          "actor": "student",
+          "note": "",
+          "date": "2026-07-17T02:42:42.850Z"
+        },
+        {
+          "id": "1784256162850-legacy-status-Cancelled",
+          "type": "status",
+          "title": "Status: Cancelled",
+          "description": "Current request status is Cancelled.",
+          "status": "Cancelled",
+          "actor": "System",
+          "note": "",
+          "date": "2026-07-17T02:46:05.649Z"
+        }
+      ]
+    },
+    {
+      "id": 1786096008870,
+      "student": "student",
+      "category": "Career Services",
+      "subject": "Job application",
+      "issue": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbjon",
+      "attachment": {
+        "path": "/uploads/1786096008858-939452-Whiplash-Poster.jpeg",
+        "originalName": "Whiplash Poster.jpeg",
+        "storedName": "1786096008858-939452-Whiplash-Poster.jpeg",
+        "mimeType": "image/jpeg",
+        "size": 97757
+      },
+      "status": "In Progress",
+      "assignedTo": "Academic Advising Dept",
+      "notes": "Academic advice in process",
+      "createdAt": "2026-08-07T09:46:48.870Z",
+      "updatedAt": "2026-08-07T09:50:00.761Z",
+      "history": [
+        {
+          "id": "1786096008870-submission",
+          "type": "submission",
+          "title": "Request Submitted",
+          "description": "Service request was submitted by the student.",
+          "status": "Submitted",
+          "actor": "student",
+          "note": "",
+          "date": "2026-08-07T09:46:48.870Z"
+        },
+        {
+          "id": "1786096008870-1786096087985-31131",
+          "type": "staff-note",
+          "title": "Staff Note Added",
+          "description": "A staff member added or updated a note.",
+          "status": "Submitted",
+          "actor": "staff",
+          "note": "Academic advice",
+          "date": "2026-08-07T09:48:07.985Z"
+        },
+        {
+          "id": "1786096008870-1786096158121-52042",
+          "type": "student-edit",
+          "title": "Request Updated",
+          "description": "Student updated: description.",
+          "status": "Submitted",
+          "actor": "student",
+          "note": "",
+          "date": "2026-08-07T09:49:18.121Z"
+        },
+        {
+          "id": "1786096008870-legacy-status-In Progress",
+          "type": "status",
+          "title": "Status: In Progress",
+          "description": "Current request status is In Progress.",
+          "status": "In Progress",
+          "actor": "System",
+          "note": "Academic advice",
+          "date": "2026-08-07T09:49:18.121Z"
+        },
+        {
+          "id": "1786096008870-1786096200761-57108",
+          "type": "status",
+          "title": "Status Updated",
+          "description": "Request status changed from Submitted to In Progress.",
+          "status": "In Progress",
+          "actor": "staff",
+          "note": "",
+          "date": "2026-08-07T09:50:00.761Z"
+        },
+        {
+          "id": "1786096008870-1786096200761-41719",
+          "type": "staff-note",
+          "title": "Staff Note Added",
+          "description": "A staff member added or updated a note.",
+          "status": "In Progress",
+          "actor": "staff",
+          "note": "Academic advice in process",
+          "date": "2026-08-07T09:50:00.761Z"
+        }
+      ]
     }
   ]
 }

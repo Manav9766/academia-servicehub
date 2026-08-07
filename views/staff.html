@@ -18,6 +18,7 @@
 </header>
 
 <div class="staff-actions">
+  <a href="/todays-appointments" class="staff-action-btn">Today's Appointments</a>
   <a href="/staff-appointments" class="staff-action-btn">Manage Appointments</a>
   <a href="/staff-requests" class="staff-action-btn">Manage Service Requests</a>
   <a href="/staff-report" class="staff-action-btn" target="_blank" style="background-color: #2c3e50;">Generate Summary Report</a>
@@ -25,19 +26,47 @@
 
 <main class="staff-container">
 
-  <section class="staff-card" style="display: flex; justify-content: space-between; text-align: center; background-color: #f8f9fa; margin-bottom: 20px;">
-    <div style="flex: 1; padding: 10px; border-right: 1px solid #ddd;">
-      <h3 style="margin: 0; color: #555;">Pending Requests</h3>
-      <h1 id="countPendingRequests" style="margin: 10px 0; font-size: 2.5rem; color: #007bff;">-</h1>
+  <section class="staff-card staff-summary-grid">
+
+    <div class="summary-box">
+      <h3>Submitted Requests</h3>
+      <h1 id="countPendingRequests">-</h1>
     </div>
-    <div style="flex: 1; padding: 10px; border-right: 1px solid #ddd;">
-      <h3 style="margin: 0; color: #555;">Requests In Progress</h3>
-      <h1 id="countInProgressRequests" style="margin: 10px 0; font-size: 2.5rem; color: #ff9800;">-</h1>
+
+    <div class="summary-box">
+      <h3>Requests In Progress</h3>
+      <h1 id="countInProgressRequests">-</h1>
     </div>
-    <div style="flex: 1; padding: 10px;">
-      <h3 style="margin: 0; color: #555;">Scheduled Appointments</h3>
-      <h1 id="countScheduledAppointments" style="margin: 10px 0; font-size: 2.5rem; color: #28a745;">-</h1>
+
+    <div class="summary-box">
+      <h3>Scheduled Appointments</h3>
+      <h1 id="countScheduledAppointments">-</h1>
     </div>
+
+    <div class="summary-box">
+      <h3>Today's Appointments</h3>
+      <h1 id="countTodaysAppointments">-</h1>
+    </div>
+
+  </section>
+
+  <section class="staff-card" id="todayAppointmentsSection">
+
+    <div class="section-header-row">
+      <div>
+        <h2>Today's Appointments</h2>
+        <p class="section-text">
+          Quick view of appointments scheduled for today.
+        </p>
+      </div>
+
+      <a href="/todays-appointments" class="small-link-btn">
+        Open Full View
+      </a>
+    </div>
+
+    <div id="todayAppointments"></div>
+
   </section>
 
   <section class="staff-card" id="appointmentsSection">
@@ -59,22 +88,68 @@
 </main>
 
 <script>
+
+async function loadTodayAppointments() {
+
+  const response = await fetch("/api/todays-appointments");
+  const appointments = await response.json();
+
+  const container = document.getElementById("todayAppointments");
+  container.innerHTML = "";
+
+  document.getElementById("countTodaysAppointments").innerText =
+    appointments.length;
+
+  if (appointments.length === 0) {
+    container.innerHTML =
+      `<div class="info">No appointments scheduled for today.</div>`;
+    return;
+  }
+
+  appointments.slice(0, 3).forEach((appointment) => {
+    container.innerHTML += `
+      <div class="request-card today-mini-card">
+        <div class="request-top">
+          <h3>${appointment.service}</h3>
+          <span class="status-badge ${getAppointmentStatusClass(appointment.status)}">
+            ${appointment.status || "Scheduled"}
+          </span>
+        </div>
+
+        <p><strong>Student:</strong> ${appointment.student}</p>
+        <p><strong>Time:</strong> ${appointment.time || "Not selected"}</p>
+        <p><strong>Appointment ID:</strong> ${appointment.id}</p>
+      </div>
+    `;
+  });
+
+}
+
 async function loadStaffAppointments() {
+
   const response = await fetch("/api/all-appointments");
   const appointments = await response.json();
 
   const container = document.getElementById("staffAppointments");
   container.innerHTML = "";
 
-  const scheduledCount = appointments.filter(a => a.status === "Scheduled" || a.status === "Confirmed" || a.status === "Rescheduled").length;
-  document.getElementById("countScheduledAppointments").innerText = scheduledCount;
+  const scheduledCount =
+    appointments.filter(
+      appointment =>
+        appointment.status === "Scheduled" ||
+        appointment.status === "Confirmed" ||
+        appointment.status === "Rescheduled"
+    ).length;
+
+  document.getElementById("countScheduledAppointments").innerText =
+    scheduledCount;
 
   if (appointments.length === 0) {
     container.innerHTML = `<div class="info">No appointments found.</div>`;
     return;
   }
 
-  appointments.forEach((appointment) => {
+  appointments.slice(0, 5).forEach((appointment) => {
     container.innerHTML += `
       <div class="request-card">
         <div class="request-top">
@@ -93,19 +168,34 @@ async function loadStaffAppointments() {
       </div>
     `;
   });
+
 }
 
 async function loadDashboardRequests() {
+
   const response = await fetch("/api/all-requests");
   const requests = await response.json();
 
   const container = document.getElementById("dashboardRequests");
   container.innerHTML = "";
 
-  const pendingCount = requests.filter(r => r.status === "Pending").length;
-  const inProgressCount = requests.filter(r => r.status === "In Progress").length;
-  document.getElementById("countPendingRequests").innerText = pendingCount;
-  document.getElementById("countInProgressRequests").innerText = inProgressCount;
+  const pendingCount =
+    requests.filter(
+      request =>
+        request.status === "Submitted" ||
+        request.status === "Pending"
+    ).length;
+
+  const inProgressCount =
+    requests.filter(
+      request => request.status === "In Progress"
+    ).length;
+
+  document.getElementById("countPendingRequests").innerText =
+    pendingCount;
+
+  document.getElementById("countInProgressRequests").innerText =
+    inProgressCount;
 
   if (requests.length === 0) {
     container.innerHTML = `<div class="info">No service requests found.</div>`;
@@ -116,22 +206,25 @@ async function loadDashboardRequests() {
     container.innerHTML += `
       <div class="request-card">
         <div class="request-top">
-          <h3>${request.issue}</h3>
+          <h3>${request.subject || request.issue}</h3>
           <span class="status-badge ${getStatusClass(request.status)}">
             ${request.status}
           </span>
         </div>
 
         <p><strong>Student:</strong> ${request.student}</p>
+        <p><strong>Category:</strong> ${request.category || "General"}</p>
         <p><strong>Request ID:</strong> ${request.id}</p>
       </div>
     `;
   });
+
 }
 
 function getStatusClass(status) {
+  if (status === "Completed" || status === "Resolved" || status === "Closed") return "status-completed";
   if (status === "In Progress") return "status-inprogress";
-  if (status === "Resolved") return "status-completed";
+  if (status === "Cancelled") return "status-cancelled";
   return "status-submitted";
 }
 
@@ -143,6 +236,7 @@ function getAppointmentStatusClass(status) {
   return "status-submitted";
 }
 
+loadTodayAppointments();
 loadStaffAppointments();
 loadDashboardRequests();
 
@@ -152,11 +246,12 @@ async function checkNewRequests() {
   try {
     const response = await fetch("/api/all-requests");
     const requests = await response.json();
-    
+
     if (lastRequestCount !== null && requests.length > lastRequestCount) {
       showToast("New service request submitted!");
-      loadDashboardRequests(); // Refresh the list and summary
+      loadDashboardRequests();
     }
+
     lastRequestCount = requests.length;
   } catch(e) {
     console.error("Polling error", e);
@@ -179,15 +274,22 @@ function showToast(message) {
   toast.style.zIndex = "1000";
   toast.style.transition = "opacity 0.5s ease-in-out";
   toast.style.fontWeight = "bold";
-  
+
   document.body.appendChild(toast);
-  
+
   setTimeout(() => {
     toast.style.opacity = "0";
     setTimeout(() => toast.remove(), 500);
   }, 4000);
 }
+
 </script>
 
 </body>
+<footer class="app-footer">
+  <p>
+    © 2026 Student Services Appointment and Case Management System |
+    PRJ666 NAA Team 5
+  </p>
+</footer>
 </html>

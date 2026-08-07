@@ -27,7 +27,7 @@
     <div class="student-actions">
 
         <a href="/submit-request" class="action-btn">
-            Submit Service Request
+            Create New Request
         </a>
 
         <a href="/track-requests" class="action-btn secondary">
@@ -35,6 +35,8 @@
         </a>
 
     </div>
+
+    <div id="appointmentConfirmation"></div>
 
     <div class="student-card">
 
@@ -159,13 +161,25 @@
 
     <div class="student-card">
 
-        <h2>Your Appointment History</h2>
+        <h2>Upcoming Appointments</h2>
 
         <p class="section-text">
-            Your booked appointments are shown below. You can cancel or reschedule active appointments.
+            Active and future appointments are shown below. You can cancel or reschedule active appointments.
         </p>
 
-        <ul id="appointments"></ul>
+        <ul id="upcomingAppointments"></ul>
+
+    </div>
+
+    <div class="student-card">
+
+        <h2>Past Appointments</h2>
+
+        <p class="section-text">
+            Completed, cancelled, and old appointments are shown here as appointment history.
+        </p>
+
+        <ul id="pastAppointments"></ul>
 
     </div>
 
@@ -185,6 +199,19 @@
 
 <script>
 
+function getTodayDateString(){
+
+    const now = new Date();
+
+    const timezoneOffset =
+        now.getTimezoneOffset() * 60000;
+
+    return new Date(now - timezoneOffset)
+        .toISOString()
+        .slice(0, 10);
+
+}
+
 async function loadAppointments(){
 
     try{
@@ -193,96 +220,74 @@ async function loadAppointments(){
 
         const appointments = await response.json();
 
-        const list = document.getElementById("appointments");
+        const upcomingList =
+            document.getElementById("upcomingAppointments");
 
-        list.innerHTML="";
+        const pastList =
+            document.getElementById("pastAppointments");
 
-        if(appointments.length===0){
+        const confirmationBox =
+            document.getElementById("appointmentConfirmation");
 
-            list.innerHTML=`
-            <li class="info">
-            No appointments booked yet.
-            </li>
-            `;
+        upcomingList.innerHTML="";
+        pastList.innerHTML="";
+        confirmationBox.innerHTML="";
 
-            return;
+        const params = new URLSearchParams(window.location.search);
 
-        }
+        const confirmedAppointmentId =
+            params.get("appointmentConfirmed");
 
-        appointments.forEach(a=>{
+        if(confirmedAppointmentId){
 
-            const canModify =
-                a.status !== "Cancelled" &&
-                a.status !== "Completed";
+            const confirmedAppointment =
+                appointments.find(
+                    appointment =>
+                        String(appointment.id) === confirmedAppointmentId
+                );
 
-            let appointmentActions = "";
+            if(confirmedAppointment){
 
-            if(canModify){
+                confirmationBox.innerHTML = `
 
-                appointmentActions = `
+                <div class="appointment-confirmation-card">
 
-                <div class="appointment-actions">
+                    <h2>Appointment Confirmed</h2>
 
-                    <form
-                    action="/cancel-appointment"
-                    method="POST"
-                    class="inline-appointment-form">
+                    <p>
+                    Your appointment has been booked successfully.
+                    </p>
 
-                        <input
-                        type="hidden"
-                        name="id"
-                        value="${a.id}">
+                    <div class="confirmation-details">
 
-                        <button
-                        type="submit"
-                        class="cancel-btn">
-                        Cancel Appointment
-                        </button>
+                        <p>
+                        <strong>Service:</strong>
+                        ${confirmedAppointment.service}
+                        </p>
 
-                    </form>
+                        <p>
+                        <strong>Date:</strong>
+                        ${confirmedAppointment.date}
+                        </p>
 
-                    <form
-                    action="/reschedule-appointment"
-                    method="POST"
-                    class="reschedule-form">
+                        <p>
+                        <strong>Time:</strong>
+                        ${confirmedAppointment.time || "-"}
+                        </p>
 
-                        <input
-                        type="hidden"
-                        name="id"
-                        value="${a.id}">
+                        <p>
+                        <strong>Status:</strong>
+                        <span class="status-badge ${getAppointmentStatusClass(confirmedAppointment.status)}">
+                        ${confirmedAppointment.status || "Scheduled"}
+                        </span>
+                        </p>
 
-                        <label>
-                            New Date
+                        <p>
+                        <strong>Appointment ID:</strong>
+                        ${confirmedAppointment.id}
+                        </p>
 
-                            <input
-                            type="date"
-                            name="date"
-                            required>
-                        </label>
-
-                        <label>
-                            New Time
-
-                            <select
-                            name="time"
-                            required>
-                                <option value="">Select Time</option>
-                                <option>09:00 AM</option>
-                                <option>10:00 AM</option>
-                                <option>11:00 AM</option>
-                                <option>01:00 PM</option>
-                                <option>02:00 PM</option>
-                                <option>03:00 PM</option>
-                            </select>
-                        </label>
-
-                        <button
-                        type="submit"
-                        class="reschedule-btn">
-                        Reschedule
-                        </button>
-
-                    </form>
+                    </div>
 
                 </div>
 
@@ -290,47 +295,93 @@ async function loadAppointments(){
 
             }
 
-            list.innerHTML += `
+        }
 
-            <li class="card">
+        if(appointments.length===0){
 
-            <strong>Service:</strong>
-            ${a.service}
-
-            <br>
-
-            <strong>Date:</strong>
-            ${a.date}
-
-            <br>
-
-            <strong>Time:</strong>
-            ${a.time || "-"}
-
-            <br>
-
-            <strong>Status:</strong>
-            <span class="status-badge ${getAppointmentStatusClass(a.status)}">
-            ${a.status || "Scheduled"}
-            </span>
-
-            <br>
-
-            <strong>Notes:</strong>
-            ${a.notes || "None"}
-
-            <br>
-
-            <strong>Staff Notes:</strong>
-            ${a.staffNotes || "No staff notes added"}
-
-            ${appointmentActions}
-
+            upcomingList.innerHTML=`
+            <li class="info">
+            No upcoming appointments.
             </li>
-
             `;
 
-        });
+            pastList.innerHTML=`
+            <li class="info">
+            No past appointments.
+            </li>
+            `;
+
+            return;
+
+        }
+
+        const today = getTodayDateString();
+
+        const upcomingAppointments =
+            appointments.filter(appointment => {
+
+                const status =
+                    appointment.status || "Scheduled";
+
+                return (
+                    status !== "Cancelled" &&
+                    status !== "Completed" &&
+                    appointment.date >= today
+                );
+
+            });
+
+        const pastAppointments =
+            appointments.filter(appointment => {
+
+                const status =
+                    appointment.status || "Scheduled";
+
+                return (
+                    status === "Cancelled" ||
+                    status === "Completed" ||
+                    appointment.date < today
+                );
+
+            });
+
+        if(upcomingAppointments.length===0){
+
+            upcomingList.innerHTML=`
+            <li class="info">
+            No upcoming appointments.
+            </li>
+            `;
+
+        }else{
+
+            upcomingAppointments.forEach(appointment=>{
+
+                upcomingList.innerHTML +=
+                    buildAppointmentCard(appointment, true);
+
+            });
+
+        }
+
+        if(pastAppointments.length===0){
+
+            pastList.innerHTML=`
+            <li class="info">
+            No past appointments.
+            </li>
+            `;
+
+        }else{
+
+            pastAppointments.forEach(appointment=>{
+
+                pastList.innerHTML +=
+                    buildAppointmentCard(appointment, false);
+
+            });
+
+        }
 
     }
 
@@ -339,6 +390,145 @@ async function loadAppointments(){
         console.error(err);
 
     }
+
+}
+
+function buildAppointmentCard(a, allowActions){
+
+    const canModify =
+        allowActions &&
+        a.status !== "Cancelled" &&
+        a.status !== "Completed";
+
+    let appointmentActions = "";
+
+    if(canModify){
+
+        appointmentActions = `
+
+        <div class="appointment-actions">
+
+            <form
+            action="/cancel-appointment"
+            method="POST"
+            class="inline-appointment-form">
+
+                <input
+                type="hidden"
+                name="id"
+                value="${a.id}">
+
+                <button
+                type="submit"
+                class="cancel-btn">
+                Cancel Appointment
+                </button>
+
+            </form>
+
+            <form
+            action="/reschedule-appointment"
+            method="POST"
+            class="reschedule-form">
+
+                <input
+                type="hidden"
+                name="id"
+                value="${a.id}">
+
+                <label>
+                    New Date
+
+                    <input
+                    type="date"
+                    name="date"
+                    required>
+                </label>
+
+                <label>
+                    New Time
+
+                    <select
+                    name="time"
+                    required>
+                        <option value="">Select Time</option>
+                        <option>09:00 AM</option>
+                        <option>10:00 AM</option>
+                        <option>11:00 AM</option>
+                        <option>01:00 PM</option>
+                        <option>02:00 PM</option>
+                        <option>03:00 PM</option>
+                    </select>
+                </label>
+
+                <button
+                type="submit"
+                class="reschedule-btn">
+                Reschedule
+                </button>
+
+            </form>
+
+        </div>
+
+        `;
+
+    }
+
+    const updatedAt =
+        a.updatedAt
+        ? new Date(a.updatedAt).toLocaleString()
+        : "-";
+
+    return `
+
+    <li class="card appointment-history-card">
+
+        <div class="request-top">
+
+            <h3>${a.service}</h3>
+
+            <span class="status-badge ${getAppointmentStatusClass(a.status)}">
+            ${a.status || "Scheduled"}
+            </span>
+
+        </div>
+
+        <p>
+        <strong>Date:</strong>
+        ${a.date}
+        </p>
+
+        <p>
+        <strong>Time:</strong>
+        ${a.time || "-"}
+        </p>
+
+        <p>
+        <strong>Notes:</strong>
+        ${a.notes || "None"}
+        </p>
+
+        <p>
+        <strong>Staff Notes:</strong>
+        ${a.staffNotes || "No staff notes added"}
+        </p>
+
+        <p>
+        <strong>Last Updated:</strong>
+        ${updatedAt}
+        </p>
+
+        <p>
+        <strong>Appointment ID:</strong>
+        ${a.id}
+        </p>
+
+        ${appointmentActions}
+
+    </li>
+
+    `;
 
 }
 
@@ -440,7 +630,7 @@ async function loadRequests(){
 
 function getStatusClass(status){
 
-    if(status==="Resolved")
+    if(status==="Resolved" || status==="Completed" || status==="Closed")
         return "status-completed";
 
     if(status==="In Progress")
@@ -478,5 +668,10 @@ loadRequests();
 </script>
 
 </body>
-
+<footer class="app-footer">
+  <p>
+    © 2026 Student Services Appointment and Case Management System |
+    PRJ666 NAA Team 5
+  </p>
+</footer>
 </html>

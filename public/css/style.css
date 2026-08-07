@@ -1,210 +1,467 @@
+/* =========================================================
+   PRJ666 - Aurora Compact Glass UI
+   Full replacement for public/css/style.css
+========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+
+:root {
+  --bg-1: #07111f;
+  --bg-2: #101a32;
+  --bg-3: #14233f;
+
+  --surface: rgba(255, 255, 255, 0.88);
+  --surface-strong: rgba(255, 255, 255, 0.96);
+
+  --text: #111827;
+  --text-light: #f8fafc;
+  --muted: #64748b;
+
+  --primary: #6d5dfc;
+  --primary-dark: #4f46e5;
+  --cyan: #22d3ee;
+  --pink: #ec4899;
+  --green: #22c55e;
+  --orange: #f59e0b;
+  --red: #ef4444;
+  --blue: #2563eb;
+  --purple: #8b5cf6;
+
+  --border: rgba(148, 163, 184, 0.24);
+  --border-strong: rgba(255, 255, 255, 0.35);
+
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+
+  --shadow-soft: 0 14px 36px rgba(15, 23, 42, 0.14);
+  --shadow-heavy: 0 30px 80px rgba(2, 6, 23, 0.32);
+}
+
+/* =========================================================
+   Global Reset
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f7fb;
   margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 8% 8%, rgba(34, 211, 238, 0.2), transparent 28%),
+    radial-gradient(circle at 92% 12%, rgba(236, 72, 153, 0.2), transparent 30%),
+    radial-gradient(circle at 50% 90%, rgba(139, 92, 246, 0.22), transparent 34%),
+    linear-gradient(135deg, #07111f 0%, #101a32 45%, #172554 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent);
+  z-index: -2;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  width: 520px;
+  height: 520px;
+  right: -170px;
+  bottom: -170px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.26), transparent 62%);
+  filter: blur(6px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+a {
+  color: inherit;
+}
+
+ul {
+  list-style: none;
   padding: 0;
-  color: #222;
+  margin: 0;
 }
 
-/* Global Container */
-.container {
-  width: 90%;
-  max-width: 1100px;
-  margin: 50px auto;
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-}
-
-/* Typography */
-h1 {
-  color: #1f3c88;
+h1,
+h2,
+h3,
+p {
   margin-top: 0;
 }
 
+h1 {
+  color: var(--text-light);
+  font-size: clamp(2rem, 3vw, 3.4rem);
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.055em;
+}
+
 h2 {
-  color: #333;
-  margin-bottom: 15px;
+  color: #111827;
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+h3 {
+  color: #111827;
+  font-weight: 850;
+  letter-spacing: -0.025em;
 }
 
 p {
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
-/* Forms */
+/* =========================================================
+   Page Containers
+========================================================= */
+
+.container,
+.student-container,
+.staff-container {
+  width: min(1180px, calc(100% - 40px));
+  margin: 34px auto;
+}
+
+.container {
+  padding: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-heavy);
+  backdrop-filter: blur(22px);
+}
+
+.student-page,
+.staff-page {
+  min-height: 100vh;
+  background: transparent;
+}
+
+/* =========================================================
+   Hero Headers
+========================================================= */
+
+.student-header,
+.staff-header {
+  position: relative;
+  width: min(1180px, calc(100% - 40px));
+  margin: 28px auto 0 auto;
+  padding: 30px 34px;
+  color: white;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: var(--shadow-heavy);
+  backdrop-filter: blur(24px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.student-header {
+  background:
+    linear-gradient(135deg, rgba(109, 93, 252, 0.88), rgba(34, 211, 238, 0.46)),
+    rgba(15, 23, 42, 0.72);
+}
+
+.staff-header {
+  background:
+    linear-gradient(135deg, rgba(34, 197, 94, 0.78), rgba(109, 93, 252, 0.62)),
+    rgba(15, 23, 42, 0.76);
+}
+
+.student-header::before,
+.staff-header::before {
+  content: "";
+  position: absolute;
+  inset: -80px;
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.28), transparent 26%),
+    radial-gradient(circle at 82% 10%, rgba(255, 255, 255, 0.2), transparent 25%),
+    radial-gradient(circle at 78% 90%, rgba(236, 72, 153, 0.24), transparent 24%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.student-header > *,
+.staff-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.student-header h1,
+.staff-header h1,
+.student-header p,
+.staff-header p {
+  color: white;
+  margin: 0;
+}
+
+.student-header p,
+.staff-header p {
+  margin-top: 8px;
+  font-size: 1.02rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* =========================================================
+   Cards / Panels
+========================================================= */
+
+.card,
+.student-card,
+.staff-card,
+.request-card {
+  position: relative;
+  background: var(--surface-strong);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+.card::before,
+.student-card::before,
+.staff-card::before,
+.request-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--cyan), var(--primary), var(--pink));
+}
+
+.card,
+.student-card,
+.staff-card {
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.request-card {
+  padding: 24px;
+  margin-bottom: 18px;
+}
+
+.card {
+  line-height: 1.75;
+}
+
+.section-text {
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 22px;
+}
+
+/* =========================================================
+   Navigation / Action Buttons
+========================================================= */
+
+.student-actions,
+.staff-actions {
+  width: min(1180px, calc(100% - 40px));
+  margin: 26px auto;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.student-container .student-actions {
+  width: 100%;
+  margin: 0 0 24px 0;
+}
+
+button,
+.primary-btn,
+.action-btn,
+.staff-action-btn,
+.small-link-btn,
+.update-btn,
+.cancel-btn,
+.reschedule-btn,
+.request-cancel-btn,
+.request-close-btn,
+.small-btn {
+  position: relative;
+  border: none;
+  border-radius: 999px;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+button,
+.primary-btn {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--blue));
+  box-shadow: 0 14px 28px rgba(79, 70, 229, 0.28);
+}
+
+button:hover,
+.primary-btn:hover,
+.action-btn:hover,
+.staff-action-btn:hover,
+.small-link-btn:hover,
+.update-btn:hover,
+.cancel-btn:hover,
+.reschedule-btn:hover,
+.request-cancel-btn:hover,
+.request-close-btn:hover,
+.small-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.24);
+}
+
+.action-btn,
+.staff-action-btn,
+.small-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 12px 20px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--cyan));
+  box-shadow: 0 12px 24px rgba(34, 211, 238, 0.22);
+}
+
+.staff-action-btn {
+  background: linear-gradient(135deg, var(--green), var(--primary));
+  box-shadow: 0 12px 24px rgba(34, 197, 94, 0.22);
+}
+
+.action-btn.secondary {
+  color: white;
+  background: linear-gradient(135deg, var(--pink), var(--purple));
+}
+
+.logout,
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 11px 18px;
+  color: white;
+  text-decoration: none;
+  font-weight: 850;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(16px);
+}
+
+.logout:hover,
+.logout-btn:hover {
+  background: linear-gradient(135deg, var(--red), var(--pink));
+}
+
+.update-btn {
+  width: auto;
+  margin-top: 24px;
+  padding: 13px 22px;
+  color: white;
+  background: linear-gradient(135deg, var(--green), #14b8a6);
+}
+
+.cancel-btn,
+.request-cancel-btn {
+  width: auto;
+  margin: 0;
+  padding: 12px 18px;
+  color: white;
+  background: linear-gradient(135deg, var(--red), var(--pink));
+}
+
+.reschedule-btn,
+.request-close-btn,
+.small-btn {
+  width: auto;
+  margin: 0;
+  padding: 12px 18px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--blue));
+}
+
+/* =========================================================
+   Forms
+========================================================= */
+
 label {
   display: block;
   margin-top: 15px;
-  font-weight: bold;
+  color: #111827;
+  font-weight: 800;
 }
 
 input,
 select,
 textarea {
   width: 100%;
-  padding: 12px;
-  margin-top: 6px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  margin-top: 8px;
+  padding: 14px 15px;
   font-size: 15px;
-  box-sizing: border-box;
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  border-radius: 16px;
+  outline: none;
+  transition: all 0.18s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-/* Buttons */
-button,
-.primary-btn {
-  margin-top: 20px;
-  width: 100%;
-  padding: 12px;
-  background: #1f3c88;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: bold;
-  transition: 0.2s ease;
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(109, 93, 252, 0.72);
+  box-shadow:
+    0 0 0 5px rgba(109, 93, 252, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-button:hover,
-.primary-btn:hover {
-  background: #162d66;
+textarea {
+  min-height: 96px;
+  resize: vertical;
 }
 
-/* Cards */
-.card,
-.student-card,
-.staff-card {
-  background: white;
-  padding: 22px;
-  margin-bottom: 22px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-}
-
-.card {
-  border-left: 5px solid #1f3c88;
-  background: #eef3ff;
-}
-
-/* Logout Button */
-.logout,
-.logout-btn {
-  display: inline-block;
-  margin-top: 20px;
-  background: #d9534f;
-  color: white;
-  padding: 10px 18px;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: bold;
-  transition: 0.2s ease;
-}
-
-.logout:hover,
-.logout-btn:hover {
-  background: #b52b27;
-}
-
-/* Messages */
-.error {
-  color: #dc3545;
-  font-weight: bold;
-}
-
-.success {
-  color: #198754;
-  font-weight: bold;
-}
-
-.info {
-  margin-top: 20px;
-  background: #f0f0f0;
-  padding: 15px;
-  border-radius: 6px;
-}
-
-/* Tables */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+input[type="file"] {
+  padding: 10px;
   background: white;
 }
 
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 14px;
-  text-align: left;
-}
-
-th {
-  background: #1f3c88;
-  color: white;
-}
-
-tr:nth-child(even) {
-  background: #f9f9f9;
-}
-
-/* Student Dashboard */
-.student-page {
-  background: #f4f6f9;
-}
-
-.student-header {
-  background: #23395d;
-  color: white;
-  padding: 24px 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.student-header h1,
-.student-header p {
-  color: white;
-  margin: 0;
-}
-
-.student-header p {
-  margin-top: 6px;
-}
-
-.student-container {
-  max-width: 1100px;
-  margin: 30px auto;
-  padding: 0 20px;
-}
-
-.section-text {
-  color: #555;
-  margin-bottom: 20px;
-}
-
-/* Service Cards */
-.services-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-}
-
-.service-card {
-  background: #eef3fb;
-  padding: 18px;
-  border-radius: 8px;
-  border-left: 5px solid #23395d;
-}
-
-.service-card h3 {
-  margin-top: 0;
-  color: #23395d;
-}
-
-/* Appointment Form */
-.appointment-form {
+.appointment-form,
+.edit-request-form {
   display: grid;
   gap: 16px;
 }
@@ -214,445 +471,333 @@ tr:nth-child(even) {
   flex-direction: column;
 }
 
-/* Student Actions */
-.student-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-bottom: 25px;
-}
-
-.action-btn {
-  background-color: #23395d;
-  color: white;
-  padding: 12px 22px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: 0.2s ease;
-}
-
-.action-btn:hover {
-  background-color: #1a2c49;
-}
-
-.action-btn.secondary {
-  background-color: white;
-  color: #23395d;
-  border: 2px solid #23395d;
-}
-
-.action-btn.secondary:hover {
-  background-color: #eef3fb;
-}
-
-/* Staff Dashboard */
-.staff-page {
-  background: #f4f6f9;
-}
-
-.staff-header {
-  background: #1f4f2b;
-  color: white;
-  padding: 24px 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.staff-header h1,
-.staff-header p {
-  color: white;
-  margin: 0;
-}
-
-.staff-header p {
-  margin-top: 6px;
-}
-
-.staff-container {
-  max-width: 1100px;
-  margin: 30px auto;
-  padding: 0 20px;
-}
-
-.staff-card h2 {
-  color: #1f4f2b;
-}
-
-.staff-actions {
-  max-width: 1100px;
-  margin: 25px auto 0 auto;
-  padding: 0 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.staff-action-btn {
-  background-color: #1f4f2b;
-  color: white;
-  padding: 12px 22px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: 0.2s ease;
-}
-
-.staff-action-btn:hover {
-  background-color: #163b20;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-
-  .student-header,
-  .staff-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .services-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .student-actions {
-    flex-direction: column;
-  }
-
-  .action-btn {
-    text-align: center;
-  }
-
-  .container {
-    width: 95%;
-    padding: 20px;
-  }
-}
-.student-actions,
-.staff-actions {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.action-btn,
-.staff-action-btn {
-  background: #23395d;
-  color: white;
-  text-decoration: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: bold;
-}
-
-.action-btn.secondary {
-  background: #1f4f2b;
-}
-
-.action-btn:hover,
-.staff-action-btn:hover {
-  opacity: 0.9;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-.card {
-  margin-bottom: 12px;
-}
-.request-card {
-  background: #f8fafc;
-  border: 1px solid #d9e2ec;
-  border-left: 5px solid #1f4f2b;
-  border-radius: 10px;
-  padding: 18px;
-  margin-bottom: 16px;
-}
+/* =========================================================
+   Request / Appointment Cards
+========================================================= */
 
 .request-top {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 10px;
-  margin-bottom: 12px;
+  gap: 14px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .request-top h3 {
   margin: 0;
-  color: #1f4f2b;
+  color: #111827;
 }
 
-.status-form {
-  margin-top: 15px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
+.request-card p {
+  margin: 8px 0;
+  color: #263244;
+  word-break: break-word;
 }
 
-.status-form label {
-  margin-top: 0;
+.request-card a,
+table td a {
+  color: var(--primary-dark);
+  font-weight: 800;
+  text-decoration: none;
 }
 
-.status-form select {
-  width: 180px;
-  margin-top: 0;
+.request-card a:hover,
+table td a:hover {
+  text-decoration: underline;
 }
 
-.small-btn {
-  width: auto;
-  margin-top: 0;
-  padding: 10px 16px;
-  background: #1f4f2b;
-}
-
-.small-btn:hover {
-  background: #163b20;
-}
-/* Manav - Sprint 2 Appointment Persistence and Staff Appointment View */
-
-.appointment-form .form-group {
-  margin-bottom: 15px;
-}
-
-.appointment-form textarea {
-  min-height: 90px;
-  resize: vertical;
-}
-
-#appointments {
-  list-style: none;
-  padding-left: 0;
-}
-
-#appointments .card {
-  margin-bottom: 15px;
-  line-height: 1.7;
-}
-
-#staffAppointments {
-  margin-top: 20px;
-}
-
-.request-card {
-  background: #eef3ff;
-  border-left: 5px solid #1f3c88;
-  padding: 18px;
-  border-radius: 10px;
-  margin-bottom: 16px;
-}
-
-.request-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.request-top h3 {
-  margin: 0;
-  color: #1f3c88;
-}
+/* =========================================================
+   Status Badges
+========================================================= */
 
 .status-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .status-submitted {
-  background: #e7f1ff;
-  color: #084298;
+  background: linear-gradient(135deg, #dbeafe, #cffafe);
+  color: #075985;
 }
 
 .status-inprogress {
-  background: #fff3cd;
-  color: #664d03;
+  background: linear-gradient(135deg, #fef3c7, #fed7aa);
+  color: #92400e;
 }
 
 .status-completed {
-  background: #d1e7dd;
-  color: #0f5132;
-}
-.request-update-form {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  margin-top: 22px;
-  flex-wrap: wrap;
-}
-
-.request-update-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 15px;
-}
-
-.request-update-form select {
-  min-width: 160px;
-  padding: 12px;
-  border: 1px solid #c8ccd4;
-  border-radius: 6px;
-  font-size: 15px;
-}
-
-.request-update-form textarea {
-  min-width: 420px;
-  min-height: 70px;
-  padding: 12px;
-  border: 1px solid #c8ccd4;
-  border-radius: 6px;
-  font-size: 15px;
-  resize: vertical;
-}
-
-.update-btn {
-  background-color: #12451f;
-  color: white;
-  border: none;
-  padding: 14px 24px;
-  border-radius: 6px;
-  font-weight: bold;
-  font-size: 15px;
-  cursor: pointer;
-  margin-top: 24px;
-}
-
-.update-btn:hover {
-  background-color: #0d3518;
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #166534;
 }
 
 .status-cancelled {
-  background-color: #f5d6d6;
-  color: #8a1f1f;
+  background: linear-gradient(135deg, #fee2e2, #fecdd3);
+  color: #991b1b;
 }
 
-
-.request-card a{
-  color:#1f3c88;
-  font-weight:600;
-  text-decoration:none;
+.status-closed {
+  background: linear-gradient(135deg, #e5e7eb, #cbd5e1);
+  color: #334155;
 }
 
-.request-card a:hover{
-  text-decoration:underline;
+/* =========================================================
+   Tables
+========================================================= */
+
+table {
+  width: 100%;
+  margin-top: 22px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  background: var(--surface-strong);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
 }
 
-.request-update-form{
-  display:flex;
-  flex-wrap:wrap;
-  gap:18px;
-  align-items:flex-start;
+th,
+td {
+  padding: 16px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
 }
 
-.request-update-form label{
-  flex:1;
-  min-width:220px;
+th {
+  color: white;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--primary), var(--blue));
 }
 
-.request-update-form textarea{
-  width:100%;
-  min-height:90px;
+tr:nth-child(even) td {
+  background: rgba(248, 250, 252, 0.85);
 }
 
-.request-update-form select{
-  width:100%;
+tr:hover td {
+  background: rgba(224, 242, 254, 0.55);
 }
 
-.update-btn{
-  width:auto;
-  padding:12px 22px;
+/* =========================================================
+   Info / Error / Success
+========================================================= */
+
+.error {
+  color: #dc2626;
+  font-weight: 900;
 }
 
-.status-badge{
-  white-space:nowrap;
+.success {
+  color: #16a34a;
+  font-weight: 900;
 }
 
-.info{
-  text-align:center;
+.info {
+  margin-top: 18px;
+  padding: 18px;
+  color: #475569;
+  text-align: center;
+  font-weight: 650;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(224, 242, 254, 0.82));
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: var(--radius-md);
 }
 
-table td{
-  vertical-align:top;
+/* =========================================================
+   Staff Summary Dashboard
+========================================================= */
+
+.staff-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
-table td a{
-  color:#1f3c88;
-  font-weight:600;
+.summary-box {
+  position: relative;
+  min-height: 145px;
+  padding: 24px;
+  color: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
 }
 
-table td a:hover{
-  text-decoration:underline;
+.summary-box:nth-child(1) {
+  background: linear-gradient(135deg, #2563eb, #22d3ee);
 }
 
-.student-card ul{
-  margin:0;
-  padding:0;
+.summary-box:nth-child(2) {
+  background: linear-gradient(135deg, #f59e0b, #ec4899);
 }
 
-.student-card .card{
-  line-height:1.8;
+.summary-box:nth-child(3) {
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
 }
 
-.request-card p{
-  margin:8px 0;
-  word-break:break-word;
+.summary-box:nth-child(4) {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
 }
 
-textarea{
-  resize:vertical;
+.summary-box::after {
+  content: "";
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  right: -34px;
+  top: -34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
 }
 
-input[type="file"]{
-  padding:8px;
-  background:#fff;
+.summary-box h3 {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 14px;
+  font-weight: 850;
 }
 
-@media (max-width:900px){
-
-  .request-update-form{
-      flex-direction:column;
-  }
-
-  .request-update-form label{
-      width:100%;
-  }
-
-  .request-update-form textarea{
-      min-width:100%;
-  }
-
-  .request-update-form select{
-      min-width:100%;
-  }
-
-  table{
-      display:block;
-      overflow-x:auto;
-  }
-
+.summary-box h1 {
+  position: relative;
+  z-index: 1;
+  margin: 14px 0 0 0;
+  color: white;
+  font-size: 3rem;
+  line-height: 1;
 }
+
+/* =========================================================
+   Sprint 4 Appointment UI
+========================================================= */
+
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.today-mini-card {
+  border-left: none;
+}
+
+.today-mini-card::before {
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+}
+
+.appointment-confirmation-card {
+  position: relative;
+  padding: 26px;
+  margin-bottom: 24px;
+  color: white;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.22), transparent 24%),
+    linear-gradient(135deg, #16a34a, #22c55e 45%, #14b8a6);
+  box-shadow: 0 24px 50px rgba(34, 197, 94, 0.24);
+  overflow: hidden;
+}
+
+.appointment-confirmation-card::before {
+  content: "✓";
+  position: absolute;
+  right: 24px;
+  top: 18px;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  color: #16a34a;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.appointment-confirmation-card h2,
+.appointment-confirmation-card p,
+.appointment-confirmation-card strong {
+  color: white;
+}
+
+.confirmation-details {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.appointment-history-card {
+  margin-bottom: 18px;
+}
+
+/* =========================================================
+   Filters
+========================================================= */
+
+.filter-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr 0.8fr;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.filter-row input,
+.filter-row select {
+  margin-top: 0;
+}
+
+/* =========================================================
+   Update Forms / Inline Actions
+========================================================= */
+
+.request-update-form {
+  display: grid;
+  grid-template-columns: 0.9fr 1.6fr auto;
+  gap: 16px;
+  align-items: end;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.request-update-form label {
+  margin-top: 0;
+}
+
+.request-update-form textarea {
+  min-height: 76px;
+}
+
 .appointment-actions {
-  margin-top: 20px;
   display: grid;
   gap: 16px;
-}
-
-.inline-appointment-form,
-.reschedule-form {
-  margin-top: 10px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .inline-appointment-form {
   display: flex;
   justify-content: flex-start;
+  margin: 0;
 }
 
 .reschedule-form {
@@ -662,291 +807,17 @@ input[type="file"]{
   align-items: end;
 }
 
-.cancel-btn {
-  background-color: #d9534f;
-  color: white;
-  border: none;
-  padding: 12px 18px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  width: auto;
+.reschedule-form label {
+  margin-top: 0;
 }
 
-.cancel-btn:hover {
-  background-color: #b52b27;
-}
-
-.reschedule-btn {
-  background-color: #1f3c88;
-  color: white;
-  border: none;
-  padding: 12px 18px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  width: auto;
-}
-
-.reschedule-btn:hover {
-  background-color: #162d66;
-}
-
-.service-request-actions {
-  margin-top: 22px;
-  display: grid;
-  gap: 18px;
-}
-
-.edit-request-form {
-  display: grid;
-  gap: 14px;
-  margin-top: 10px;
-}
-
-.edit-request-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-weight: bold;
-}
-
-.edit-request-form input,
-.edit-request-form select,
-.edit-request-form textarea {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #c8ccd4;
-  border-radius: 6px;
-  font-size: 15px;
-}
-/* Modern Login Page */
-
-.login-page {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(31, 60, 136, 0.16), transparent 34%),
-    linear-gradient(135deg, #f4f7fb 0%, #e9eef6 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-}
-
-.login-wrapper {
-  width: 100%;
-  max-width: 1180px;
-  min-height: 650px;
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  background: white;
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow: 0 25px 70px rgba(18, 39, 76, 0.18);
-}
-
-.login-hero {
-  background:
-    linear-gradient(135deg, rgba(17, 75, 36, 0.95), rgba(31, 60, 136, 0.96)),
-    url("https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80");
-  background-size: cover;
-  background-position: center;
-  color: white;
-  padding: 70px 60px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.login-badge {
-  width: fit-content;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 10px 16px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 28px;
-  letter-spacing: 0.3px;
-}
-
-.login-hero h1 {
-  font-size: 46px;
-  line-height: 1.12;
-  margin-bottom: 22px;
-  color: white;
-}
-
-.login-subtitle {
-  font-size: 18px;
-  line-height: 1.7;
-  max-width: 620px;
-  color: rgba(255, 255, 255, 0.88);
-  margin-bottom: 34px;
-}
-
-.login-features {
-  display: grid;
-  gap: 16px;
-}
-
-.login-feature {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.login-feature span {
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #dfffe6;
-  font-weight: bold;
-}
-
-.login-feature p {
-  margin: 0;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.login-card {
-  padding: 70px 54px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.login-card h2 {
-  font-size: 34px;
-  color: #143f24;
-  margin-bottom: 8px;
-}
-
-.login-card-text {
-  color: #5d6575;
-  margin-bottom: 34px;
-  font-size: 16px;
-}
-
-.login-form {
-  display: grid;
-  gap: 14px;
-}
-
-.login-form label {
-  font-weight: 700;
-  color: #1d2635;
-}
-
-.login-form input {
-  width: 100%;
-  padding: 15px 16px;
-  border: 1px solid #cbd3df;
-  border-radius: 12px;
-  font-size: 16px;
-  outline: none;
-  transition: 0.2s ease;
-}
-
-.login-form input:focus {
-  border-color: #1f3c88;
-  box-shadow: 0 0 0 4px rgba(31, 60, 136, 0.12);
-}
-
-.login-form button {
-  margin-top: 12px;
-  padding: 16px;
-  border: none;
-  border-radius: 12px;
-  background: #1f3c88;
-  color: white;
-  font-size: 17px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.login-form button:hover {
-  background: #142b66;
-  transform: translateY(-1px);
-}
-
-.demo-credentials {
-  margin-top: 34px;
-  background: #f4f7fb;
-  border: 1px solid #e1e7f0;
-  border-radius: 16px;
-  padding: 20px;
-}
-
-.demo-title {
-  margin: 0 0 14px 0;
-  color: #143f24;
-  font-weight: 800;
-}
-
-.credential-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 10px 0;
-  border-top: 1px solid #e1e7f0;
-  font-size: 14px;
-}
-
-.credential-row span {
-  color: #5d6575;
-}
-
-.credential-row strong {
-  color: #1f3c88;
-}
-
-@media (max-width: 900px) {
-  .login-page {
-    padding: 20px;
-  }
-
-  .login-wrapper {
-    grid-template-columns: 1fr;
-  }
-
-  .login-hero {
-    padding: 44px 34px;
-  }
-
-  .login-hero h1 {
-    font-size: 34px;
-  }
-
-  .login-card {
-    padding: 44px 34px;
-  }
-}
-
-
-.status-closed {
-  background: #e2e3e5;
-  color: #383d41;
-}
-
+.service-request-actions,
 .request-student-actions {
-  margin-top: 20px;
   display: flex;
   gap: 12px;
-  align-items: center;
   flex-wrap: wrap;
-}
-
-.request-student-actions .action-btn {
-  display: inline-block;
-  width: auto;
-  text-align: center;
+  align-items: center;
+  margin-top: 22px;
 }
 
 .inline-request-form {
@@ -954,254 +825,589 @@ input[type="file"]{
   margin: 0;
 }
 
-.request-cancel-btn {
-  width: auto;
-  margin: 0;
-  padding: 12px 20px;
-  background: #d9534f;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-}
+/* =========================================================
+   Login Page - Compact Premium Deployment UI
+========================================================= */
 
-.request-cancel-btn:hover {
-  background: #b52b27;
-}
-
-.request-close-btn {
-  width: auto;
-  margin: 0;
-  padding: 12px 20px;
-  background: #1f4f2b;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.request-close-btn:hover {
-  background: #163b20;
-}
-
-.request-help-text {
-  margin-top: 16px;
-  padding: 12px 14px;
-  background: #f4f7fb;
-  border-left: 4px solid #1f3c88;
-  border-radius: 6px;
-  color: #555;
-  line-height: 1.5;
-}
-
-.request-history-actions {
-  margin-top: 20px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.request-history-actions .action-btn {
-  width: auto;
-}
-
-.history-item {
-  display: flex;
-  gap: 18px;
-  position: relative;
-  padding-bottom: 26px;
-}
-
-.history-item:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  left: 18px;
-  top: 38px;
-  bottom: 0;
-  width: 2px;
-  background: #d9e2ec;
-}
-
-.history-marker {
-  min-width: 38px;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #23395d;
-  color: white;
+.login-page {
+  min-height: 100vh;
+  padding: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(34, 211, 238, 0.24), transparent 30%),
+    radial-gradient(circle at 88% 18%, rgba(236, 72, 153, 0.2), transparent 28%),
+    linear-gradient(135deg, #020617 0%, #08111f 45%, #111827 100%);
+}
+
+.login-wrapper {
+  width: min(1180px, 100%);
+  min-height: 600px;
+  max-height: calc(100vh - 44px);
+  display: grid;
+  grid-template-columns: 1fr 0.92fr;
+  border-radius: 34px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(28px);
+}
+
+.login-hero {
+  position: relative;
+  padding: 42px 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: white;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(34, 211, 238, 0.24), transparent 26%),
+    radial-gradient(circle at 78% 76%, rgba(236, 72, 153, 0.18), transparent 30%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(30, 41, 59, 0.3));
+  overflow: hidden;
+}
+
+.login-hero::before {
+  content: "";
+  position: absolute;
+  width: 330px;
+  height: 330px;
+  left: -120px;
+  bottom: -120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.32), transparent 70%);
+}
+
+.login-hero::after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  right: -80px;
+  top: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.25), transparent 70%);
+}
+
+.login-hero > * {
   position: relative;
   z-index: 1;
 }
 
-.history-content {
-  flex: 1;
-  background: #f8fafc;
-  border: 1px solid #d9e2ec;
-  border-radius: 10px;
-  padding: 18px;
+.login-badge {
+  width: fit-content;
+  margin-bottom: 20px;
+  padding: 10px 16px;
+  color: white;
+  font-size: 13px;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
 }
 
-.history-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
+.login-hero h1 {
+  max-width: 650px;
+  color: white;
+  font-size: clamp(2.55rem, 3.65vw, 4.35rem);
+  line-height: 0.99;
+  font-weight: 950;
+  letter-spacing: -0.075em;
+  margin-bottom: 18px;
 }
 
-.history-heading h3 {
-  margin: 0;
-  color: #23395d;
-}
-
-.history-content p {
-  margin: 8px 0;
-}
-
-.history-note {
-  margin-top: 12px;
-  padding: 12px;
-  background: #eef3ff;
-  border-left: 4px solid #1f3c88;
-  border-radius: 6px;
-}
-
-.history-meta {
-  color: #666;
-  font-size: 14px;
-}
-
-#editRequestForm {
-  display: grid;
-  gap: 16px;
-}
-
-#editRequestForm .form-group {
-  margin-bottom: 12px;
-}
-
-#editRequestForm input[type="file"] {
-  background: white;
-}
-
-#currentAttachment {
-  text-align: left;
-  margin-top: 6px;
-}
-
-#currentAttachment a {
-  color: #1f3c88;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-#currentAttachment a:hover {
-  text-decoration: underline;
-}
-
-.request-filter-bar {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+.login-subtitle {
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1rem;
+  line-height: 1.6;
   margin-bottom: 20px;
 }
 
-.request-filter-bar input {
-  flex: 1;
-  min-width: 240px;
+.login-features {
+  display: grid;
+  gap: 9px;
 }
 
-.request-filter-bar select {
-  width: auto;
-  min-width: 170px;
+.login-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  width: fit-content;
+  min-width: 292px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
 }
 
-@media (max-width: 768px) {
+.login-feature span {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 950;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), var(--primary));
+}
 
-  .request-student-actions,
-  .request-history-actions {
+.login-feature p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.login-card {
+  padding: 42px 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(248, 250, 252, 0.92));
+}
+
+.login-card h2 {
+  color: #08111f;
+  font-size: 2.35rem;
+  margin-bottom: 8px;
+}
+
+.login-card-text {
+  color: #64748b;
+  font-size: 0.98rem;
+  margin-bottom: 22px;
+}
+
+.login-form {
+  display: grid;
+  gap: 11px;
+}
+
+.login-form label {
+  margin-top: 0;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.login-form input {
+  min-height: 50px;
+  border-radius: 16px;
+  background: white;
+}
+
+.login-form button {
+  min-height: 52px;
+  margin-top: 7px;
+  font-size: 17px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--pink));
+  box-shadow: 0 18px 32px rgba(109, 93, 252, 0.28);
+}
+
+.demo-credentials {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  background:
+    linear-gradient(135deg, rgba(224, 242, 254, 0.75), rgba(245, 243, 255, 0.8));
+}
+
+.demo-title {
+  margin: 0 0 8px 0;
+  color: #0f172a;
+  font-weight: 950;
+}
+
+.credential-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+  font-size: 13px;
+}
+
+.credential-row span {
+  color: #64748b;
+  font-weight: 650;
+}
+
+.credential-row strong {
+  color: var(--primary-dark);
+  font-weight: 900;
+}
+
+/* =========================================================
+   App Footer - Clean Deployment Footer
+========================================================= */
+
+.app-footer {
+  width: min(1180px, calc(100% - 40px));
+  margin: 18px auto 22px auto;
+  padding: 10px 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.68);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.app-footer p {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Login page footer should stay below the login card, not overlap it */
+.login-page {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-page .app-footer {
+  position: static;
+  transform: none;
+  margin: 0 auto;
+  padding: 6px 12px;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+/* Make login card slightly shorter so footer fits without awkward scroll */
+.login-wrapper {
+  min-height: 570px;
+  max-height: calc(100vh - 82px);
+}
+
+.login-hero {
+  padding: 36px 48px;
+}
+
+.login-card {
+  padding: 36px 48px;
+}
+
+.login-hero h1 {
+  font-size: clamp(2.35rem, 3.25vw, 4rem);
+  margin-bottom: 16px;
+}
+
+.login-subtitle {
+  margin-bottom: 18px;
+}
+
+.login-feature {
+  padding: 8px 12px;
+}
+
+.demo-credentials {
+  margin-top: 16px;
+}
+/* =========================================================
+   Responsive
+========================================================= */
+
+@media (max-width: 1100px) {
+  .login-page {
+    align-items: flex-start;
+    padding: 18px;
+  }
+
+  .login-wrapper {
+    grid-template-columns: 1fr;
+    max-height: none;
+    max-width: 760px;
+  }
+
+  .login-hero {
+    padding: 42px 36px;
+  }
+
+  .login-card {
+    padding: 42px 36px;
+  }
+
+  .login-hero h1 {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+  }
+
+  .student-header,
+  .staff-header,
+  .student-container,
+  .staff-container,
+  .student-actions,
+  .staff-actions,
+  .container {
+    width: calc(100% - 32px);
+  }
+
+  .staff-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .request-update-form {
+    grid-template-columns: 1fr;
+  }
+
+  .reschedule-form {
+    grid-template-columns: 1fr;
+  }
+
+  .update-btn,
+  .cancel-btn,
+  .reschedule-btn,
+  .request-cancel-btn,
+  .request-close-btn,
+  .small-btn {
+    width: 100%;
+  }
+
+  .login-page .app-footer {
+    position: static;
+    transform: none;
+    margin: 18px auto 0 auto;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    background-attachment: scroll;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.12;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+  }
+
+  .login-page {
+    padding: 12px;
+  }
+
+  .login-wrapper {
+    width: 100%;
+    min-height: auto;
+    border-radius: 26px;
+  }
+
+  .login-hero,
+  .login-card {
+    padding: 34px 24px;
+  }
+
+  .login-hero h1 {
+    font-size: 2.65rem;
+  }
+
+  .login-subtitle {
+    font-size: 0.98rem;
+  }
+
+  .login-feature {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .credential-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .student-header,
+  .staff-header {
+    width: calc(100% - 20px);
+    margin-top: 10px;
+    padding: 22px;
+    border-radius: 24px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .student-container,
+  .staff-container,
+  .container {
+    width: calc(100% - 20px);
+    margin: 20px auto;
+  }
+
+  .student-actions,
+  .staff-actions {
+    width: calc(100% - 20px);
+    margin: 18px auto;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .student-container .student-actions {
+    width: 100%;
+    margin: 0 0 18px 0;
+  }
+
+  .action-btn,
+  .staff-action-btn,
+  .small-link-btn,
+  .logout-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .card,
+  .student-card,
+  .staff-card,
+  .request-card {
+    border-radius: 22px;
+  }
+
+  .card,
+  .student-card,
+  .staff-card {
+    padding: 22px;
+  }
+
+  .request-card {
+    padding: 20px;
+  }
+
+  .request-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .status-badge {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .staff-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .summary-box {
+    min-height: 120px;
+  }
+
+  .summary-box h1 {
+    font-size: 2.4rem;
+  }
+
+  .section-header-row {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .request-student-actions .action-btn,
-  .request-history-actions .action-btn,
-  .request-cancel-btn,
-  .request-close-btn {
+  .filter-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .filter-row input,
+  .filter-row select {
     width: 100%;
-    box-sizing: border-box;
-    text-align: center;
+  }
+
+  .request-update-form {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .inline-appointment-form {
+    width: 100%;
+  }
+
+  .reschedule-form {
+    grid-template-columns: 1fr;
+  }
+
+  .service-request-actions,
+  .request-student-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .inline-request-form {
     width: 100%;
   }
 
-  .history-item {
-    gap: 12px;
+  input,
+  select,
+  textarea,
+  button {
+    font-size: 16px;
   }
 
-  .history-heading {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .request-filter-bar {
-    flex-direction: column;
-  }
-
-  .request-filter-bar input,
-  .request-filter-bar select {
+  table {
+    display: block;
     width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  th,
+  td {
+    padding: 12px;
+  }
+
+  .app-footer {
+    width: calc(100% - 24px);
+    border-radius: 18px;
+    font-size: 0.85rem;
   }
 }
 
-.action-btn,
-.action-btn:visited,
-.staff-action-btn,
-.staff-action-btn:visited,
-.reschedule-btn,
-.reschedule-btn:visited,
-.update-btn,
-.update-btn:visited,
-.request-close-btn,
-.request-close-btn:visited,
-.request-cancel-btn,
-.request-cancel-btn:visited {
-  color: #ffffff !important;
-  text-decoration: none;
-}
+@media (max-width: 420px) {
+  .login-hero h1 {
+    font-size: 2.2rem;
+  }
 
-.action-btn:hover,
-.staff-action-btn:hover,
-.reschedule-btn:hover,
-.update-btn:hover,
-.request-close-btn:hover,
-.request-cancel-btn:hover {
-  color: #ffffff !important;
-  text-decoration: none;
-}
+  .login-card h2 {
+    font-size: 2rem;
+  }
 
-.request-card .action-btn,
-.request-card .action-btn:visited,
-.request-card .reschedule-btn,
-.request-card .reschedule-btn:visited {
-  color: #ffffff !important;
-}
+  .student-header,
+  .staff-header,
+  .card,
+  .student-card,
+  .staff-card,
+  .request-card {
+    border-radius: 18px;
+  }
 
-.request-history-actions .action-btn,
-.request-history-actions .action-btn:visited {
-  color: #ffffff !important;
-}
+  .student-header,
+  .staff-header {
+    padding: 20px;
+  }
 
-.request-student-actions .action-btn,
-.request-student-actions .action-btn:visited {
-  color: #ffffff !important;
+  .card,
+  .student-card,
+  .staff-card,
+  .request-card {
+    padding: 18px;
+  }
+
+  .summary-box {
+    padding: 20px;
+  }
 }

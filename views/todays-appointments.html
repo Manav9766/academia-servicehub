@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Today's Appointments</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="staff-page">
+
+<header class="staff-header">
+  <div>
+    <h1>Today's Appointments</h1>
+    <p>View appointments scheduled for the current day</p>
+  </div>
+
+  <a href="/logout" class="logout-btn">Logout</a>
+</header>
+
+<div class="staff-actions">
+  <a href="/staff" class="staff-action-btn">Back to Dashboard</a>
+  <a href="/staff-appointments" class="staff-action-btn">Manage Appointments</a>
+  <a href="/staff-requests" class="staff-action-btn">Manage Service Requests</a>
+</div>
+
+<main class="staff-container">
+
+  <section class="staff-card">
+
+    <h2>Appointments Scheduled Today</h2>
+
+    <p class="section-text">
+      Only appointments matching today's date are displayed here.
+    </p>
+
+    <div id="todaysAppointments"></div>
+
+  </section>
+
+</main>
+
+<script>
+
+async function loadTodaysAppointments() {
+
+  const response = await fetch("/api/todays-appointments");
+  const appointments = await response.json();
+
+  const container = document.getElementById("todaysAppointments");
+  container.innerHTML = "";
+
+  if (appointments.length === 0) {
+    container.innerHTML =
+      `<div class="info">No appointments scheduled for today.</div>`;
+    return;
+  }
+
+  appointments.forEach((appointment) => {
+    container.innerHTML += `
+      <div class="request-card">
+        <div class="request-top">
+          <h3>${appointment.service}</h3>
+          <span class="status-badge ${getAppointmentStatusClass(appointment.status)}">
+            ${appointment.status || "Scheduled"}
+          </span>
+        </div>
+
+        <p><strong>Student:</strong> ${appointment.student}</p>
+        <p><strong>Service:</strong> ${appointment.service}</p>
+        <p><strong>Time:</strong> ${appointment.time || "Not selected"}</p>
+        <p><strong>Date:</strong> ${appointment.date}</p>
+        <p><strong>Status:</strong> ${appointment.status || "Scheduled"}</p>
+        <p><strong>Student Notes:</strong> ${appointment.notes || "No notes provided"}</p>
+        <p><strong>Staff Notes:</strong> ${appointment.staffNotes || "No staff notes added"}</p>
+        <p><strong>Appointment ID:</strong> ${appointment.id}</p>
+      </div>
+    `;
+  });
+
+}
+
+function getAppointmentStatusClass(status) {
+  if (status === "Completed") return "status-completed";
+  if (status === "Cancelled") return "status-cancelled";
+  if (status === "Confirmed") return "status-inprogress";
+  if (status === "Rescheduled") return "status-inprogress";
+  return "status-submitted";
+}
+
+loadTodaysAppointments();
+
+</script>
+
+</body>
+<footer class="app-footer">
+  <p>
+    © 2026 Student Services Appointment and Case Management System |
+    PRJ666 NAA Team 5
+  </p>
+</footer>
+</html>

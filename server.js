@@ -69,10 +69,8 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
-
 fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
 fs.mkdirSync(UPLOAD_DIRECTORY, { recursive: true });
-
 
 const storage = multer.diskStorage({
   destination: (req, file, callback) => {
@@ -123,7 +121,6 @@ const upload = multer({
   },
 });
 
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
@@ -140,7 +137,6 @@ app.use(
     },
   })
 );
-
 
 function normalizeRequestStatus(status) {
   if (status === "Pending") {
@@ -183,7 +179,6 @@ function ensureRequestHistory(request) {
     });
   }
 
-  
   if (
     request.status !== "Submitted" &&
     !request.history.some(
@@ -268,6 +263,12 @@ function writeData(data) {
 
 function sortNewestFirst(items) {
   return [...items].sort((a, b) => Number(b.id) - Number(a.id));
+}
+
+function getTodayDateString() {
+  const now = new Date();
+  const timezoneOffset = now.getTimezoneOffset() * 60000;
+  return new Date(now - timezoneOffset).toISOString().slice(0, 10);
 }
 
 function removeUploadedFile(file) {
@@ -359,7 +360,6 @@ function validateRequestFields(category, subject, issue) {
   return null;
 }
 
-
 function sendRequestError(res, message, statusCode = 400) {
   return res.status(statusCode).send(`
     <!DOCTYPE html>
@@ -404,7 +404,6 @@ function sendRequestError(res, message, statusCode = 400) {
   `);
 }
 
-
 function redirectByRole(req, res) {
   if (!req.session.user) {
     return res.redirect("/");
@@ -443,6 +442,7 @@ function roleMiddleware(role) {
   };
 }
 
+/* ---------------- LOGIN ---------------- */
 
 app.get("/", (req, res) => {
   if (req.session.user) {
@@ -495,6 +495,7 @@ app.post("/login", (req, res) => {
   });
 });
 
+/* ---------------- DASHBOARDS ---------------- */
 
 app.get(
   "/student",
@@ -526,6 +527,17 @@ app.get(
 );
 
 app.get(
+  "/todays-appointments",
+  authMiddleware,
+  roleMiddleware("staff"),
+  (req, res) => {
+    return res.sendFile(
+      path.join(__dirname, "views", "todays-appointments.html")
+    );
+  }
+);
+
+app.get(
   "/admin",
   authMiddleware,
   roleMiddleware("admin"),
@@ -534,6 +546,7 @@ app.get(
   }
 );
 
+/* ---------------- ADMIN USER MANAGEMENT ---------------- */
 
 app.get(
   "/manage-users",
@@ -789,6 +802,8 @@ app.post(
   }
 );
 
+/* ---------------- STUDENT REQUESTS ---------------- */
+
 app.get(
   "/submit-request",
   authMiddleware,
@@ -851,15 +866,11 @@ app.post(
       subject,
       issue,
       attachment: buildAttachment(req.file),
-
-      
       status: "Submitted",
-
       assignedTo: "Unassigned",
       notes: "",
       createdAt: now,
       updatedAt: now,
-
       history: [
         {
           id: `${requestId}-submission`,
@@ -909,7 +920,6 @@ app.get(
   }
 );
 
-
 app.get(
   "/request-history",
   authMiddleware,
@@ -920,7 +930,6 @@ app.get(
     );
   }
 );
-
 
 app.get(
   "/api/request-history/:id",
@@ -958,7 +967,6 @@ app.get(
       createdAt: request.createdAt,
       updatedAt: request.updatedAt || request.createdAt,
       closedAt: request.closedAt || null,
-
       history: [...request.history].sort(
         (a, b) =>
           new Date(a.date).getTime() -
@@ -993,7 +1001,6 @@ app.get(
   }
 );
 
-
 app.get(
   "/edit-request",
   authMiddleware,
@@ -1004,7 +1011,6 @@ app.get(
     );
   }
 );
-
 
 app.post(
   "/edit-service-request",
@@ -1074,7 +1080,6 @@ app.post(
     request.status =
       normalizeRequestStatus(request.status);
 
-   
     if (request.status !== "Submitted") {
       removeUploadedFile(req.file);
 
@@ -1092,7 +1097,6 @@ app.post(
     request.subject = subject;
     request.issue = issue;
 
-    
     if (req.file) {
       removeStoredAttachment(request.attachment);
       request.attachment = buildAttachment(req.file);
@@ -1202,7 +1206,6 @@ app.post(
   }
 );
 
-
 app.post(
   "/cancel-service-request",
   authMiddleware,
@@ -1232,7 +1235,6 @@ app.post(
     request.status =
       normalizeRequestStatus(request.status);
 
-    
     if (request.status !== "Submitted") {
       return res
         .status(400)
@@ -1262,6 +1264,7 @@ app.post(
   }
 );
 
+/* ---------------- STAFF REQUESTS ---------------- */
 
 app.get(
   "/staff-report",
@@ -1338,7 +1341,6 @@ app.post(
     request.status =
       normalizeRequestStatus(request.status);
 
-    
     if (request.status === "Closed") {
       return res
         .status(400)
@@ -1356,7 +1358,6 @@ app.post(
 
     const now = new Date().toISOString();
 
-    
     if (previousStatus !== newStatus) {
       request.status = newStatus;
 
@@ -1371,7 +1372,6 @@ app.post(
       });
     }
 
-    
     if (
       newNotes &&
       newNotes !== previousNotes
@@ -1399,6 +1399,8 @@ app.post(
     return res.redirect("/staff-requests");
   }
 );
+
+/* ---------------- APPOINTMENTS ---------------- */
 
 app.post(
   "/book-appointment",
@@ -1433,7 +1435,7 @@ app.post(
     data.appointments.push(appointment);
     writeData(data);
 
-    return res.redirect("/student");
+    return res.redirect(`/student?appointmentConfirmed=${appointment.id}`);
   }
 );
 
@@ -1580,6 +1582,22 @@ app.get(
   }
 );
 
+app.get(
+  "/api/todays-appointments",
+  authMiddleware,
+  roleMiddleware("staff"),
+  (req, res) => {
+    const data = readData();
+    const today = getTodayDateString();
+
+    const todaysAppointments = data.appointments.filter(
+      (appointment) => appointment.date === today
+    );
+
+    return res.json(sortNewestFirst(todaysAppointments));
+  }
+);
+
 app.post(
   "/update-appointment-status",
   authMiddleware,
@@ -1641,6 +1659,7 @@ app.post(
   }
 );
 
+/* ---------------- LOGOUT ---------------- */
 
 app.get("/logout", (req, res) => {
   req.session.destroy((error) => {
@@ -1653,7 +1672,6 @@ app.get("/logout", (req, res) => {
     return res.redirect("/");
   });
 });
-
 
 app.use((error, req, res, next) => {
   console.error(
@@ -1671,7 +1689,6 @@ app.use((error, req, res, next) => {
       "An unexpected server error occurred."
     );
 });
-
 
 app.listen(PORT, () => {
   console.log(

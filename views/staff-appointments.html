@@ -19,17 +19,28 @@
 
 <div class="staff-actions">
   <a href="/staff" class="staff-action-btn">Back to Dashboard</a>
+  <a href="/todays-appointments" class="staff-action-btn">Today's Appointments</a>
   <a href="/staff-requests" class="staff-action-btn">Manage Service Requests</a>
 </div>
 
 <main class="staff-container">
 
   <section class="staff-card">
+
     <h2>Booked Appointments</h2>
+
     <p class="section-text">
-    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-      <input type="text" id="searchAppt" placeholder="Search student or service..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px;">
-      <select id="filterApptStatus" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+      Staff can search, filter, view, and update student appointments.
+    </p>
+
+    <div class="filter-row">
+
+      <input
+      type="text"
+      id="searchAppt"
+      placeholder="Search student or service...">
+
+      <select id="filterApptStatus">
         <option value="">All Statuses</option>
         <option value="Scheduled">Scheduled</option>
         <option value="Confirmed">Confirmed</option>
@@ -37,41 +48,69 @@
         <option value="Cancelled">Cancelled</option>
         <option value="Rescheduled">Rescheduled</option>
       </select>
-      <input type="date" id="filterApptDate" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+
+      <input
+      type="date"
+      id="filterApptDate">
+
     </div>
+
     <div id="appointmentsContainer"></div>
+
   </section>
 
 </main>
 
 <script>
+
 let allAppointments = [];
 
 async function fetchAppointments() {
+
   const response = await fetch("/api/all-appointments");
   allAppointments = await response.json();
+
   renderAppointments();
+
 }
 
 function renderAppointments() {
+
   const container = document.getElementById("appointmentsContainer");
   container.innerHTML = "";
 
-  const searchAppt = document.getElementById("searchAppt").value.toLowerCase();
-  const filterApptStatus = document.getElementById("filterApptStatus").value;
-  const filterApptDate = document.getElementById("filterApptDate").value;
+  const searchAppt =
+    document.getElementById("searchAppt").value.toLowerCase();
+
+  const filterApptStatus =
+    document.getElementById("filterApptStatus").value;
+
+  const filterApptDate =
+    document.getElementById("filterApptDate").value;
 
   const filtered = allAppointments.filter(appointment => {
-    const matchesKeyword = (appointment.student || "").toLowerCase().includes(searchAppt) ||
-                           (appointment.service || "").toLowerCase().includes(searchAppt);
-    const matchesStatus = filterApptStatus ? appointment.status === filterApptStatus : true;
-    const matchesDate = filterApptDate ? appointment.date === filterApptDate : true;
+
+    const matchesKeyword =
+      (appointment.student || "").toLowerCase().includes(searchAppt) ||
+      (appointment.service || "").toLowerCase().includes(searchAppt);
+
+    const matchesStatus =
+      filterApptStatus
+      ? appointment.status === filterApptStatus
+      : true;
+
+    const matchesDate =
+      filterApptDate
+      ? appointment.date === filterApptDate
+      : true;
 
     return matchesKeyword && matchesStatus && matchesDate;
+
   });
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="info">No appointments found matching the criteria.</div>`;
+    container.innerHTML =
+      `<div class="info">No appointments found matching the criteria.</div>`;
     return;
   }
 
@@ -89,6 +128,7 @@ function renderAppointments() {
         <p><strong>Date:</strong> ${appointment.date}</p>
         <p><strong>Time:</strong> ${appointment.time || "Not selected"}</p>
         <p><strong>Student Notes:</strong> ${appointment.notes || "No notes provided"}</p>
+        <p><strong>Staff Notes:</strong> ${appointment.staffNotes || "No staff notes added"}</p>
         <p><strong>Appointment ID:</strong> ${appointment.id}</p>
 
         <form action="/update-appointment-status" method="POST" class="request-update-form">
@@ -115,12 +155,20 @@ function renderAppointments() {
       </div>
     `;
   });
+
 }
 
-document.getElementById("searchAppt").addEventListener("input", renderAppointments);
-document.getElementById("filterApptStatus").addEventListener("change", renderAppointments);
-document.getElementById("filterApptDate").addEventListener("change", renderAppointments);
+document
+.getElementById("searchAppt")
+.addEventListener("input", renderAppointments);
 
+document
+.getElementById("filterApptStatus")
+.addEventListener("change", renderAppointments);
+
+document
+.getElementById("filterApptDate")
+.addEventListener("change", renderAppointments);
 
 function getAppointmentStatusClass(status) {
   if (status === "Completed") return "status-completed";
@@ -131,7 +179,14 @@ function getAppointmentStatusClass(status) {
 }
 
 fetchAppointments();
+
 </script>
 
 </body>
+<footer class="app-footer">
+  <p>
+    © 2026 Student Services Appointment and Case Management System |
+    PRJ666 NAA Team 5
+  </p>
+</footer>
 </html>
