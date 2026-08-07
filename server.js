@@ -19,6 +19,7 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
 const REQUEST_CATEGORIES = [
   "Academic Advising",
   "Registration & Enrollment",
@@ -102,8 +103,7 @@ const storage = new CloudinaryStorage({
     };
   },
 });
-const { v2: cloudinary } = require("cloudinary");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
 function attachmentFileFilter(req, file, callback) {
   const extension = path.extname(file.originalname).toLowerCase();
 
@@ -282,6 +282,21 @@ function getTodayDateString() {
 
 function removeUploadedFile(file) {
   if (!file || !file.path) {
+    return;
+  }
+
+  if (file.filename) {
+    cloudinary.uploader
+      .destroy(file.filename, { resource_type: "image" })
+      .catch(() => {
+        return cloudinary.uploader.destroy(file.filename, {
+          resource_type: "raw",
+        });
+      })
+      .catch((error) => {
+        console.error("Unable to remove uploaded Cloudinary file:", error);
+      });
+
     return;
   }
 
@@ -486,8 +501,7 @@ app.post("/login", (req, res) => {
 
   const user = data.users.find(
     (existingUser) =>
-      existingUser.username === username &&
-      existingUser.password === password
+      existingUser.username === username && existingUser.password === password
   );
 
   if (!user) {
@@ -523,23 +537,13 @@ app.post("/login", (req, res) => {
 
 /* ---------------- DASHBOARDS ---------------- */
 
-app.get(
-  "/student",
-  authMiddleware,
-  roleMiddleware("student"),
-  (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "student.html"));
-  }
-);
+app.get("/student", authMiddleware, roleMiddleware("student"), (req, res) => {
+  return res.sendFile(path.join(__dirname, "views", "student.html"));
+});
 
-app.get(
-  "/staff",
-  authMiddleware,
-  roleMiddleware("staff"),
-  (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "staff.html"));
-  }
-);
+app.get("/staff", authMiddleware, roleMiddleware("staff"), (req, res) => {
+  return res.sendFile(path.join(__dirname, "views", "staff.html"));
+});
 
 app.get(
   "/staff-appointments",
@@ -563,14 +567,9 @@ app.get(
   }
 );
 
-app.get(
-  "/admin",
-  authMiddleware,
-  roleMiddleware("admin"),
-  (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "admin.html"));
-  }
-);
+app.get("/admin", authMiddleware, roleMiddleware("admin"), (req, res) => {
+  return res.sendFile(path.join(__dirname, "views", "admin.html"));
+});
 
 /* ---------------- ADMIN USER MANAGEMENT ---------------- */
 
@@ -583,23 +582,18 @@ app.get(
   }
 );
 
-app.get(
-  "/api/users",
-  authMiddleware,
-  roleMiddleware("admin"),
-  (req, res) => {
-    const data = readData();
+app.get("/api/users", authMiddleware, roleMiddleware("admin"), (req, res) => {
+  const data = readData();
 
-    const safeUsers = data.users.map((user) => ({
-      id: user.id,
-      username: user.username,
-      role: user.role,
-      status: user.status || "active",
-    }));
+  const safeUsers = data.users.map((user) => ({
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    status: user.status || "active",
+  }));
 
-    return res.json(safeUsers);
-  }
-);
+  return res.json(safeUsers);
+});
 
 app.post(
   "/admin/users/create",
@@ -663,9 +657,7 @@ app.post(
 
     const allowedRoles = ["student", "staff", "admin"];
 
-    const user = data.users.find(
-      (existingUser) => existingUser.id === userId
-    );
+    const user = data.users.find((existingUser) => existingUser.id === userId);
 
     if (!user) {
       return res.redirect(
@@ -730,9 +722,7 @@ app.post(
 
     const userId = Number(req.params.id);
 
-    const user = data.users.find(
-      (existingUser) => existingUser.id === userId
-    );
+    const user = data.users.find((existingUser) => existingUser.id === userId);
 
     if (!user) {
       return res.redirect(
@@ -748,10 +738,7 @@ app.post(
       );
     }
 
-    user.status =
-      user.status === "disabled"
-        ? "active"
-        : "disabled";
+    user.status = user.status === "disabled" ? "active" : "disabled";
 
     writeData(data);
 
@@ -774,16 +761,10 @@ app.get(
     const data = readData();
 
     return res.json({
-      totalStudents: data.users.filter(
-        (user) => user.role === "student"
-      ).length,
-
-      totalStaff: data.users.filter(
-        (user) => user.role === "staff"
-      ).length,
-
+      totalStudents: data.users.filter((user) => user.role === "student")
+        .length,
+      totalStaff: data.users.filter((user) => user.role === "staff").length,
       totalAppointments: data.appointments.length,
-
       totalRequests: data.requests.length,
     });
   }
@@ -799,9 +780,7 @@ app.post(
     const userId = Number(req.params.id);
     const newPassword = String(req.body.password || "").trim();
 
-    const user = data.users.find(
-      (existingUser) => existingUser.id === userId
-    );
+    const user = data.users.find((existingUser) => existingUser.id === userId);
 
     if (!user) {
       return res.redirect(
@@ -835,9 +814,7 @@ app.get(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "submit-request.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "submit-request.html"));
   }
 );
 
@@ -873,8 +850,7 @@ app.post(
     const subject = String(req.body.subject || "").trim();
     const issue = String(req.body.issue || "").trim();
 
-    const validationError =
-      validateRequestFields(category, subject, issue);
+    const validationError = validateRequestFields(category, subject, issue);
 
     if (validationError) {
       removeUploadedFile(req.file);
@@ -902,8 +878,7 @@ app.post(
           id: `${requestId}-submission`,
           type: "submission",
           title: "Request Submitted",
-          description:
-            "Service request was submitted by the student.",
+          description: "Service request was submitted by the student.",
           status: "Submitted",
           actor: req.session.user.username,
           note: "",
@@ -924,9 +899,7 @@ app.get(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "track-requests.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "track-requests.html"));
   }
 );
 
@@ -938,8 +911,7 @@ app.get(
     const data = readData();
 
     const requests = data.requests.filter(
-      (request) =>
-        request.student === req.session.user.username
+      (request) => request.student === req.session.user.username
     );
 
     return res.json(sortNewestFirst(requests));
@@ -951,9 +923,7 @@ app.get(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "request-history.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "request-history.html"));
   }
 );
 
@@ -966,10 +936,8 @@ app.get(
 
     const request = data.requests.find(
       (existingRequest) =>
-        String(existingRequest.id) ===
-          String(req.params.id) &&
-        existingRequest.student ===
-          req.session.user.username
+        String(existingRequest.id) === String(req.params.id) &&
+        existingRequest.student === req.session.user.username
     );
 
     if (!request) {
@@ -994,9 +962,7 @@ app.get(
       updatedAt: request.updatedAt || request.createdAt,
       closedAt: request.closedAt || null,
       history: [...request.history].sort(
-        (a, b) =>
-          new Date(a.date).getTime() -
-          new Date(b.date).getTime()
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
       ),
     });
   }
@@ -1011,10 +977,8 @@ app.get(
 
     const request = data.requests.find(
       (existingRequest) =>
-        String(existingRequest.id) ===
-          String(req.params.id) &&
-        existingRequest.student ===
-          req.session.user.username
+        String(existingRequest.id) === String(req.params.id) &&
+        existingRequest.student === req.session.user.username
     );
 
     if (!request) {
@@ -1032,9 +996,7 @@ app.get(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "edit-request.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "edit-request.html"));
   }
 );
 
@@ -1076,8 +1038,7 @@ app.post(
       return sendRequestError(res, "Request ID is required.");
     }
 
-    const validationError =
-      validateRequestFields(category, subject, issue);
+    const validationError = validateRequestFields(category, subject, issue);
 
     if (validationError) {
       removeUploadedFile(req.file);
@@ -1089,22 +1050,16 @@ app.post(
     const request = data.requests.find(
       (existingRequest) =>
         String(existingRequest.id) === requestId &&
-        existingRequest.student ===
-          req.session.user.username
+        existingRequest.student === req.session.user.username
     );
 
     if (!request) {
       removeUploadedFile(req.file);
 
-      return sendRequestError(
-        res,
-        "Service request was not found.",
-        404
-      );
+      return sendRequestError(res, "Service request was not found.", 404);
     }
 
-    request.status =
-      normalizeRequestStatus(request.status);
+    request.status = normalizeRequestStatus(request.status);
 
     if (request.status !== "Submitted") {
       removeUploadedFile(req.file);
@@ -1175,10 +1130,7 @@ app.post(
     const requestId = String(req.body.id || "").trim();
 
     if (!requestId) {
-      return sendRequestError(
-        res,
-        "Request ID is required."
-      );
+      return sendRequestError(res, "Request ID is required.");
     }
 
     const data = readData();
@@ -1186,20 +1138,14 @@ app.post(
     const request = data.requests.find(
       (existingRequest) =>
         String(existingRequest.id) === requestId &&
-        existingRequest.student ===
-          req.session.user.username
+        existingRequest.student === req.session.user.username
     );
 
     if (!request) {
-      return sendRequestError(
-        res,
-        "Service request was not found.",
-        404
-      );
+      return sendRequestError(res, "Service request was not found.", 404);
     }
 
-    request.status =
-      normalizeRequestStatus(request.status);
+    request.status = normalizeRequestStatus(request.status);
 
     if (request.status !== "Completed") {
       return sendRequestError(
@@ -1217,8 +1163,7 @@ app.post(
     addHistoryEntry(request, {
       type: "closure",
       title: "Request Closed",
-      description:
-        "Student confirmed that the completed request can be closed.",
+      description: "Student confirmed that the completed request can be closed.",
       status: "Closed",
       actor: req.session.user.username,
       date: now,
@@ -1248,25 +1193,17 @@ app.post(
     const request = data.requests.find(
       (existingRequest) =>
         String(existingRequest.id) === requestId &&
-        existingRequest.student ===
-          req.session.user.username
+        existingRequest.student === req.session.user.username
     );
 
     if (!request) {
-      return res.status(404).send(
-        "Service request not found."
-      );
+      return res.status(404).send("Service request not found.");
     }
 
-    request.status =
-      normalizeRequestStatus(request.status);
+    request.status = normalizeRequestStatus(request.status);
 
     if (request.status !== "Submitted") {
-      return res
-        .status(400)
-        .send(
-          "Only submitted requests can be cancelled."
-        );
+      return res.status(400).send("Only submitted requests can be cancelled.");
     }
 
     const now = new Date().toISOString();
@@ -1277,8 +1214,7 @@ app.post(
     addHistoryEntry(request, {
       type: "cancellation",
       title: "Request Cancelled",
-      description:
-        "Student cancelled the service request.",
+      description: "Student cancelled the service request.",
       status: "Cancelled",
       actor: req.session.user.username,
       date: now,
@@ -1297,9 +1233,7 @@ app.get(
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "staff-report.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "staff-report.html"));
   }
 );
 
@@ -1308,9 +1242,7 @@ app.get(
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    return res.sendFile(
-      path.join(__dirname, "views", "staff-requests.html")
-    );
+    return res.sendFile(path.join(__dirname, "views", "staff-requests.html"));
   }
 );
 
@@ -1321,9 +1253,7 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    return res.json(
-      sortNewestFirst(data.requests)
-    );
+    return res.json(sortNewestFirst(data.requests));
   }
 );
 
@@ -1334,43 +1264,30 @@ app.post(
   (req, res) => {
     const requestId = String(req.body.id || "").trim();
 
-    let newStatus =
-      String(req.body.status || "").trim();
+    let newStatus = String(req.body.status || "").trim();
 
     newStatus = normalizeRequestStatus(newStatus);
 
-    const newNotes =
-      String(req.body.notes || "").trim();
+    const newNotes = String(req.body.notes || "").trim();
 
-    if (
-      !requestId ||
-      !REQUEST_STATUSES.includes(newStatus)
-    ) {
-      return res
-        .status(400)
-        .send("Invalid request status update.");
+    if (!requestId || !REQUEST_STATUSES.includes(newStatus)) {
+      return res.status(400).send("Invalid request status update.");
     }
 
     const data = readData();
 
     const request = data.requests.find(
-      (existingRequest) =>
-        String(existingRequest.id) === requestId
+      (existingRequest) => String(existingRequest.id) === requestId
     );
 
     if (!request) {
-      return res
-        .status(404)
-        .send("Service request not found.");
+      return res.status(404).send("Service request not found.");
     }
 
-    request.status =
-      normalizeRequestStatus(request.status);
+    request.status = normalizeRequestStatus(request.status);
 
     if (request.status === "Closed") {
-      return res
-        .status(400)
-        .send("Closed requests cannot be modified.");
+      return res.status(400).send("Closed requests cannot be modified.");
     }
 
     const previousStatus = request.status;
@@ -1378,8 +1295,7 @@ app.post(
 
     if (req.body.assignedTo !== undefined) {
       request.assignedTo =
-        String(req.body.assignedTo || "").trim() ||
-        "Unassigned";
+        String(req.body.assignedTo || "").trim() || "Unassigned";
     }
 
     const now = new Date().toISOString();
@@ -1390,25 +1306,20 @@ app.post(
       addHistoryEntry(request, {
         type: "status",
         title: "Status Updated",
-        description:
-          `Request status changed from ${previousStatus} to ${newStatus}.`,
+        description: `Request status changed from ${previousStatus} to ${newStatus}.`,
         status: newStatus,
         actor: req.session.user.username,
         date: now,
       });
     }
 
-    if (
-      newNotes &&
-      newNotes !== previousNotes
-    ) {
+    if (newNotes && newNotes !== previousNotes) {
       request.notes = newNotes;
 
       addHistoryEntry(request, {
         type: "staff-note",
         title: "Staff Note Added",
-        description:
-          "A staff member added or updated a note.",
+        description: "A staff member added or updated a note.",
         status: request.status,
         actor: req.session.user.username,
         note: newNotes,
@@ -1439,9 +1350,7 @@ app.post(
     const notes = String(req.body.notes || "").trim();
 
     if (!service || !date || !time) {
-      return res
-        .status(400)
-        .send("Service, date, and time are required.");
+      return res.status(400).send("Service, date, and time are required.");
     }
 
     const data = readData();
@@ -1473,14 +1382,10 @@ app.get(
     const data = readData();
 
     const appointments = data.appointments.filter(
-      (appointment) =>
-        appointment.student ===
-        req.session.user.username
+      (appointment) => appointment.student === req.session.user.username
     );
 
-    return res.json(
-      sortNewestFirst(appointments)
-    );
+    return res.json(sortNewestFirst(appointments));
   }
 );
 
@@ -1489,43 +1394,32 @@ app.post(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    const appointmentId =
-      String(req.body.id || "").trim();
+    const appointmentId = String(req.body.id || "").trim();
 
     if (!appointmentId) {
-      return res
-        .status(400)
-        .send("Appointment ID is required.");
+      return res.status(400).send("Appointment ID is required.");
     }
 
     const data = readData();
 
-    const appointment =
-      data.appointments.find(
-        (existingAppointment) =>
-          String(existingAppointment.id) ===
-            appointmentId &&
-          existingAppointment.student ===
-            req.session.user.username
-      );
+    const appointment = data.appointments.find(
+      (existingAppointment) =>
+        String(existingAppointment.id) === appointmentId &&
+        existingAppointment.student === req.session.user.username
+    );
 
     if (!appointment) {
-      return res
-        .status(404)
-        .send("Appointment not found.");
+      return res.status(404).send("Appointment not found.");
     }
 
     if (appointment.status === "Completed") {
       return res
         .status(400)
-        .send(
-          "Completed appointments cannot be cancelled."
-        );
+        .send("Completed appointments cannot be cancelled.");
     }
 
     appointment.status = "Cancelled";
-    appointment.updatedAt =
-      new Date().toISOString();
+    appointment.updatedAt = new Date().toISOString();
 
     writeData(data);
 
@@ -1538,38 +1432,26 @@ app.post(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    const appointmentId =
-      String(req.body.id || "").trim();
-
-    const newDate =
-      String(req.body.date || "").trim();
-
-    const newTime =
-      String(req.body.time || "").trim();
+    const appointmentId = String(req.body.id || "").trim();
+    const newDate = String(req.body.date || "").trim();
+    const newTime = String(req.body.time || "").trim();
 
     if (!appointmentId || !newDate || !newTime) {
       return res
         .status(400)
-        .send(
-          "Appointment ID, date, and time are required."
-        );
+        .send("Appointment ID, date, and time are required.");
     }
 
     const data = readData();
 
-    const appointment =
-      data.appointments.find(
-        (existingAppointment) =>
-          String(existingAppointment.id) ===
-            appointmentId &&
-          existingAppointment.student ===
-            req.session.user.username
-      );
+    const appointment = data.appointments.find(
+      (existingAppointment) =>
+        String(existingAppointment.id) === appointmentId &&
+        existingAppointment.student === req.session.user.username
+    );
 
     if (!appointment) {
-      return res
-        .status(404)
-        .send("Appointment not found.");
+      return res.status(404).send("Appointment not found.");
     }
 
     if (
@@ -1578,16 +1460,13 @@ app.post(
     ) {
       return res
         .status(400)
-        .send(
-          "Cancelled or completed appointments cannot be rescheduled."
-        );
+        .send("Cancelled or completed appointments cannot be rescheduled.");
     }
 
     appointment.date = newDate;
     appointment.time = newTime;
     appointment.status = "Rescheduled";
-    appointment.updatedAt =
-      new Date().toISOString();
+    appointment.updatedAt = new Date().toISOString();
 
     writeData(data);
 
@@ -1602,9 +1481,7 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    return res.json(
-      sortNewestFirst(data.appointments)
-    );
+    return res.json(sortNewestFirst(data.appointments));
   }
 );
 
@@ -1637,51 +1514,31 @@ app.post(
       "Rescheduled",
     ];
 
-    const appointmentId =
-      String(req.body.id || "").trim();
+    const appointmentId = String(req.body.id || "").trim();
+    const status = String(req.body.status || "").trim();
+    const staffNotes = String(req.body.staffNotes || "").trim();
 
-    const status =
-      String(req.body.status || "").trim();
-
-    const staffNotes =
-      String(req.body.staffNotes || "").trim();
-
-    if (
-      !appointmentId ||
-      !allowedStatuses.includes(status)
-    ) {
-      return res
-        .status(400)
-        .send(
-          "Invalid appointment status update."
-        );
+    if (!appointmentId || !allowedStatuses.includes(status)) {
+      return res.status(400).send("Invalid appointment status update.");
     }
 
     const data = readData();
 
-    const appointment =
-      data.appointments.find(
-        (existingAppointment) =>
-          String(existingAppointment.id) ===
-          appointmentId
-      );
+    const appointment = data.appointments.find(
+      (existingAppointment) => String(existingAppointment.id) === appointmentId
+    );
 
     if (!appointment) {
-      return res
-        .status(404)
-        .send("Appointment not found.");
+      return res.status(404).send("Appointment not found.");
     }
 
     appointment.status = status;
     appointment.staffNotes = staffNotes;
-    appointment.updatedAt =
-      new Date().toISOString();
+    appointment.updatedAt = new Date().toISOString();
 
     writeData(data);
 
-    return res.redirect(
-      "/staff-appointments"
-    );
+    return res.redirect("/staff-appointments");
   }
 );
 
@@ -1700,24 +1557,15 @@ app.get("/logout", (req, res) => {
 });
 
 app.use((error, req, res, next) => {
-  console.error(
-    "Unexpected server error:",
-    error
-  );
+  console.error("Unexpected server error:", error);
 
   if (res.headersSent) {
     return next(error);
   }
 
-  return res
-    .status(500)
-    .send(
-      "An unexpected server error occurred."
-    );
+  return res.status(500).send("An unexpected server error occurred.");
 });
 
 app.listen(PORT, () => {
-  console.log(
-    `Server running on port ${PORT}`
-  );
+  console.log(`Server running on port ${PORT}`);
 });
