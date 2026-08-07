@@ -20,6 +20,14 @@ const REQUEST_CATEGORIES = [
   "General",
 ];
 
+const REQUEST_STATUSES = [
+  "Submitted",
+  "In Progress",
+  "Completed",
+  "Closed",
+  "Cancelled",
+];
+
 const DEFAULT_USERS = [
   {
     id: 1,
@@ -61,8 +69,10 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
+
 fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
 fs.mkdirSync(UPLOAD_DIRECTORY, { recursive: true });
+
 
 const storage = multer.diskStorage({
   destination: (req, file, callback) => {
@@ -113,6 +123,7 @@ const upload = multer({
   },
 });
 
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
@@ -129,6 +140,76 @@ app.use(
     },
   })
 );
+
+
+function normalizeRequestStatus(status) {
+  if (status === "Pending") {
+    return "Submitted";
+  }
+
+  if (status === "Resolved") {
+    return "Completed";
+  }
+
+  return status || "Submitted";
+}
+
+function ensureRequestHistory(request) {
+  request.status = normalizeRequestStatus(request.status);
+
+  if (!Array.isArray(request.history)) {
+    request.history = [];
+  }
+
+  const submissionDate =
+    request.createdAt ||
+    request.updatedAt ||
+    new Date(Number(request.id) || Date.now()).toISOString();
+
+  const hasSubmissionEntry = request.history.some(
+    (entry) => entry.type === "submission"
+  );
+
+  if (!hasSubmissionEntry) {
+    request.history.push({
+      id: `${request.id}-submission`,
+      type: "submission",
+      title: "Request Submitted",
+      description: "Service request was submitted by the student.",
+      status: "Submitted",
+      actor: request.student || "Student",
+      note: "",
+      date: submissionDate,
+    });
+  }
+
+  
+  if (
+    request.status !== "Submitted" &&
+    !request.history.some(
+      (entry) =>
+        entry.type === "status" &&
+        normalizeRequestStatus(entry.status) === request.status
+    )
+  ) {
+    request.history.push({
+      id: `${request.id}-legacy-status-${request.status}`,
+      type: "status",
+      title: `Status: ${request.status}`,
+      description: `Current request status is ${request.status}.`,
+      status: request.status,
+      actor: "System",
+      note: request.notes || "",
+      date: request.updatedAt || submissionDate,
+    });
+  }
+
+  request.history.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
+  return request;
+}
 
 function readData() {
   if (!fs.existsSync(DATA_FILE)) {
@@ -165,6 +246,10 @@ function readData() {
       parsedData.requests = [];
     }
 
+    parsedData.requests = parsedData.requests.map((request) =>
+      ensureRequestHistory(request)
+    );
+
     return parsedData;
   } catch (error) {
     console.error("Unable to read data file:", error);
@@ -197,6 +282,84 @@ function removeUploadedFile(file) {
   });
 }
 
+function removeStoredAttachment(attachment) {
+  if (!attachment) {
+    return;
+  }
+
+  let storedPath = null;
+
+  if (typeof attachment === "string") {
+    storedPath = path.join(__dirname, "public", attachment);
+  } else if (attachment.path) {
+    storedPath = path.join(__dirname, "public", attachment.path);
+  }
+
+  if (!storedPath) {
+    return;
+  }
+
+  fs.unlink(storedPath, (error) => {
+    if (error && error.code !== "ENOENT") {
+      console.error("Unable to remove old attachment:", error);
+    }
+  });
+}
+
+function buildAttachment(file) {
+  if (!file) {
+    return null;
+  }
+
+  return {
+    path: `/uploads/${file.filename}`,
+    originalName: file.originalname,
+    storedName: file.filename,
+    mimeType: file.mimetype,
+    size: file.size,
+  };
+}
+
+function addHistoryEntry(request, entry) {
+  ensureRequestHistory(request);
+
+  request.history.push({
+    id: `${request.id}-${Date.now()}-${Math.round(Math.random() * 100000)}`,
+    type: entry.type,
+    title: entry.title,
+    description: entry.description || "",
+    status: entry.status || request.status,
+    actor: entry.actor || "System",
+    note: entry.note || "",
+    date: entry.date || new Date().toISOString(),
+  });
+
+  request.history.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+}
+
+function validateRequestFields(category, subject, issue) {
+  if (!category || !subject || !issue) {
+    return "Category, subject, and detailed description are required.";
+  }
+
+  if (!REQUEST_CATEGORIES.includes(category)) {
+    return "Please select a valid service request category.";
+  }
+
+  if (subject.length < 3 || subject.length > 120) {
+    return "The subject must contain between 3 and 120 characters.";
+  }
+
+  if (issue.length < 10 || issue.length > 3000) {
+    return "The detailed description must contain between 10 and 3,000 characters.";
+  }
+
+  return null;
+}
+
+
 function sendRequestError(res, message, statusCode = 400) {
   return res.status(statusCode).send(`
     <!DOCTYPE html>
@@ -212,7 +375,7 @@ function sendRequestError(res, message, statusCode = 400) {
         <header class="student-header">
           <div>
             <h1>Service Request Error</h1>
-            <p>Your request could not be submitted</p>
+            <p>Your request could not be completed</p>
           </div>
 
           <a href="/logout" class="logout-btn">Logout</a>
@@ -222,9 +385,12 @@ function sendRequestError(res, message, statusCode = 400) {
           <div class="student-card">
             <p class="error">${message}</p>
 
-            <div class="student-actions" style="justify-content: flex-start; margin-top: 20px;">
-              <a href="/submit-request" class="action-btn">
-                Return to Request Form
+            <div
+              class="student-actions"
+              style="justify-content: flex-start; margin-top: 20px;"
+            >
+              <a href="/track-requests" class="action-btn">
+                Track Requests
               </a>
 
               <a href="/student" class="action-btn secondary">
@@ -237,6 +403,7 @@ function sendRequestError(res, message, statusCode = 400) {
     </html>
   `);
 }
+
 
 function redirectByRole(req, res) {
   if (!req.session.user) {
@@ -276,7 +443,6 @@ function roleMiddleware(role) {
   };
 }
 
-/* ---------------- LOGIN ---------------- */
 
 app.get("/", (req, res) => {
   if (req.session.user) {
@@ -294,7 +460,8 @@ app.post("/login", (req, res) => {
 
   const user = data.users.find(
     (existingUser) =>
-      existingUser.username === username && existingUser.password === password
+      existingUser.username === username &&
+      existingUser.password === password
   );
 
   if (!user) {
@@ -328,30 +495,45 @@ app.post("/login", (req, res) => {
   });
 });
 
-/* ---------------- DASHBOARDS ---------------- */
 
-app.get("/student", authMiddleware, roleMiddleware("student"), (req, res) => {
-  return res.sendFile(path.join(__dirname, "views", "student.html"));
-});
+app.get(
+  "/student",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    return res.sendFile(path.join(__dirname, "views", "student.html"));
+  }
+);
 
-app.get("/staff", authMiddleware, roleMiddleware("staff"), (req, res) => {
-  return res.sendFile(path.join(__dirname, "views", "staff.html"));
-});
+app.get(
+  "/staff",
+  authMiddleware,
+  roleMiddleware("staff"),
+  (req, res) => {
+    return res.sendFile(path.join(__dirname, "views", "staff.html"));
+  }
+);
 
 app.get(
   "/staff-appointments",
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "staff-appointments.html"));
+    return res.sendFile(
+      path.join(__dirname, "views", "staff-appointments.html")
+    );
   }
 );
 
-app.get("/admin", authMiddleware, roleMiddleware("admin"), (req, res) => {
-  return res.sendFile(path.join(__dirname, "views", "admin.html"));
-});
+app.get(
+  "/admin",
+  authMiddleware,
+  roleMiddleware("admin"),
+  (req, res) => {
+    return res.sendFile(path.join(__dirname, "views", "admin.html"));
+  }
+);
 
-/* ---------------- ADMIN USER MANAGEMENT ---------------- */
 
 app.get(
   "/manage-users",
@@ -441,7 +623,10 @@ app.post(
     const role = String(req.body.role || "").trim();
 
     const allowedRoles = ["student", "staff", "admin"];
-    const user = data.users.find((existingUser) => existingUser.id === userId);
+
+    const user = data.users.find(
+      (existingUser) => existingUser.id === userId
+    );
 
     if (!user) {
       return res.redirect(
@@ -497,18 +682,18 @@ app.post(
   }
 );
 
-
 app.post(
   "/admin/users/:id/toggle-status",
-
-  
   authMiddleware,
   roleMiddleware("admin"),
   (req, res) => {
     const data = readData();
 
     const userId = Number(req.params.id);
-    const user = data.users.find((existingUser) => existingUser.id === userId);
+
+    const user = data.users.find(
+      (existingUser) => existingUser.id === userId
+    );
 
     if (!user) {
       return res.redirect(
@@ -524,7 +709,10 @@ app.post(
       );
     }
 
-    user.status = user.status === "disabled" ? "active" : "disabled";
+    user.status =
+      user.status === "disabled"
+        ? "active"
+        : "disabled";
 
     writeData(data);
 
@@ -539,8 +727,6 @@ app.post(
   }
 );
 
-
-
 app.get(
   "/api/admin/statistics",
   authMiddleware,
@@ -548,7 +734,7 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    const statistics = {
+    return res.json({
       totalStudents: data.users.filter(
         (user) => user.role === "student"
       ).length,
@@ -560,9 +746,7 @@ app.get(
       totalAppointments: data.appointments.length,
 
       totalRequests: data.requests.length,
-    };
-
-    return res.json(statistics);
+    });
   }
 );
 
@@ -605,14 +789,14 @@ app.post(
   }
 );
 
-/* ---------------- STUDENT REQUESTS ---------------- */
-
 app.get(
   "/submit-request",
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "submit-request.html"));
+    return res.sendFile(
+      path.join(__dirname, "views", "submit-request.html")
+    );
   }
 );
 
@@ -628,13 +812,6 @@ app.post(
             return sendRequestError(
               res,
               "The attachment is too large. The maximum allowed file size is 5 MB."
-            );
-          }
-
-          if (error.code === "LIMIT_FILE_COUNT") {
-            return sendRequestError(
-              res,
-              "Only one attachment may be uploaded with each request."
             );
           }
 
@@ -655,83 +832,47 @@ app.post(
     const subject = String(req.body.subject || "").trim();
     const issue = String(req.body.issue || "").trim();
 
-    if (!category || !subject || !issue) {
+    const validationError =
+      validateRequestFields(category, subject, issue);
+
+    if (validationError) {
       removeUploadedFile(req.file);
-
-      return sendRequestError(
-        res,
-        "Category, subject, and detailed description are required."
-      );
-    }
-
-    if (!REQUEST_CATEGORIES.includes(category)) {
-      removeUploadedFile(req.file);
-
-      return sendRequestError(
-        res,
-        "Please select a valid service request category."
-      );
-    }
-
-    if (subject.length < 3) {
-      removeUploadedFile(req.file);
-
-      return sendRequestError(
-        res,
-        "The subject must contain at least 3 characters."
-      );
-    }
-
-    if (subject.length > 120) {
-      removeUploadedFile(req.file);
-
-      return sendRequestError(
-        res,
-        "The subject cannot contain more than 120 characters."
-      );
-    }
-
-    if (issue.length < 10) {
-      removeUploadedFile(req.file);
-
-      return sendRequestError(
-        res,
-        "The detailed description must contain at least 10 characters."
-      );
-    }
-
-    if (issue.length > 3000) {
-      removeUploadedFile(req.file);
-
-      return sendRequestError(
-        res,
-        "The detailed description cannot contain more than 3,000 characters."
-      );
+      return sendRequestError(res, validationError);
     }
 
     const data = readData();
-
-    const attachment = req.file
-      ? {
-          path: `/uploads/${req.file.filename}`,
-          originalName: req.file.originalname,
-          storedName: req.file.filename,
-          mimeType: req.file.mimetype,
-          size: req.file.size,
-        }
-      : null;
+    const now = new Date().toISOString();
+    const requestId = Date.now();
 
     const newRequest = {
-      id: Date.now(),
+      id: requestId,
       student: req.session.user.username,
       category,
       subject,
       issue,
-      attachment,
-      status: "Pending",
+      attachment: buildAttachment(req.file),
+
+      
+      status: "Submitted",
+
       assignedTo: "Unassigned",
       notes: "",
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
+
+      history: [
+        {
+          id: `${requestId}-submission`,
+          type: "submission",
+          title: "Request Submitted",
+          description:
+            "Service request was submitted by the student.",
+          status: "Submitted",
+          actor: req.session.user.username,
+          note: "",
+          date: now,
+        },
+      ],
     };
 
     data.requests.push(newRequest);
@@ -746,7 +887,9 @@ app.get(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "track-requests.html"));
+    return res.sendFile(
+      path.join(__dirname, "views", "track-requests.html")
+    );
   }
 );
 
@@ -758,12 +901,307 @@ app.get(
     const data = readData();
 
     const requests = data.requests.filter(
-      (request) => request.student === req.session.user.username
+      (request) =>
+        request.student === req.session.user.username
     );
 
     return res.json(sortNewestFirst(requests));
   }
 );
+
+
+app.get(
+  "/request-history",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    return res.sendFile(
+      path.join(__dirname, "views", "request-history.html")
+    );
+  }
+);
+
+
+app.get(
+  "/api/request-history/:id",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const data = readData();
+
+    const request = data.requests.find(
+      (existingRequest) =>
+        String(existingRequest.id) ===
+          String(req.params.id) &&
+        existingRequest.student ===
+          req.session.user.username
+    );
+
+    if (!request) {
+      return res.status(404).json({
+        error: "Service request not found.",
+      });
+    }
+
+    ensureRequestHistory(request);
+
+    return res.json({
+      id: request.id,
+      student: request.student,
+      subject: request.subject,
+      category: request.category,
+      issue: request.issue,
+      attachment: request.attachment || null,
+      status: request.status,
+      assignedTo: request.assignedTo || "Unassigned",
+      notes: request.notes || "",
+      createdAt: request.createdAt,
+      updatedAt: request.updatedAt || request.createdAt,
+      closedAt: request.closedAt || null,
+
+      history: [...request.history].sort(
+        (a, b) =>
+          new Date(a.date).getTime() -
+          new Date(b.date).getTime()
+      ),
+    });
+  }
+);
+
+app.get(
+  "/api/student-request/:id",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const data = readData();
+
+    const request = data.requests.find(
+      (existingRequest) =>
+        String(existingRequest.id) ===
+          String(req.params.id) &&
+        existingRequest.student ===
+          req.session.user.username
+    );
+
+    if (!request) {
+      return res.status(404).json({
+        error: "Service request not found.",
+      });
+    }
+
+    return res.json(request);
+  }
+);
+
+
+app.get(
+  "/edit-request",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    return res.sendFile(
+      path.join(__dirname, "views", "edit-request.html")
+    );
+  }
+);
+
+
+app.post(
+  "/edit-service-request",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res, next) => {
+    upload.single("attachment")(req, res, (error) => {
+      if (error) {
+        if (error instanceof multer.MulterError) {
+          if (error.code === "LIMIT_FILE_SIZE") {
+            return sendRequestError(
+              res,
+              "The attachment is too large. The maximum allowed file size is 5 MB."
+            );
+          }
+
+          return sendRequestError(
+            res,
+            `Attachment upload failed: ${error.message}`
+          );
+        }
+
+        return sendRequestError(res, error.message);
+      }
+
+      return next();
+    });
+  },
+  (req, res) => {
+    const requestId = String(req.body.id || "").trim();
+    const category = String(req.body.category || "").trim();
+    const subject = String(req.body.subject || "").trim();
+    const issue = String(req.body.issue || "").trim();
+
+    if (!requestId) {
+      removeUploadedFile(req.file);
+      return sendRequestError(res, "Request ID is required.");
+    }
+
+    const validationError =
+      validateRequestFields(category, subject, issue);
+
+    if (validationError) {
+      removeUploadedFile(req.file);
+      return sendRequestError(res, validationError);
+    }
+
+    const data = readData();
+
+    const request = data.requests.find(
+      (existingRequest) =>
+        String(existingRequest.id) === requestId &&
+        existingRequest.student ===
+          req.session.user.username
+    );
+
+    if (!request) {
+      removeUploadedFile(req.file);
+
+      return sendRequestError(
+        res,
+        "Service request was not found.",
+        404
+      );
+    }
+
+    request.status =
+      normalizeRequestStatus(request.status);
+
+   
+    if (request.status !== "Submitted") {
+      removeUploadedFile(req.file);
+
+      return sendRequestError(
+        res,
+        "This request can no longer be edited because processing has already started."
+      );
+    }
+
+    const previousCategory = request.category;
+    const previousSubject = request.subject;
+    const previousIssue = request.issue;
+
+    request.category = category;
+    request.subject = subject;
+    request.issue = issue;
+
+    
+    if (req.file) {
+      removeStoredAttachment(request.attachment);
+      request.attachment = buildAttachment(req.file);
+    }
+
+    request.updatedAt = new Date().toISOString();
+
+    const changedFields = [];
+
+    if (previousCategory !== category) {
+      changedFields.push("category");
+    }
+
+    if (previousSubject !== subject) {
+      changedFields.push("subject");
+    }
+
+    if (previousIssue !== issue) {
+      changedFields.push("description");
+    }
+
+    if (req.file) {
+      changedFields.push("attachment");
+    }
+
+    addHistoryEntry(request, {
+      type: "student-edit",
+      title: "Request Updated",
+      description:
+        changedFields.length > 0
+          ? `Student updated: ${changedFields.join(", ")}.`
+          : "Student saved the request without changing request details.",
+      status: request.status,
+      actor: req.session.user.username,
+    });
+
+    writeData(data);
+
+    return res.redirect(
+      `/request-history?id=${encodeURIComponent(request.id)}`
+    );
+  }
+);
+
+app.post(
+  "/close-service-request",
+  authMiddleware,
+  roleMiddleware("student"),
+  (req, res) => {
+    const requestId = String(req.body.id || "").trim();
+
+    if (!requestId) {
+      return sendRequestError(
+        res,
+        "Request ID is required."
+      );
+    }
+
+    const data = readData();
+
+    const request = data.requests.find(
+      (existingRequest) =>
+        String(existingRequest.id) === requestId &&
+        existingRequest.student ===
+          req.session.user.username
+    );
+
+    if (!request) {
+      return sendRequestError(
+        res,
+        "Service request was not found.",
+        404
+      );
+    }
+
+    request.status =
+      normalizeRequestStatus(request.status);
+
+    if (request.status !== "Completed") {
+      return sendRequestError(
+        res,
+        "Only completed service requests can be closed."
+      );
+    }
+
+    const now = new Date().toISOString();
+
+    request.status = "Closed";
+    request.closedAt = now;
+    request.updatedAt = now;
+
+    addHistoryEntry(request, {
+      type: "closure",
+      title: "Request Closed",
+      description:
+        "Student confirmed that the completed request can be closed.",
+      status: "Closed",
+      actor: req.session.user.username,
+      date: now,
+    });
+
+    writeData(data);
+
+    return res.redirect(
+      `/request-history?id=${encodeURIComponent(request.id)}`
+    );
+  }
+);
+
 
 app.post(
   "/cancel-service-request",
@@ -781,19 +1219,42 @@ app.post(
     const request = data.requests.find(
       (existingRequest) =>
         String(existingRequest.id) === requestId &&
-        existingRequest.student === req.session.user.username
+        existingRequest.student ===
+          req.session.user.username
     );
 
     if (!request) {
-      return res.status(404).send("Service request not found.");
+      return res.status(404).send(
+        "Service request not found."
+      );
     }
 
-    if (request.status === "Resolved") {
-      return res.status(400).send("Resolved requests cannot be cancelled.");
+    request.status =
+      normalizeRequestStatus(request.status);
+
+    
+    if (request.status !== "Submitted") {
+      return res
+        .status(400)
+        .send(
+          "Only submitted requests can be cancelled."
+        );
     }
+
+    const now = new Date().toISOString();
 
     request.status = "Cancelled";
-    request.updatedAt = new Date().toISOString();
+    request.updatedAt = now;
+
+    addHistoryEntry(request, {
+      type: "cancellation",
+      title: "Request Cancelled",
+      description:
+        "Student cancelled the service request.",
+      status: "Cancelled",
+      actor: req.session.user.username,
+      date: now,
+    });
 
     writeData(data);
 
@@ -801,76 +1262,15 @@ app.post(
   }
 );
 
-app.post(
-  "/edit-service-request",
-  authMiddleware,
-  roleMiddleware("student"),
-  (req, res) => {
-    const requestId = String(req.body.id || "").trim();
-    const category = String(req.body.category || "").trim();
-    const subject = String(req.body.subject || "").trim();
-    const issue = String(req.body.issue || "").trim();
-
-    if (!requestId || !category || !subject || !issue) {
-      return res
-        .status(400)
-        .send("Request ID, category, subject, and description are required.");
-    }
-
-    if (!REQUEST_CATEGORIES.includes(category)) {
-      return res.status(400).send("Invalid service request category.");
-    }
-
-    if (subject.length < 3 || subject.length > 120) {
-      return res
-        .status(400)
-        .send("Subject must be between 3 and 120 characters.");
-    }
-
-    if (issue.length < 10 || issue.length > 3000) {
-      return res
-        .status(400)
-        .send("Description must be between 10 and 3000 characters.");
-    }
-
-    const data = readData();
-
-    const request = data.requests.find(
-      (existingRequest) =>
-        String(existingRequest.id) === requestId &&
-        existingRequest.student === req.session.user.username
-    );
-
-    if (!request) {
-      return res.status(404).send("Service request not found.");
-    }
-
-    if (request.status === "Cancelled" || request.status === "Resolved") {
-      return res
-        .status(400)
-        .send("Cancelled or resolved requests cannot be edited.");
-    }
-
-    request.category = category;
-    request.subject = subject;
-    request.issue = issue;
-    request.status = "Pending";
-    request.updatedAt = new Date().toISOString();
-
-    writeData(data);
-
-    return res.redirect("/track-requests");
-  }
-);
-
-/* ---------------- STAFF REQUESTS ---------------- */
 
 app.get(
   "/staff-report",
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "staff-report.html"));
+    return res.sendFile(
+      path.join(__dirname, "views", "staff-report.html")
+    );
   }
 );
 
@@ -879,7 +1279,9 @@ app.get(
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    return res.sendFile(path.join(__dirname, "views", "staff-requests.html"));
+    return res.sendFile(
+      path.join(__dirname, "views", "staff-requests.html")
+    );
   }
 );
 
@@ -890,7 +1292,9 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    return res.json(sortNewestFirst(data.requests));
+    return res.json(
+      sortNewestFirst(data.requests)
+    );
   }
 );
 
@@ -899,47 +1303,102 @@ app.post(
   authMiddleware,
   roleMiddleware("staff"),
   (req, res) => {
-    const allowedStatuses = [
-      "Pending",
-      "In Progress",
-      "Resolved",
-      "Cancelled",
-    ];
-
     const requestId = String(req.body.id || "").trim();
-    const status = String(req.body.status || "").trim();
-    const notes = String(req.body.notes || "").trim();
 
-    if (!requestId || !allowedStatuses.includes(status)) {
-      return res.status(400).send("Invalid request status update.");
+    let newStatus =
+      String(req.body.status || "").trim();
+
+    newStatus = normalizeRequestStatus(newStatus);
+
+    const newNotes =
+      String(req.body.notes || "").trim();
+
+    if (
+      !requestId ||
+      !REQUEST_STATUSES.includes(newStatus)
+    ) {
+      return res
+        .status(400)
+        .send("Invalid request status update.");
     }
 
     const data = readData();
 
     const request = data.requests.find(
-      (existingRequest) => String(existingRequest.id) === requestId
+      (existingRequest) =>
+        String(existingRequest.id) === requestId
     );
 
     if (!request) {
-      return res.status(404).send("Service request not found.");
+      return res
+        .status(404)
+        .send("Service request not found.");
     }
 
-    request.status = status;
-    request.notes = notes;
+    request.status =
+      normalizeRequestStatus(request.status);
+
     
-    if (req.body.assignedTo !== undefined) {
-      request.assignedTo = req.body.assignedTo;
+    if (request.status === "Closed") {
+      return res
+        .status(400)
+        .send("Closed requests cannot be modified.");
     }
+
+    const previousStatus = request.status;
+    const previousNotes = request.notes || "";
+
+    if (req.body.assignedTo !== undefined) {
+      request.assignedTo =
+        String(req.body.assignedTo || "").trim() ||
+        "Unassigned";
+    }
+
+    const now = new Date().toISOString();
+
     
-    request.updatedAt = new Date().toISOString();
+    if (previousStatus !== newStatus) {
+      request.status = newStatus;
+
+      addHistoryEntry(request, {
+        type: "status",
+        title: "Status Updated",
+        description:
+          `Request status changed from ${previousStatus} to ${newStatus}.`,
+        status: newStatus,
+        actor: req.session.user.username,
+        date: now,
+      });
+    }
+
+    
+    if (
+      newNotes &&
+      newNotes !== previousNotes
+    ) {
+      request.notes = newNotes;
+
+      addHistoryEntry(request, {
+        type: "staff-note",
+        title: "Staff Note Added",
+        description:
+          "A staff member added or updated a note.",
+        status: request.status,
+        actor: req.session.user.username,
+        note: newNotes,
+        date: now,
+      });
+    } else {
+      request.notes = newNotes;
+    }
+
+    request.updatedAt = now;
 
     writeData(data);
 
     return res.redirect("/staff-requests");
   }
 );
-
-/* ---------------- APPOINTMENTS ---------------- */
 
 app.post(
   "/book-appointment",
@@ -952,7 +1411,9 @@ app.post(
     const notes = String(req.body.notes || "").trim();
 
     if (!service || !date || !time) {
-      return res.status(400).send("Service, date, and time are required.");
+      return res
+        .status(400)
+        .send("Service, date, and time are required.");
     }
 
     const data = readData();
@@ -984,10 +1445,14 @@ app.get(
     const data = readData();
 
     const appointments = data.appointments.filter(
-      (appointment) => appointment.student === req.session.user.username
+      (appointment) =>
+        appointment.student ===
+        req.session.user.username
     );
 
-    return res.json(sortNewestFirst(appointments));
+    return res.json(
+      sortNewestFirst(appointments)
+    );
   }
 );
 
@@ -996,30 +1461,43 @@ app.post(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    const appointmentId = String(req.body.id || "").trim();
+    const appointmentId =
+      String(req.body.id || "").trim();
 
     if (!appointmentId) {
-      return res.status(400).send("Appointment ID is required.");
+      return res
+        .status(400)
+        .send("Appointment ID is required.");
     }
 
     const data = readData();
 
-    const appointment = data.appointments.find(
-      (existingAppointment) =>
-        String(existingAppointment.id) === appointmentId &&
-        existingAppointment.student === req.session.user.username
-    );
+    const appointment =
+      data.appointments.find(
+        (existingAppointment) =>
+          String(existingAppointment.id) ===
+            appointmentId &&
+          existingAppointment.student ===
+            req.session.user.username
+      );
 
     if (!appointment) {
-      return res.status(404).send("Appointment not found.");
+      return res
+        .status(404)
+        .send("Appointment not found.");
     }
 
     if (appointment.status === "Completed") {
-      return res.status(400).send("Completed appointments cannot be cancelled.");
+      return res
+        .status(400)
+        .send(
+          "Completed appointments cannot be cancelled."
+        );
     }
 
     appointment.status = "Cancelled";
-    appointment.updatedAt = new Date().toISOString();
+    appointment.updatedAt =
+      new Date().toISOString();
 
     writeData(data);
 
@@ -1032,36 +1510,56 @@ app.post(
   authMiddleware,
   roleMiddleware("student"),
   (req, res) => {
-    const appointmentId = String(req.body.id || "").trim();
-    const newDate = String(req.body.date || "").trim();
-    const newTime = String(req.body.time || "").trim();
+    const appointmentId =
+      String(req.body.id || "").trim();
+
+    const newDate =
+      String(req.body.date || "").trim();
+
+    const newTime =
+      String(req.body.time || "").trim();
 
     if (!appointmentId || !newDate || !newTime) {
-      return res.status(400).send("Appointment ID, date, and time are required.");
+      return res
+        .status(400)
+        .send(
+          "Appointment ID, date, and time are required."
+        );
     }
 
     const data = readData();
 
-    const appointment = data.appointments.find(
-      (existingAppointment) =>
-        String(existingAppointment.id) === appointmentId &&
-        existingAppointment.student === req.session.user.username
-    );
+    const appointment =
+      data.appointments.find(
+        (existingAppointment) =>
+          String(existingAppointment.id) ===
+            appointmentId &&
+          existingAppointment.student ===
+            req.session.user.username
+      );
 
     if (!appointment) {
-      return res.status(404).send("Appointment not found.");
+      return res
+        .status(404)
+        .send("Appointment not found.");
     }
 
-    if (appointment.status === "Cancelled" || appointment.status === "Completed") {
+    if (
+      appointment.status === "Cancelled" ||
+      appointment.status === "Completed"
+    ) {
       return res
         .status(400)
-        .send("Cancelled or completed appointments cannot be rescheduled.");
+        .send(
+          "Cancelled or completed appointments cannot be rescheduled."
+        );
     }
 
     appointment.date = newDate;
     appointment.time = newTime;
     appointment.status = "Rescheduled";
-    appointment.updatedAt = new Date().toISOString();
+    appointment.updatedAt =
+      new Date().toISOString();
 
     writeData(data);
 
@@ -1076,7 +1574,9 @@ app.get(
   (req, res) => {
     const data = readData();
 
-    return res.json(sortNewestFirst(data.appointments));
+    return res.json(
+      sortNewestFirst(data.appointments)
+    );
   }
 );
 
@@ -1093,35 +1593,54 @@ app.post(
       "Rescheduled",
     ];
 
-    const appointmentId = String(req.body.id || "").trim();
-    const status = String(req.body.status || "").trim();
-    const staffNotes = String(req.body.staffNotes || "").trim();
+    const appointmentId =
+      String(req.body.id || "").trim();
 
-    if (!appointmentId || !allowedStatuses.includes(status)) {
-      return res.status(400).send("Invalid appointment status update.");
+    const status =
+      String(req.body.status || "").trim();
+
+    const staffNotes =
+      String(req.body.staffNotes || "").trim();
+
+    if (
+      !appointmentId ||
+      !allowedStatuses.includes(status)
+    ) {
+      return res
+        .status(400)
+        .send(
+          "Invalid appointment status update."
+        );
     }
 
     const data = readData();
 
-    const appointment = data.appointments.find(
-      (existingAppointment) => String(existingAppointment.id) === appointmentId
-    );
+    const appointment =
+      data.appointments.find(
+        (existingAppointment) =>
+          String(existingAppointment.id) ===
+          appointmentId
+      );
 
     if (!appointment) {
-      return res.status(404).send("Appointment not found.");
+      return res
+        .status(404)
+        .send("Appointment not found.");
     }
 
     appointment.status = status;
     appointment.staffNotes = staffNotes;
-    appointment.updatedAt = new Date().toISOString();
+    appointment.updatedAt =
+      new Date().toISOString();
 
     writeData(data);
 
-    return res.redirect("/staff-appointments");
+    return res.redirect(
+      "/staff-appointments"
+    );
   }
 );
 
-/* ---------------- LOGOUT ---------------- */
 
 app.get("/logout", (req, res) => {
   req.session.destroy((error) => {
@@ -1130,20 +1649,32 @@ app.get("/logout", (req, res) => {
     }
 
     res.clearCookie("connect.sid");
+
     return res.redirect("/");
   });
 });
 
+
 app.use((error, req, res, next) => {
-  console.error("Unexpected server error:", error);
+  console.error(
+    "Unexpected server error:",
+    error
+  );
 
   if (res.headersSent) {
     return next(error);
   }
 
-  return res.status(500).send("An unexpected server error occurred.");
+  return res
+    .status(500)
+    .send(
+      "An unexpected server error occurred."
+    );
 });
 
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(
+    `Server running on port ${PORT}`
+  );
 });

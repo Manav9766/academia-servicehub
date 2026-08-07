@@ -928,3 +928,280 @@ input[type="file"]{
     padding: 44px 34px;
   }
 }
+
+
+.status-closed {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.request-student-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.request-student-actions .action-btn {
+  display: inline-block;
+  width: auto;
+  text-align: center;
+}
+
+.inline-request-form {
+  display: inline-block;
+  margin: 0;
+}
+
+.request-cancel-btn {
+  width: auto;
+  margin: 0;
+  padding: 12px 20px;
+  background: #d9534f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.request-cancel-btn:hover {
+  background: #b52b27;
+}
+
+.request-close-btn {
+  width: auto;
+  margin: 0;
+  padding: 12px 20px;
+  background: #1f4f2b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.request-close-btn:hover {
+  background: #163b20;
+}
+
+.request-help-text {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: #f4f7fb;
+  border-left: 4px solid #1f3c88;
+  border-radius: 6px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.request-history-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.request-history-actions .action-btn {
+  width: auto;
+}
+
+.history-item {
+  display: flex;
+  gap: 18px;
+  position: relative;
+  padding-bottom: 26px;
+}
+
+.history-item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 38px;
+  bottom: 0;
+  width: 2px;
+  background: #d9e2ec;
+}
+
+.history-marker {
+  min-width: 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #23395d;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  position: relative;
+  z-index: 1;
+}
+
+.history-content {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #d9e2ec;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.history-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.history-heading h3 {
+  margin: 0;
+  color: #23395d;
+}
+
+.history-content p {
+  margin: 8px 0;
+}
+
+.history-note {
+  margin-top: 12px;
+  padding: 12px;
+  background: #eef3ff;
+  border-left: 4px solid #1f3c88;
+  border-radius: 6px;
+}
+
+.history-meta {
+  color: #666;
+  font-size: 14px;
+}
+
+#editRequestForm {
+  display: grid;
+  gap: 16px;
+}
+
+#editRequestForm .form-group {
+  margin-bottom: 12px;
+}
+
+#editRequestForm input[type="file"] {
+  background: white;
+}
+
+#currentAttachment {
+  text-align: left;
+  margin-top: 6px;
+}
+
+#currentAttachment a {
+  color: #1f3c88;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#currentAttachment a:hover {
+  text-decoration: underline;
+}
+
+.request-filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.request-filter-bar input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.request-filter-bar select {
+  width: auto;
+  min-width: 170px;
+}
+
+@media (max-width: 768px) {
+
+  .request-student-actions,
+  .request-history-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .request-student-actions .action-btn,
+  .request-history-actions .action-btn,
+  .request-cancel-btn,
+  .request-close-btn {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .inline-request-form {
+    width: 100%;
+  }
+
+  .history-item {
+    gap: 12px;
+  }
+
+  .history-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .request-filter-bar {
+    flex-direction: column;
+  }
+
+  .request-filter-bar input,
+  .request-filter-bar select {
+    width: 100%;
+  }
+}
+
+.action-btn,
+.action-btn:visited,
+.staff-action-btn,
+.staff-action-btn:visited,
+.reschedule-btn,
+.reschedule-btn:visited,
+.update-btn,
+.update-btn:visited,
+.request-close-btn,
+.request-close-btn:visited,
+.request-cancel-btn,
+.request-cancel-btn:visited {
+  color: #ffffff !important;
+  text-decoration: none;
+}
+
+.action-btn:hover,
+.staff-action-btn:hover,
+.reschedule-btn:hover,
+.update-btn:hover,
+.request-close-btn:hover,
+.request-cancel-btn:hover {
+  color: #ffffff !important;
+  text-decoration: none;
+}
+
+.request-card .action-btn,
+.request-card .action-btn:visited,
+.request-card .reschedule-btn,
+.request-card .reschedule-btn:visited {
+  color: #ffffff !important;
+}
+
+.request-history-actions .action-btn,
+.request-history-actions .action-btn:visited {
+  color: #ffffff !important;
+}
+
+.request-student-actions .action-btn,
+.request-student-actions .action-btn:visited {
+  color: #ffffff !important;
+}

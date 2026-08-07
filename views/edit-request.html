@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Edit Service Request</title>
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="student-page">
+
+<header class="student-header">
+
+  <div>
+    <h1>Edit Service Request</h1>
+    <p>Update your request before processing begins</p>
+  </div>
+
+  <a href="/logout" class="logout-btn">
+    Logout
+  </a>
+
+</header>
+
+<main class="student-container">
+
+  <div class="student-actions">
+
+    <a href="/track-requests" class="action-btn secondary">
+      Back to Track Requests
+    </a>
+
+    <a href="/student" class="action-btn">
+      Student Dashboard
+    </a>
+
+  </div>
+
+  <section class="student-card">
+
+    <h2>Request Details</h2>
+
+    <p class="section-text">
+      You can edit this request only while its status is Submitted.
+    </p>
+
+    <div id="editMessage"></div>
+
+    <form
+      id="editRequestForm"
+      action="/edit-service-request"
+      method="POST"
+      enctype="multipart/form-data"
+      class="appointment-form"
+      style="display:none;"
+    >
+
+      <input
+        type="hidden"
+        id="requestId"
+        name="id"
+      >
+
+      <div class="form-group">
+
+        <label for="category">
+          Category *
+        </label>
+
+        <select
+          id="category"
+          name="category"
+          required
+        >
+
+          <option value="">
+            Select Category
+          </option>
+
+          <option value="Academic Advising">
+            Academic Advising
+          </option>
+
+          <option value="Registration & Enrollment">
+            Registration & Enrollment
+          </option>
+
+          <option value="Financial Aid">
+            Financial Aid
+          </option>
+
+          <option value="IT Support">
+            IT Support
+          </option>
+
+          <option value="Career Services">
+            Career Services
+          </option>
+
+          <option value="Mental Health">
+            Mental Health
+          </option>
+
+          <option value="General">
+            General
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="subject">
+          Subject *
+        </label>
+
+        <input
+          type="text"
+          id="subject"
+          name="subject"
+          minlength="3"
+          maxlength="120"
+          required
+          placeholder="Enter request subject"
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="issue">
+          Detailed Description *
+        </label>
+
+        <textarea
+          id="issue"
+          name="issue"
+          rows="7"
+          minlength="10"
+          maxlength="3000"
+          required
+          placeholder="Describe your request in detail..."
+        ></textarea>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          Current Attachment
+        </label>
+
+        <div id="currentAttachment" class="info">
+          No attachment uploaded.
+        </div>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="attachment">
+          Replace Attachment (Optional)
+        </label>
+
+        <input
+          type="file"
+          id="attachment"
+          name="attachment"
+          accept=".png,.jpg,.jpeg,.pdf,.doc,.docx"
+        >
+
+        <small style="margin-top:6px;color:#666;">
+          If you select a new file, it will replace the current attachment.
+          Maximum file size: 5 MB.
+        </small>
+
+      </div>
+
+
+      <button
+        type="submit"
+        class="primary-btn"
+      >
+        Save Request Changes
+      </button>
+
+    </form>
+
+  </section>
+
+</main>
+
+<script>
+
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
+
+const requestId =
+  params.get("id");
+
+
+async function loadRequest() {
+
+  const message =
+    document.getElementById("editMessage");
+
+  const form =
+    document.getElementById("editRequestForm");
+
+  if (!requestId) {
+
+    message.innerHTML = `
+      <div class="error">
+        Request ID is missing.
+      </div>
+    `;
+
+    return;
+
+  }
+
+  try {
+
+    const response =
+      await fetch(
+        `/api/student-request/${encodeURIComponent(requestId)}`
+      );
+
+    const request =
+      await response.json();
+
+    if (!response.ok) {
+
+      throw new Error(
+        request.error ||
+        "Unable to load service request."
+      );
+
+    }
+
+    const status =
+      normalizeStatus(
+        request.status
+      );
+
+    if (status !== "Submitted") {
+
+      message.innerHTML = `
+        <div class="info">
+          This request can no longer be edited because its current status is
+          <strong>${escapeHTML(status)}</strong>.
+          Editing is only available while a request is Submitted.
+        </div>
+      `;
+
+      return;
+
+    }
+
+    document
+      .getElementById("requestId")
+      .value =
+      request.id;
+
+    document
+      .getElementById("category")
+      .value =
+      request.category ||
+      "General";
+
+    document
+      .getElementById("subject")
+      .value =
+      request.subject ||
+      "";
+
+    document
+      .getElementById("issue")
+      .value =
+      request.issue ||
+      "";
+
+    renderCurrentAttachment(
+      request.attachment
+    );
+
+    form.style.display =
+      "grid";
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    message.innerHTML = `
+      <div class="error">
+        ${escapeHTML(error.message)}
+      </div>
+    `;
+
+  }
+
+}
+
+
+function renderCurrentAttachment(
+  attachment
+) {
+
+  const container =
+    document.getElementById(
+      "currentAttachment"
+    );
+
+  if (!attachment) {
+
+    container.innerHTML =
+      "No attachment uploaded.";
+
+    return;
+
+  }
+
+  if (
+    typeof attachment === "string"
+  ) {
+
+    container.innerHTML = `
+      <a
+        href="${escapeHTML(attachment)}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        View Current Attachment
+      </a>
+    `;
+
+    return;
+
+  }
+
+  if (
+    attachment.path
+  ) {
+
+    container.innerHTML = `
+      <a
+        href="${escapeHTML(attachment.path)}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        📎 ${escapeHTML(
+          attachment.originalName ||
+          "View Current Attachment"
+        )}
+      </a>
+    `;
+
+    return;
+
+  }
+
+  container.innerHTML =
+    "No attachment uploaded.";
+
+}
+
+
+function normalizeStatus(status) {
+
+  if (status === "Pending") {
+    return "Submitted";
+  }
+
+  if (status === "Resolved") {
+    return "Completed";
+  }
+
+  return status || "Submitted";
+
+}
+
+
+function escapeHTML(value) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+document
+  .getElementById("editRequestForm")
+  .addEventListener(
+    "submit",
+    function(event) {
+
+      const category =
+        document
+          .getElementById("category")
+          .value
+          .trim();
+
+      const subject =
+        document
+          .getElementById("subject")
+          .value
+          .trim();
+
+      const issue =
+        document
+          .getElementById("issue")
+          .value
+          .trim();
+
+      const attachment =
+        document
+          .getElementById("attachment")
+          .files[0];
+
+      if (!category) {
+
+        alert(
+          "Please select a category."
+        );
+
+        event.preventDefault();
+
+        return;
+
+      }
+
+      if (
+        subject.length < 3 ||
+        subject.length > 120
+      ) {
+
+        alert(
+          "Subject must be between 3 and 120 characters."
+        );
+
+        event.preventDefault();
+
+        return;
+
+      }
+
+      if (
+        issue.length < 10 ||
+        issue.length > 3000
+      ) {
+
+        alert(
+          "Description must be between 10 and 3000 characters."
+        );
+
+        event.preventDefault();
+
+        return;
+
+      }
+
+      if (attachment) {
+
+        const allowedExtensions = [
+          "png",
+          "jpg",
+          "jpeg",
+          "pdf",
+          "doc",
+          "docx"
+        ];
+
+        const extension =
+          attachment.name
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+        if (
+          !allowedExtensions.includes(
+            extension
+          )
+        ) {
+
+          alert(
+            "Unsupported attachment type."
+          );
+
+          event.preventDefault();
+
+          return;
+
+        }
+
+        if (
+          attachment.size >
+          5 * 1024 * 1024
+        ) {
+
+          alert(
+            "Attachment must be 5 MB or smaller."
+          );
+
+          event.preventDefault();
+
+          return;
+
+        }
+
+      }
+
+    }
+  );
+
+
+loadRequest();
+
+</script>
+
+</body>
+
+</html>
