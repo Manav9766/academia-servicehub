@@ -1,20 +1,19 @@
 require("dotenv").config();
+
 const express = require("express");
 const session = require("express-session");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 const DATA_FILE = path.join(__dirname, "data", "db.json");
 const UPLOAD_DIRECTORY = path.join(__dirname, "public", "uploads");
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
