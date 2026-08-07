@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const fs = require("fs");
@@ -6,10 +7,19 @@ const multer = require("multer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const DATA_FILE = path.join(__dirname, "data", "db.json");
 const UPLOAD_DIRECTORY = path.join(__dirname, "public", "uploads");
-
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 const REQUEST_CATEGORIES = [
   "Academic Advising",
   "Registration & Enrollment",
@@ -72,12 +82,9 @@ const ALLOWED_MIME_TYPES = new Set([
 fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
 fs.mkdirSync(UPLOAD_DIRECTORY, { recursive: true });
 
-const storage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, UPLOAD_DIRECTORY);
-  },
-
-  filename: (req, file, callback) => {
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
     const extension = path.extname(file.originalname).toLowerCase();
 
     const safeBaseName = path
@@ -87,14 +94,17 @@ const storage = multer.diskStorage({
       .replace(/^-|-$/g, "")
       .slice(0, 60);
 
-    const uniqueName = `${Date.now()}-${Math.round(
-      Math.random() * 1_000_000
-    )}-${safeBaseName || "attachment"}${extension}`;
-
-    callback(null, uniqueName);
+    return {
+      folder: "prj666-service-attachments",
+      resource_type: "auto",
+      public_id: `${Date.now()}-${Math.round(
+        Math.random() * 1_000_000
+      )}-${safeBaseName || "attachment"}`,
+    };
   },
 });
-
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 function attachmentFileFilter(req, file, callback) {
   const extension = path.extname(file.originalname).toLowerCase();
 
@@ -288,11 +298,26 @@ function removeStoredAttachment(attachment) {
     return;
   }
 
+  if (attachment.storage === "cloudinary" && attachment.publicId) {
+    cloudinary.uploader
+      .destroy(attachment.publicId, { resource_type: "image" })
+      .catch(() => {
+        return cloudinary.uploader.destroy(attachment.publicId, {
+          resource_type: "raw",
+        });
+      })
+      .catch((error) => {
+        console.error("Unable to remove Cloudinary attachment:", error);
+      });
+
+    return;
+  }
+
   let storedPath = null;
 
   if (typeof attachment === "string") {
     storedPath = path.join(__dirname, "public", attachment);
-  } else if (attachment.path) {
+  } else if (attachment.path && attachment.path.startsWith("/uploads/")) {
     storedPath = path.join(__dirname, "public", attachment.path);
   }
 
@@ -313,11 +338,13 @@ function buildAttachment(file) {
   }
 
   return {
-    path: `/uploads/${file.filename}`,
+    path: file.path,
     originalName: file.originalname,
     storedName: file.filename,
+    publicId: file.filename,
     mimeType: file.mimetype,
     size: file.size,
+    storage: "cloudinary",
   };
 }
 
