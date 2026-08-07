@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Manage Service Requests</title>
+
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
@@ -32,104 +35,112 @@
 
 <main class="staff-container">
 
-<section class="staff-card">
+    <section class="staff-card">
 
-<div
-style="
-display:flex;
-gap:10px;
-margin-bottom:20px;
-flex-wrap:wrap;
-">
+        <div
+            style="
+            display:flex;
+            gap:10px;
+            margin-bottom:20px;
+            flex-wrap:wrap;
+            "
+        >
 
-<input
-id="searchKeyword"
-type="text"
-placeholder="Search student, subject or description..."
-style="
-padding:10px;
-flex:1;
-border:1px solid #ccc;
-border-radius:4px;
-">
+            <input
+                id="searchKeyword"
+                type="text"
+                placeholder="Search student, subject or description..."
+                style="
+                padding:10px;
+                flex:1;
+                border:1px solid #ccc;
+                border-radius:4px;
+                "
+            >
 
-<select
-id="filterStatus"
-style="
-padding:10px;
-border:1px solid #ccc;
-border-radius:4px;
-">
+            <select
+                id="filterStatus"
+                style="
+                padding:10px;
+                border:1px solid #ccc;
+                border-radius:4px;
+                "
+            >
 
-<option value="">
-All Statuses
-</option>
+                <option value="">
+                    All Statuses
+                </option>
 
-<option value="Pending">
-Pending
-</option>
+                <option value="Submitted">
+                    Submitted
+                </option>
 
-<option value="In Progress">
-In Progress
-</option>
+                <option value="In Progress">
+                    In Progress
+                </option>
 
-<option value="Resolved">
-Resolved
-</option>
+                <option value="Completed">
+                    Completed
+                </option>
 
-<option value="Cancelled">
-Cancelled
-</option>
+                <option value="Closed">
+                    Closed
+                </option>
 
-</select>
+                <option value="Cancelled">
+                    Cancelled
+                </option>
 
-<select
-id="filterCategory"
-style="
-padding:10px;
-border:1px solid #ccc;
-border-radius:4px;
-">
+            </select>
 
-<option value="">
-All Categories
-</option>
+            <select
+                id="filterCategory"
+                style="
+                padding:10px;
+                border:1px solid #ccc;
+                border-radius:4px;
+                "
+            >
 
-<option>
-Academic Advising
-</option>
+                <option value="">
+                    All Categories
+                </option>
 
-<option>
-Registration & Enrollment
-</option>
+                <option value="Academic Advising">
+                    Academic Advising
+                </option>
 
-<option>
-Financial Aid
-</option>
+                <option value="Registration & Enrollment">
+                    Registration & Enrollment
+                </option>
 
-<option>
-IT Support
-</option>
+                <option value="Financial Aid">
+                    Financial Aid
+                </option>
 
-<option>
-Career Services
-</option>
+                <option value="IT Support">
+                    IT Support
+                </option>
 
-<option>
-Mental Health
-</option>
+                <option value="Career Services">
+                    Career Services
+                </option>
 
-<option>
-General
-</option>
+                <option value="Mental Health">
+                    Mental Health
+                </option>
 
-</select>
+                <option value="General">
+                    General
+                </option>
 
-</div>
+            </select>
 
-<div id="requests"></div>
+        </div>
 
-</section>
+        <div id="requests"></div>
+
+    </section>
 
 </main>
 
@@ -137,318 +148,463 @@ General
 
 let allRequests = [];
 
-async function fetchRequests(){
 
-    const response = await fetch("/api/all-requests");
+async function fetchRequests() {
 
-    allRequests = await response.json();
+    const container =
+        document.getElementById("requests");
 
-    renderRequests();
+    try {
+
+        const response =
+            await fetch("/api/all-requests");
+
+        if (!response.ok) {
+            throw new Error("Unable to load service requests.");
+        }
+
+        allRequests =
+            await response.json();
+
+        renderRequests();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        container.innerHTML = `
+            <div class="info">
+                Unable to load service requests.
+            </div>
+        `;
+
+    }
 
 }
 
-function renderRequests(){
 
-    const container = document.getElementById("requests");
+function renderRequests() {
+
+    const container =
+        document.getElementById("requests");
 
     container.innerHTML = "";
 
     const keyword =
         document
-        .getElementById("searchKeyword")
-        .value
-        .toLowerCase();
+            .getElementById("searchKeyword")
+            .value
+            .trim()
+            .toLowerCase();
 
-    const status =
+    const selectedStatus =
         document
-        .getElementById("filterStatus")
-        .value;
+            .getElementById("filterStatus")
+            .value;
 
-    const category =
+    const selectedCategory =
         document
-        .getElementById("filterCategory")
-        .value;
+            .getElementById("filterCategory")
+            .value;
 
-    const filtered = allRequests.filter(request=>{
+    const filtered =
+        allRequests.filter((request) => {
 
-        const matchesKeyword =
+            const status =
+                normalizeStatus(request.status);
 
-            (request.student || "")
-            .toLowerCase()
-            .includes(keyword)
+            const matchesKeyword =
 
-            ||
+                (request.student || "")
+                    .toLowerCase()
+                    .includes(keyword)
 
-            (request.subject || "")
-            .toLowerCase()
-            .includes(keyword)
+                ||
 
-            ||
+                (request.subject || "")
+                    .toLowerCase()
+                    .includes(keyword)
 
-            (request.issue || "")
-            .toLowerCase()
-            .includes(keyword);
+                ||
 
-        const matchesStatus =
-            status
-            ? request.status===status
-            : true;
+                (request.issue || "")
+                    .toLowerCase()
+                    .includes(keyword)
 
-        const matchesCategory =
-            category
-            ? request.category===category
-            : true;
+                ||
 
-        return matchesKeyword &&
-               matchesStatus &&
-               matchesCategory;
+                String(request.id || "")
+                    .toLowerCase()
+                    .includes(keyword);
 
-    });
+            const matchesStatus =
+                selectedStatus
+                    ? status === selectedStatus
+                    : true;
 
-    if(filtered.length===0){
+            const matchesCategory =
+                selectedCategory
+                    ? request.category === selectedCategory
+                    : true;
 
-        container.innerHTML=`
-        <div class="info">
-            No service requests found.
-        </div>
+            return (
+                matchesKeyword &&
+                matchesStatus &&
+                matchesCategory
+            );
+
+        });
+
+
+    if (filtered.length === 0) {
+
+        container.innerHTML = `
+            <div class="info">
+                No service requests found matching the selected criteria.
+            </div>
         `;
 
         return;
 
     }
 
-    filtered.forEach(request=>{
 
-        let attachmentHTML = "";
+    filtered.forEach((request) => {
 
-        if(request.attachment){
+        const status =
+            normalizeStatus(request.status);
 
-            if(typeof request.attachment==="string"){
+        const submitted =
+            request.createdAt
+                ? formatDate(request.createdAt)
+                : "Not available";
 
-                attachmentHTML=`
+        const updated =
+            request.updatedAt
+                ? formatDate(request.updatedAt)
+                : submitted;
 
-                <p>
 
-                <strong>Attachment:</strong>
+        let attachmentHTML = `
+            <span>None</span>
+        `;
 
-                <a
-                href="${request.attachment}"
-                target="_blank">
 
-                View Attachment
+        if (request.attachment) {
 
-                </a>
+            if (
+                typeof request.attachment === "string"
+            ) {
 
-                </p>
-
+                attachmentHTML = `
+                    <a
+                        href="${escapeHTML(request.attachment)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View Attachment
+                    </a>
                 `;
 
             }
 
-            else{
+            else if (
+                request.attachment.path
+            ) {
 
-                attachmentHTML=`
-
-                <p>
-
-                <strong>Attachment:</strong>
-
-                <a
-                href="${request.attachment.path}"
-                target="_blank">
-
-                📎 ${request.attachment.originalName}
-
-                </a>
-
-                </p>
-
+                attachmentHTML = `
+                    <a
+                        href="${escapeHTML(request.attachment.path)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        📎 ${escapeHTML(
+                            request.attachment.originalName ||
+                            "View Attachment"
+                        )}
+                    </a>
                 `;
 
             }
 
         }
 
-        let createdHTML="";
 
-        if(request.createdAt){
+        let closedHTML = "";
 
-            createdHTML=`
 
-            <p>
+        if (request.closedAt) {
 
-            <strong>Submitted:</strong>
+            closedHTML = `
+                <p>
+                    <strong>Closed:</strong>
+                    ${formatDate(request.closedAt)}
+                </p>
+            `;
 
-            ${new Date(request.createdAt).toLocaleString()}
+        }
 
-            </p>
+
+        let updateSection = "";
+
+
+        /*
+          Closed requests remain visible to staff,
+          but no additional editing/status changes are allowed.
+        */
+        if (status === "Closed") {
+
+            updateSection = `
+
+                <div class="request-help-text">
+                    This request has been closed by the student.
+                    The request remains available for history and reference.
+                </div>
 
             `;
 
         }
 
-        let updatedHTML="";
+        else {
 
-        if(request.updatedAt){
+            updateSection = `
 
-            updatedHTML=`
+                <form
+                    action="/update-status"
+                    method="POST"
+                    class="request-update-form"
+                >
 
-            <p>
+                    <input
+                        type="hidden"
+                        name="id"
+                        value="${escapeHTML(request.id)}"
+                    >
 
-            <strong>Last Updated:</strong>
 
-            ${new Date(request.updatedAt).toLocaleString()}
+                    <label>
 
-            </p>
+                        Update Status
+
+                        <select name="status">
+
+                            <option
+                                value="Submitted"
+                                ${status === "Submitted" ? "selected" : ""}
+                            >
+                                Submitted
+                            </option>
+
+                            <option
+                                value="In Progress"
+                                ${status === "In Progress" ? "selected" : ""}
+                            >
+                                In Progress
+                            </option>
+
+                            <option
+                                value="Completed"
+                                ${status === "Completed" ? "selected" : ""}
+                            >
+                                Completed
+                            </option>
+
+                            <option
+                                value="Cancelled"
+                                ${status === "Cancelled" ? "selected" : ""}
+                            >
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                    </label>
+
+
+                    <label>
+
+                        Assign To
+
+                        <select name="assignedTo">
+
+                            <option
+                                value="Unassigned"
+                                ${
+                                    request.assignedTo === "Unassigned" ||
+                                    !request.assignedTo
+                                        ? "selected"
+                                        : ""
+                                }
+                            >
+                                Unassigned
+                            </option>
+
+                            <option
+                                value="IT Department"
+                                ${
+                                    request.assignedTo === "IT Department"
+                                        ? "selected"
+                                        : ""
+                                }
+                            >
+                                IT Department
+                            </option>
+
+                            <option
+                                value="Financial Aid Dept"
+                                ${
+                                    request.assignedTo === "Financial Aid Dept"
+                                        ? "selected"
+                                        : ""
+                                }
+                            >
+                                Financial Aid Dept
+                            </option>
+
+                            <option
+                                value="Academic Advising Dept"
+                                ${
+                                    request.assignedTo === "Academic Advising Dept"
+                                        ? "selected"
+                                        : ""
+                                }
+                            >
+                                Academic Advising Dept
+                            </option>
+
+                        </select>
+
+                    </label>
+
+
+                    <label>
+
+                        Staff Notes
+
+                        <textarea
+                            name="notes"
+                            rows="4"
+                            placeholder="Enter comments for the student..."
+                        >${escapeHTML(request.notes || "")}</textarea>
+
+                    </label>
+
+
+                    <button
+                        type="submit"
+                        class="update-btn"
+                    >
+                        Save Changes
+                    </button>
+
+                </form>
 
             `;
 
         }
+
 
         container.innerHTML += `
 
-        <div class="request-card">
+            <div class="request-card">
 
-        <div class="request-top">
 
-            <h3>
+                <div class="request-top">
 
-            ${escapeHTML(request.subject || "No Subject")}
+                    <h3>
+                        ${escapeHTML(
+                            request.subject ||
+                            "No Subject"
+                        )}
+                    </h3>
 
-            </h3>
+                    <span
+                        class="status-badge ${getStatusClass(status)}"
+                    >
+                        ${escapeHTML(status)}
+                    </span>
 
-            <span
-            class="status-badge ${getStatusClass(request.status)}">
+                </div>
 
-            ${request.status}
 
-            </span>
+                <p>
+                    <strong>Student:</strong>
+                    ${escapeHTML(
+                        request.student ||
+                        "-"
+                    )}
+                </p>
 
-        </div>
 
-        <p>
+                <p>
+                    <strong>Category:</strong>
+                    ${escapeHTML(
+                        request.category ||
+                        "General"
+                    )}
+                </p>
 
-        <strong>Student:</strong>
 
-        ${escapeHTML(request.student || "-")}
+                <p>
+                    <strong>Assigned To:</strong>
+                    ${escapeHTML(
+                        request.assignedTo ||
+                        "Unassigned"
+                    )}
+                </p>
 
-        </p>
 
-        <p>
+                <p>
+                    <strong>Submitted:</strong>
+                    ${submitted}
+                </p>
 
-        <strong>Category:</strong>
 
-        ${escapeHTML(request.category || "General")}
+                <p>
+                    <strong>Last Updated:</strong>
+                    ${updated}
+                </p>
 
-        </p>
 
-        <p>
+                ${closedHTML}
 
-        <strong>Assigned To:</strong>
 
-        ${escapeHTML(request.assignedTo || "Unassigned")}
+                <p>
+                    <strong>Description:</strong>
+                    ${escapeHTML(
+                        request.issue ||
+                        "-"
+                    )}
+                </p>
 
-        </p>
 
-        ${createdHTML}
+                <p>
+                    <strong>Attachment:</strong>
+                    ${attachmentHTML}
+                </p>
 
-        ${updatedHTML}
 
-        <p>
+                <p>
+                    <strong>Request ID:</strong>
+                    ${escapeHTML(request.id)}
+                </p>
 
-        <strong>Description:</strong>
 
-        ${escapeHTML(request.issue || "-")}
+                <p>
+                    <strong>Current Staff Note:</strong>
+                    ${escapeHTML(
+                        request.notes ||
+                        "No notes yet"
+                    )}
+                </p>
 
-        </p>
 
-        ${attachmentHTML}
+                ${updateSection}
 
-        <p>
 
-        <strong>Request ID:</strong>
-
-        ${request.id}
-
-        </p>
-
-        <form
-        action="/update-status"
-        method="POST"
-        class="request-update-form">
-
-        <input
-        type="hidden"
-        name="id"
-        value="${request.id}">
-
-        <label>
-
-            Update Status
-
-            <select name="status">
-
-                <option value="Pending"
-                ${request.status==="Pending"?"selected":""}>
-                Pending
-                </option>
-
-                <option value="In Progress"
-                ${request.status==="In Progress"?"selected":""}>
-                In Progress
-                </option>
-
-                <option value="Resolved"
-                ${request.status==="Resolved"?"selected":""}>
-                Resolved
-                </option>
-
-                <option value="Cancelled"
-                ${request.status==="Cancelled"?"selected":""}>
-                Cancelled
-                </option>
-
-            </select>
-
-        </label>
-
-        <label>
-
-            Assign To
-
-            <select name="assignedTo">
-
-                <option value="Unassigned" ${request.assignedTo === "Unassigned" || !request.assignedTo ? "selected" : ""}>Unassigned</option>
-                <option value="IT Department" ${request.assignedTo === "IT Department" ? "selected" : ""}>IT Department</option>
-                <option value="Financial Aid Dept" ${request.assignedTo === "Financial Aid Dept" ? "selected" : ""}>Financial Aid Dept</option>
-                <option value="Academic Advising Dept" ${request.assignedTo === "Academic Advising Dept" ? "selected" : ""}>Academic Advising Dept</option>
-
-            </select>
-
-        </label>
-
-        <label>
-
-            Staff Notes
-
-            <textarea
-            name="notes"
-            rows="4"
-            placeholder="Enter comments for the student...">${escapeHTML(request.notes || "")}</textarea>
-
-        </label>
-
-        <button
-        type="submit"
-        class="update-btn">
-
-        Save Changes
-
-        </button>
-
-        </form>
-
-        </div>
+            </div>
 
         `;
 
@@ -456,38 +612,61 @@ function renderRequests(){
 
 }
 
-document
-.getElementById("searchKeyword")
-.addEventListener(
-    "input",
-    renderRequests
-);
 
 document
-.getElementById("filterStatus")
-.addEventListener(
-    "change",
-    renderRequests
-);
+    .getElementById("searchKeyword")
+    .addEventListener(
+        "input",
+        renderRequests
+    );
+
 
 document
-.getElementById("filterCategory")
-.addEventListener(
-    "change",
-    renderRequests
-);
+    .getElementById("filterStatus")
+    .addEventListener(
+        "change",
+        renderRequests
+    );
 
-function getStatusClass(status){
 
-    if(status==="Resolved"){
+document
+    .getElementById("filterCategory")
+    .addEventListener(
+        "change",
+        renderRequests
+    );
+
+
+function normalizeStatus(status) {
+
+    if (status === "Pending") {
+        return "Submitted";
+    }
+
+    if (status === "Resolved") {
+        return "Completed";
+    }
+
+    return status || "Submitted";
+
+}
+
+
+function getStatusClass(status) {
+
+    if (status === "Completed") {
         return "status-completed";
     }
 
-    if(status==="In Progress"){
+    if (status === "In Progress") {
         return "status-inprogress";
     }
 
-    if(status==="Cancelled"){
+    if (status === "Closed") {
+        return "status-closed";
+    }
+
+    if (status === "Cancelled") {
         return "status-cancelled";
     }
 
@@ -495,16 +674,38 @@ function getStatusClass(status){
 
 }
 
-function escapeHTML(value){
 
-    return String(value)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+function formatDate(value) {
+
+    const date =
+        new Date(value);
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "Not available";
+
+    }
+
+    return date.toLocaleString();
 
 }
+
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
 
 fetchRequests();
 

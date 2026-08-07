@@ -12,314 +12,460 @@
 
 <body class="student-page">
 
-<header class="student-header">
+  <header class="student-header">
 
-  <div>
-    <h1>My Service Requests</h1>
-    <p>Track, edit, or cancel your submitted requests</p>
-  </div>
+    <div>
+      <h1>My Service Requests</h1>
+      <p>Track your submitted requests and their complete progress</p>
+    </div>
 
-  <a href="/logout" class="logout-btn">
-    Logout
-  </a>
+    <a href="/logout" class="logout-btn">
+      Logout
+    </a>
 
-</header>
+  </header>
 
-<main class="student-container">
+  <main class="student-container">
 
-<div class="student-actions">
+    <div class="student-actions">
 
-  <a href="/submit-request" class="action-btn">
-    Submit New Request
-  </a>
+      <a href="/submit-request" class="action-btn">
+        Submit New Request
+      </a>
 
-  <a href="/student" class="action-btn secondary">
-    Back to Dashboard
-  </a>
+      <a href="/student" class="action-btn secondary">
+        Back to Dashboard
+      </a>
 
-</div>
+    </div>
 
-<div class="student-card">
+    <section class="student-card">
 
-<div id="requestCards"></div>
+      <h2>Request Tracking</h2>
 
-</div>
+      <p class="section-text">
+        View the current status of your requests, open their history,
+        or make changes while a request is still submitted.
+      </p>
 
-</main>
+      <div id="requestsContainer"></div>
+
+    </section>
+
+  </main>
 
 <script>
 
-async function loadRequests(){
+async function loadRequests() {
 
-    try{
+  const container =
+    document.getElementById("requestsContainer");
 
-        const response = await fetch("/api/student-requests");
+  try {
 
-        const requests = await response.json();
+    const response =
+      await fetch("/api/student-requests");
 
-        const container = document.getElementById("requestCards");
+    if (!response.ok) {
+      throw new Error("Unable to load service requests.");
+    }
 
-        container.innerHTML="";
+    const requests =
+      await response.json();
 
-        if(requests.length===0){
+    container.innerHTML = "";
 
-            container.innerHTML=`
+    if (requests.length === 0) {
 
-            <div class="info" style="text-align:center;padding:20px;">
+      container.innerHTML = `
+        <div class="info">
+          No service requests submitted yet.
+        </div>
+      `;
 
-            No service requests submitted yet.
+      return;
+    }
 
-            </div>
+    requests.forEach((r) => {
 
-            `;
+      const status =
+        normalizeStatus(r.status);
 
-            return;
+      const submitted =
+        r.createdAt
+          ? formatDate(r.createdAt)
+          : "Not available";
+
+      const updated =
+        r.updatedAt
+          ? formatDate(r.updatedAt)
+          : submitted;
+
+      let attachmentHTML =
+        `<span>None</span>`;
+
+      if (r.attachment) {
+
+        if (typeof r.attachment === "string") {
+
+          attachmentHTML = `
+            <a
+              href="${escapeHTML(r.attachment)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View Attachment
+            </a>
+          `;
+
+        } else if (r.attachment.path) {
+
+          attachmentHTML = `
+            <a
+              href="${escapeHTML(r.attachment.path)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              📎 ${escapeHTML(
+                r.attachment.originalName ||
+                "View Attachment"
+              )}
+            </a>
+          `;
 
         }
 
-        requests.forEach(r=>{
+      }
 
-            let attachmentHTML="None";
+      /*
+        Every request gets a history button.
+      */
+      let studentActions = `
 
-            if(r.attachment){
+        <div class="request-student-actions">
 
-                if(typeof r.attachment==="string"){
+          <a
+            href="/request-history?id=${encodeURIComponent(r.id)}"
+            class="action-btn request-history-btn"
+          >
+            View History
+          </a>
 
-                    attachmentHTML=`
-                    <a href="${r.attachment}" target="_blank">
-                    View File
-                    </a>
-                    `;
+      `;
 
-                }else{
+      /*
+        Editing and cancellation are available ONLY while
+        the request is still Submitted.
+      */
+      if (status === "Submitted") {
 
-                    attachmentHTML=`
-                    <a href="${r.attachment.path}" target="_blank">
-                    📎 ${r.attachment.originalName}
-                    </a>
-                    `;
+        studentActions += `
 
-                }
+          <a
+            href="/edit-request?id=${encodeURIComponent(r.id)}"
+            class="action-btn secondary request-edit-btn"
+          >
+            Edit Request
+          </a>
 
-            }
+          <form
+            action="/cancel-service-request"
+            method="POST"
+            class="inline-request-form"
+            onsubmit="return confirmCancelRequest();"
+          >
 
-            const submitted =
-                r.createdAt
-                ? new Date(r.createdAt).toLocaleString()
-                : "-";
+            <input
+              type="hidden"
+              name="id"
+              value="${escapeHTML(r.id)}"
+            >
 
-            const updated =
-                r.updatedAt
-                ? new Date(r.updatedAt).toLocaleString()
-                : "-";
+            <button
+              type="submit"
+              class="request-cancel-btn"
+            >
+              Cancel Request
+            </button>
 
-            const canModify =
-                r.status !== "Cancelled" &&
-                r.status !== "Resolved";
+          </form>
 
-            let studentActions = "";
+        `;
 
-            if(canModify){
+      }
 
-                studentActions = `
+      /*
+        Close Request appears ONLY after staff marks
+        the request Completed.
+      */
+      if (status === "Completed") {
 
-                <div class="service-request-actions">
+        studentActions += `
 
-                    <form
-                    action="/cancel-service-request"
-                    method="POST"
-                    class="inline-appointment-form">
+          <form
+            action="/close-service-request"
+            method="POST"
+            class="inline-request-form"
+            onsubmit="return confirmCloseRequest();"
+          >
 
-                        <input
-                        type="hidden"
-                        name="id"
-                        value="${r.id}">
+            <input
+              type="hidden"
+              name="id"
+              value="${escapeHTML(r.id)}"
+            >
 
-                        <button
-                        type="submit"
-                        class="cancel-btn">
-                        Cancel Request
-                        </button>
+            <button
+              type="submit"
+              class="request-close-btn"
+            >
+              Close Request
+            </button>
 
-                    </form>
+          </form>
 
-                    <form
-                    action="/edit-service-request"
-                    method="POST"
-                    class="edit-request-form">
+        `;
 
-                        <input
-                        type="hidden"
-                        name="id"
-                        value="${r.id}">
+      }
 
-                        <label>
-                            Category
+      studentActions += `
+        </div>
+      `;
 
-                            <select
-                            name="category"
-                            required>
+      let statusMessage = "";
 
-                                <option ${r.category==="Academic Advising" ? "selected" : ""}>
-                                Academic Advising
-                                </option>
+      if (status === "Submitted") {
 
-                                <option ${r.category==="Registration & Enrollment" ? "selected" : ""}>
-                                Registration & Enrollment
-                                </option>
+        statusMessage = `
+          <div class="request-help-text">
+            This request has not entered processing yet.
+            You may still edit or cancel it.
+          </div>
+        `;
 
-                                <option ${r.category==="Financial Aid" ? "selected" : ""}>
-                                Financial Aid
-                                </option>
+      }
 
-                                <option ${r.category==="IT Support" ? "selected" : ""}>
-                                IT Support
-                                </option>
+      if (status === "In Progress") {
 
-                                <option ${r.category==="Career Services" ? "selected" : ""}>
-                                Career Services
-                                </option>
+        statusMessage = `
+          <div class="request-help-text">
+            Staff are currently working on this request.
+            Editing is now disabled.
+          </div>
+        `;
 
-                                <option ${r.category==="Mental Health" ? "selected" : ""}>
-                                Mental Health
-                                </option>
+      }
 
-                                <option ${r.category==="General" ? "selected" : ""}>
-                                General
-                                </option>
+      if (status === "Completed") {
 
-                            </select>
-                        </label>
+        statusMessage = `
+          <div class="request-help-text">
+            Staff have completed this request.
+            Review the result and close the request when satisfied.
+          </div>
+        `;
 
-                        <label>
-                            Subject
+      }
 
-                            <input
-                            type="text"
-                            name="subject"
-                            value="${escapeHTML(r.subject || "")}"
-                            minlength="3"
-                            maxlength="120"
-                            required>
-                        </label>
+      if (status === "Closed") {
 
-                        <label>
-                            Description
+        statusMessage = `
+          <div class="request-help-text">
+            This request has been closed.
+            Its complete history remains available.
+          </div>
+        `;
 
-                            <textarea
-                            name="issue"
-                            rows="4"
-                            minlength="10"
-                            maxlength="3000"
-                            required>${escapeHTML(r.issue || "")}</textarea>
-                        </label>
+      }
 
-                        <button
-                        type="submit"
-                        class="reschedule-btn">
-                        Save Request Changes
-                        </button>
+      if (status === "Cancelled") {
 
-                    </form>
+        statusMessage = `
+          <div class="request-help-text">
+            This request was cancelled.
+            Its history remains available for reference.
+          </div>
+        `;
 
-                </div>
+      }
 
-                `;
+      container.innerHTML += `
 
-            }
+        <div class="request-card">
 
-            container.innerHTML += `
+          <div class="request-top">
 
-            <div class="request-card">
+            <h3>
+              ${escapeHTML(
+                r.subject || "No Subject"
+              )}
+            </h3>
 
-                <div class="request-top">
+            <span
+              class="status-badge ${getStatusClass(status)}"
+            >
+              ${escapeHTML(status)}
+            </span>
 
-                    <h3>${escapeHTML(r.subject || "No Subject")}</h3>
+          </div>
 
-                    <span class="status-badge ${getStatusClass(r.status)}">
-                    ${r.status}
-                    </span>
+          <p>
+            <strong>Request ID:</strong>
+            ${escapeHTML(r.id)}
+          </p>
 
-                </div>
+          <p>
+            <strong>Category:</strong>
+            ${escapeHTML(
+              r.category || "General"
+            )}
+          </p>
 
-                <p>
-                <strong>Request ID:</strong>
-                ${r.id}
-                </p>
+          <p>
+            <strong>Description:</strong>
+            ${escapeHTML(
+              r.issue || "-"
+            )}
+          </p>
 
-                <p>
-                <strong>Category:</strong>
-                ${escapeHTML(r.category || "General")}
-                </p>
+          <p>
+            <strong>Attachment:</strong>
+            ${attachmentHTML}
+          </p>
 
-                <p>
-                <strong>Description:</strong>
-                ${escapeHTML(r.issue || "-")}
-                </p>
+          <p>
+            <strong>Assigned To:</strong>
+            ${escapeHTML(
+              r.assignedTo || "Unassigned"
+            )}
+          </p>
 
-                <p>
-                <strong>Attachment:</strong>
-                ${attachmentHTML}
-                </p>
+          <p>
+            <strong>Staff Notes:</strong>
+            ${escapeHTML(
+              r.notes || "No notes yet"
+            )}
+          </p>
 
-                <p>
-                <strong>Staff Notes:</strong>
-                ${escapeHTML(r.notes || "No notes yet")}
-                </p>
+          <p>
+            <strong>Submitted:</strong>
+            ${submitted}
+          </p>
 
-                <p>
-                <strong>Submitted:</strong>
-                ${submitted}
-                </p>
+          <p>
+            <strong>Last Updated:</strong>
+            ${updated}
+          </p>
 
-                <p>
-                <strong>Last Updated:</strong>
-                ${updated}
-                </p>
+          ${statusMessage}
 
-                ${studentActions}
+          ${studentActions}
 
-            </div>
+        </div>
 
-            `;
+      `;
 
-        });
+    });
 
-    }
+  }
 
-    catch(error){
+  catch (error) {
 
-        console.error(error);
+    console.error(error);
 
-    }
+    container.innerHTML = `
+      <div class="info">
+        Unable to load your service requests.
+        Please refresh the page and try again.
+      </div>
+    `;
+
+  }
 
 }
 
-function getStatusClass(status){
 
-    if(status==="Resolved")
-        return "status-completed";
+/*
+  Supports request records created before the new lifecycle.
+*/
+function normalizeStatus(status) {
 
-    if(status==="In Progress")
-        return "status-inprogress";
+  if (status === "Pending") {
+    return "Submitted";
+  }
 
-    if(status==="Cancelled")
-        return "status-cancelled";
+  if (status === "Resolved") {
+    return "Completed";
+  }
 
-    return "status-submitted";
+  return status || "Submitted";
+}
+
+
+function getStatusClass(status) {
+
+  if (status === "Completed") {
+    return "status-completed";
+  }
+
+  if (status === "In Progress") {
+    return "status-inprogress";
+  }
+
+  if (status === "Closed") {
+    return "status-closed";
+  }
+
+  if (status === "Cancelled") {
+    return "status-cancelled";
+  }
+
+  return "status-submitted";
+}
+
+
+function formatDate(value) {
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not available";
+  }
+
+  return date.toLocaleString();
 
 }
 
-function escapeHTML(value){
 
-    return String(value)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+function confirmCancelRequest() {
+
+  return confirm(
+    "Are you sure you want to cancel this request?"
+  );
 
 }
+
+
+function confirmCloseRequest() {
+
+  return confirm(
+    "Are you sure you want to close this completed request? The request will remain available in your history."
+  );
+
+}
+
+
+function escapeHTML(value) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
 
 loadRequests();
 

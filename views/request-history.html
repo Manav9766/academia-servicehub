@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Request History</title>
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="student-page">
+
+<header class="student-header">
+
+  <div>
+    <h1>Request History</h1>
+    <p>View the complete lifecycle of your service request</p>
+  </div>
+
+  <a href="/logout" class="logout-btn">
+    Logout
+  </a>
+
+</header>
+
+<main class="student-container">
+
+  <div class="student-actions">
+
+    <a href="/track-requests" class="action-btn secondary">
+      Back to Track Requests
+    </a>
+
+    <a href="/student" class="action-btn">
+      Student Dashboard
+    </a>
+
+  </div>
+
+  <section class="student-card">
+
+    <div id="requestSummary">
+      <div class="info">
+        Loading request information...
+      </div>
+    </div>
+
+  </section>
+
+  <section class="student-card">
+
+    <h2>Request Lifecycle</h2>
+
+    <p class="section-text">
+      All request updates are shown below in chronological order.
+    </p>
+
+    <div id="historyTimeline">
+      <div class="info">
+        Loading request history...
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+const requestId = params.get("id");
+
+async function loadRequestHistory() {
+
+  const summary =
+    document.getElementById("requestSummary");
+
+  const timeline =
+    document.getElementById("historyTimeline");
+
+  if (!requestId) {
+
+    summary.innerHTML = `
+      <div class="error">
+        Request ID is missing.
+      </div>
+    `;
+
+    timeline.innerHTML = "";
+
+    return;
+
+  }
+
+  try {
+
+    const response =
+      await fetch(`/api/request-history/${encodeURIComponent(requestId)}`);
+
+    const request =
+      await response.json();
+
+    if (!response.ok) {
+
+      throw new Error(
+        request.error ||
+        "Unable to load request history."
+      );
+
+    }
+
+    const status =
+      normalizeStatus(request.status);
+
+    const submitted =
+      request.createdAt
+        ? formatDate(request.createdAt)
+        : "Not available";
+
+    const updated =
+      request.updatedAt
+        ? formatDate(request.updatedAt)
+        : submitted;
+
+    let attachmentHTML =
+      `<span>None</span>`;
+
+    if (request.attachment) {
+
+      if (
+        typeof request.attachment === "string"
+      ) {
+
+        attachmentHTML = `
+          <a
+            href="${escapeHTML(request.attachment)}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View Attachment
+          </a>
+        `;
+
+      }
+
+      else if (
+        request.attachment.path
+      ) {
+
+        attachmentHTML = `
+          <a
+            href="${escapeHTML(request.attachment.path)}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            📎 ${escapeHTML(
+              request.attachment.originalName ||
+              "View Attachment"
+            )}
+          </a>
+        `;
+
+      }
+
+    }
+
+    let closedHTML = "";
+
+    if (request.closedAt) {
+
+      closedHTML = `
+        <p>
+          <strong>Closed:</strong>
+          ${formatDate(request.closedAt)}
+        </p>
+      `;
+
+    }
+
+    let closeAction = "";
+
+    if (status === "Completed") {
+
+      closeAction = `
+        <form
+          action="/close-service-request"
+          method="POST"
+          onsubmit="return confirmCloseRequest();"
+          style="margin-top: 20px;"
+        >
+
+          <input
+            type="hidden"
+            name="id"
+            value="${escapeHTML(request.id)}"
+          >
+
+          <button
+            type="submit"
+            class="request-close-btn"
+          >
+            Close Request
+          </button>
+
+        </form>
+      `;
+
+    }
+
+    let editAction = "";
+
+    if (status === "Submitted") {
+
+      editAction = `
+        <a
+          href="/edit-request?id=${encodeURIComponent(request.id)}"
+          class="action-btn secondary"
+        >
+          Edit Request
+        </a>
+      `;
+
+    }
+
+    summary.innerHTML = `
+
+      <div class="request-card">
+
+        <div class="request-top">
+
+          <h3>
+            ${escapeHTML(
+              request.subject ||
+              "No Subject"
+            )}
+          </h3>
+
+          <span
+            class="status-badge ${getStatusClass(status)}"
+          >
+            ${escapeHTML(status)}
+          </span>
+
+        </div>
+
+        <p>
+          <strong>Request ID:</strong>
+          ${escapeHTML(request.id)}
+        </p>
+
+        <p>
+          <strong>Category:</strong>
+          ${escapeHTML(
+            request.category ||
+            "General"
+          )}
+        </p>
+
+        <p>
+          <strong>Description:</strong>
+          ${escapeHTML(
+            request.issue ||
+            "-"
+          )}
+        </p>
+
+        <p>
+          <strong>Attachment:</strong>
+          ${attachmentHTML}
+        </p>
+
+        <p>
+          <strong>Assigned To:</strong>
+          ${escapeHTML(
+            request.assignedTo ||
+            "Unassigned"
+          )}
+        </p>
+
+        <p>
+          <strong>Current Staff Note:</strong>
+          ${escapeHTML(
+            request.notes ||
+            "No notes yet"
+          )}
+        </p>
+
+        <p>
+          <strong>Submitted:</strong>
+          ${submitted}
+        </p>
+
+        <p>
+          <strong>Last Updated:</strong>
+          ${updated}
+        </p>
+
+        ${closedHTML}
+
+        <div class="request-history-actions">
+
+          ${editAction}
+
+          ${closeAction}
+
+        </div>
+
+      </div>
+
+    `;
+
+    renderHistory(request.history || []);
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    summary.innerHTML = `
+      <div class="error">
+        ${escapeHTML(error.message)}
+      </div>
+    `;
+
+    timeline.innerHTML = "";
+
+  }
+
+}
+
+
+function renderHistory(history) {
+
+  const timeline =
+    document.getElementById("historyTimeline");
+
+  timeline.innerHTML = "";
+
+  if (!history.length) {
+
+    timeline.innerHTML = `
+      <div class="info">
+        No history is available for this request.
+      </div>
+    `;
+
+    return;
+
+  }
+
+  const sortedHistory =
+    [...history].sort(
+      (a, b) =>
+        new Date(a.date).getTime() -
+        new Date(b.date).getTime()
+    );
+
+  sortedHistory.forEach((entry, index) => {
+
+    const status =
+      normalizeStatus(entry.status);
+
+    const noteHTML =
+      entry.note
+        ? `
+          <div class="history-note">
+            <strong>Note:</strong>
+            ${escapeHTML(entry.note)}
+          </div>
+        `
+        : "";
+
+    timeline.innerHTML += `
+
+      <div class="history-item">
+
+        <div class="history-marker">
+          ${index + 1}
+        </div>
+
+        <div class="history-content">
+
+          <div class="history-heading">
+
+            <h3>
+              ${escapeHTML(
+                entry.title ||
+                "Request Update"
+              )}
+            </h3>
+
+            <span
+              class="status-badge ${getStatusClass(status)}"
+            >
+              ${escapeHTML(status)}
+            </span>
+
+          </div>
+
+          <p>
+            ${escapeHTML(
+              entry.description ||
+              ""
+            )}
+          </p>
+
+          ${noteHTML}
+
+          <p class="history-meta">
+            <strong>Updated By:</strong>
+            ${escapeHTML(
+              entry.actor ||
+              "System"
+            )}
+          </p>
+
+          <p class="history-meta">
+            <strong>Date:</strong>
+            ${formatDate(entry.date)}
+          </p>
+
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+}
+
+
+function normalizeStatus(status) {
+
+  if (status === "Pending") {
+    return "Submitted";
+  }
+
+  if (status === "Resolved") {
+    return "Completed";
+  }
+
+  return status || "Submitted";
+
+}
+
+
+function getStatusClass(status) {
+
+  if (status === "Completed") {
+    return "status-completed";
+  }
+
+  if (status === "In Progress") {
+    return "status-inprogress";
+  }
+
+  if (status === "Closed") {
+    return "status-closed";
+  }
+
+  if (status === "Cancelled") {
+    return "status-cancelled";
+  }
+
+  return "status-submitted";
+
+}
+
+
+function formatDate(value) {
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return "Not available";
+  }
+
+  return date.toLocaleString();
+
+}
+
+
+function confirmCloseRequest() {
+
+  return confirm(
+    "Are you sure you want to close this completed request? The request history will remain available."
+  );
+
+}
+
+
+function escapeHTML(value) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+loadRequestHistory();
+
+</script>
+
+</body>
+
+</html>
