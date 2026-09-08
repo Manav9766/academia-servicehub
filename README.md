@@ -17,14 +17,21 @@ A role-based student services portal built with Node.js and Express. The applica
    npm install
    ```
 
-3. Create a `.env` file in the project root:
+3. Copy the provided environment template to `.env`:
 
-   ```env
-   PORT=3000
-   CLOUDINARY_CLOUD_NAME=your_cloud_name
-   CLOUDINARY_API_KEY=your_api_key
-   CLOUDINARY_API_SECRET=your_api_secret
+   macOS/Linux:
+
+   ```bash
+   cp .env.example .env
    ```
+
+   Windows PowerShell:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+   Then replace the placeholder Cloudinary values in `.env` if you want attachment uploads to work. The default `PORT=3000` can be changed if needed.
 
 4. Start the application:
 
