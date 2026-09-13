@@ -69,6 +69,10 @@ Application data is stored in `data/db.json`. The server creates the data and up
 └── .gitignore
 ```
 
+## Deployment note
+
+This repository is a course/demo application, not a production-ready authentication or persistence stack. It currently uses plaintext demo passwords, local JSON storage, and the default in-memory `express-session` store. Before deploying it for real users, replace those pieces with password hashing, persistent database-backed storage, a production session store, and environment-managed secrets.
+
 ## Development notes
 
 - `npm start` runs `node server.js`.
