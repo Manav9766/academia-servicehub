@@ -130,7 +130,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use(
   session({
-    secret: "sprint2secret",
+    secret: process.env.SESSION_SECRET || "sprint2secret",
     resave: false,
     saveUninitialized: false,
     rolling: true,
@@ -150,83 +150,56 @@ function normalizeRequestStatus(status) {
     return "Completed";
   }
 
-  return status || "Submitted";
+  return REQUEST_STATUSES.includes(status) ? status : "Submitted";
 }
 
-function ensureRequestHistory(request) {
-  request.status = normalizeRequestStatus(request.status);
-
-  if (!Array.isArray(request.history)) {
-    request.history = [];
-  }
-
-  const submissionDate =
-    request.createdAt ||
-    request.updatedAt ||
-    new Date(Number(request.id) || Date.now()).toISOString();
-
-  const hasSubmissionEntry = request.history.some(
-    (entry) => entry.type === "submission"
-  );
-
-  if (!hasSubmissionEntry) {
-    request.history.push({
-      id: `${request.id}-submission`,
-      type: "submission",
-      title: "Request Submitted",
-      description: "Service request was submitted by the student.",
-      status: "Submitted",
-      actor: request.student || "Student",
-      note: "",
-      date: submissionDate,
-    });
-  }
-
-  return request;
+function getEmptyDatabase() {
+  return {
+    users: DEFAULT_USERS.map((user) => ({ ...user })),
+    requests: [],
+    appointments: [],
+  };
 }
 
-function loadData() {
+function readDatabase() {
   try {
-    const rawData = fs.readFileSync(DATA_FILE, "utf8");
-    const parsedData = JSON.parse(rawData);
-
-    parsedData.users = Array.isArray(parsedData.users)
-      ? parsedData.users
-      : DEFAULT_USERS.map((user) => ({ ...user }));
-    parsedData.requests = Array.isArray(parsedData.requests)
-      ? parsedData.requests.map(ensureRequestHistory)
-      : [];
-    parsedData.notifications = Array.isArray(parsedData.notifications)
-      ? parsedData.notifications
-      : [];
-
-    return parsedData;
-  } catch (error) {
-    if (error.code !== "ENOENT") {
-      console.error("Unable to read data file:", error.message);
+    if (!fs.existsSync(DATA_FILE)) {
+      return getEmptyDatabase();
     }
 
+    const data = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+
     return {
-      users: DEFAULT_USERS.map((user) => ({ ...user })),
-      requests: [],
-      notifications: [],
+      users: Array.isArray(data.users) && data.users.length > 0
+        ? data.users
+        : DEFAULT_USERS.map((user) => ({ ...user })),
+      requests: Array.isArray(data.requests)
+        ? data.requests.map((request) => ({
+            ...request,
+            status: normalizeRequestStatus(request.status),
+          }))
+        : [],
+      appointments: Array.isArray(data.appointments) ? data.appointments : [],
     };
+  } catch (error) {
+    console.error("Failed to read database:", error);
+    return getEmptyDatabase();
   }
 }
 
-function saveData(data) {
+function writeDatabase(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-function findUserByUsername(data, username) {
-  return data.users.find((user) => user.username === username);
+function getNextId(items) {
+  if (!items.length) return 1;
+  return Math.max(...items.map((item) => Number(item.id) || 0)) + 1;
 }
 
 function requireAuth(req, res, next) {
   if (!req.session.user) {
     return res.redirect("/login");
   }
-
   next();
 }
 
@@ -235,72 +208,43 @@ function requireRole(...roles) {
     if (!req.session.user || !roles.includes(req.session.user.role)) {
       return res.status(403).send("Forbidden");
     }
-
     next();
   };
 }
 
-function getNextId(items) {
-  return items.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
-}
-
-function addNotification(data, userId, message, href = "/") {
-  data.notifications.push({
-    id: getNextId(data.notifications),
-    userId,
-    message,
-    href,
-    read: false,
-    createdAt: new Date().toISOString(),
-  });
-}
-
-function getNotificationsForUser(data, userId) {
-  return data.notifications
-    .filter((notification) => notification.userId === userId)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-}
-
-function renderPage(req, res, view, locals = {}) {
-  const data = loadData();
-  const notifications = req.session.user
-    ? getNotificationsForUser(data, req.session.user.id)
-    : [];
-
-  res.render(view, {
-    user: req.session.user || null,
-    notifications,
-    unreadNotificationCount: notifications.filter((notification) => !notification.read).length,
-    ...locals,
-  });
+function redirectForRole(role) {
+  if (role === "admin") return "/admin";
+  if (role === "staff") return "/staff";
+  return "/student";
 }
 
 app.get("/", (req, res) => {
   if (req.session.user) {
-    return res.redirect("/dashboard");
+    return res.redirect(redirectForRole(req.session.user.role));
   }
-
   res.redirect("/login");
 });
 
 app.get("/login", (req, res) => {
-  renderPage(req, res, "login", { error: null });
+  res.render("login", { error: null });
 });
 
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  const data = loadData();
-  const user = findUserByUsername(data, username);
+  const db = readDatabase();
+  const user = db.users.find(
+    (candidate) => candidate.username === username && candidate.password === password
+  );
 
-  if (!user || user.password !== password) {
-    return renderPage(req, res, "login", {
+  if (!user) {
+    return res.status(401).render("login", {
       error: "Invalid username or password.",
     });
   }
 
-  if (user.status !== "active") {
-    return renderPage(req, res, "login", {
-      error: "This account is inactive.",
+  if (user.status === "disabled") {
+    return res.status(403).render("login", {
+      error: "This account is disabled.",
     });
   }
 
@@ -310,7 +254,7 @@ app.post("/login", (req, res) => {
     role: user.role,
   };
 
-  res.redirect("/dashboard");
+  res.redirect(redirectForRole(user.role));
 });
 
 app.post("/logout", (req, res) => {
@@ -319,213 +263,246 @@ app.post("/logout", (req, res) => {
   });
 });
 
-app.get("/dashboard", requireAuth, (req, res) => {
-  const data = loadData();
-  const user = req.session.user;
+app.get("/student", requireAuth, requireRole("student"), (req, res) => {
+  const db = readDatabase();
+  const requests = db.requests.filter(
+    (request) => request.studentId === req.session.user.id
+  );
+  const appointments = db.appointments.filter(
+    (appointment) => appointment.studentId === req.session.user.id
+  );
 
-  if (user.role === "student") {
-    const requests = data.requests.filter((request) => request.studentId === user.id);
-    return renderPage(req, res, "student-dashboard", { requests });
-  }
-
-  if (user.role === "staff") {
-    const requests = data.requests.filter(
-      (request) => request.assignedTo === user.id || !request.assignedTo
-    );
-    return renderPage(req, res, "staff-dashboard", { requests });
-  }
-
-  renderPage(req, res, "admin-dashboard", {
-    requests: data.requests,
-    users: data.users,
-  });
-});
-
-app.get("/requests/new", requireRole("student"), (req, res) => {
-  renderPage(req, res, "new-request", {
+  res.render("student-dashboard", {
+    user: req.session.user,
+    requests,
+    appointments,
     categories: REQUEST_CATEGORIES,
-    error: null,
   });
 });
 
-app.post("/requests", requireRole("student"), upload.single("attachment"), (req, res) => {
-  const { title, category, description } = req.body;
+app.post(
+  "/student/requests",
+  requireAuth,
+  requireRole("student"),
+  upload.single("attachment"),
+  (req, res) => {
+    const { category, subject, description } = req.body;
 
-  if (!title?.trim() || !description?.trim() || !REQUEST_CATEGORIES.includes(category)) {
-    return renderPage(req, res, "new-request", {
-      categories: REQUEST_CATEGORIES,
-      error: "Please provide a title, description, and valid category.",
-    });
-  }
-
-  const data = loadData();
-  const requestId = getNextId(data.requests);
-  const now = new Date().toISOString();
-  const request = ensureRequestHistory({
-    id: requestId,
-    studentId: req.session.user.id,
-    student: req.session.user.username,
-    title: title.trim(),
-    category,
-    description: description.trim(),
-    status: "Submitted",
-    assignedTo: null,
-    attachment: req.file
-      ? {
-          originalName: req.file.originalname,
-          url: req.file.path,
-          publicId: req.file.filename,
-        }
-      : null,
-    createdAt: now,
-    updatedAt: now,
-    history: [],
-  });
-
-  data.requests.push(request);
-  saveData(data);
-  res.redirect(`/requests/${requestId}`);
-});
-
-app.get("/requests/:id", requireAuth, (req, res) => {
-  const data = loadData();
-  const request = data.requests.find((item) => String(item.id) === req.params.id);
-
-  if (!request) {
-    return res.status(404).send("Request not found");
-  }
-
-  if (
-    req.session.user.role === "student" &&
-    request.studentId !== req.session.user.id
-  ) {
-    return res.status(403).send("Forbidden");
-  }
-
-  renderPage(req, res, "request-details", { request });
-});
-
-app.post("/requests/:id/status", requireRole("staff", "admin"), (req, res) => {
-  const data = loadData();
-  const request = data.requests.find((item) => String(item.id) === req.params.id);
-  const status = req.body.status;
-
-  if (!request) {
-    return res.status(404).send("Request not found");
-  }
-
-  if (!REQUEST_STATUSES.includes(status)) {
-    return res.status(400).send("Invalid status");
-  }
-
-  const previousStatus = request.status;
-  request.status = status;
-  request.updatedAt = new Date().toISOString();
-  request.history.push({
-    id: `${request.id}-status-${Date.now()}`,
-    type: "status",
-    title: "Status Updated",
-    description: `Status changed from ${previousStatus} to ${status}.`,
-    status,
-    actor: req.session.user.username,
-    note: req.body.note?.trim() || "",
-    date: request.updatedAt,
-  });
-
-  addNotification(
-    data,
-    request.studentId,
-    `Request #${request.id} status changed to ${status}.`,
-    `/requests/${request.id}`
-  );
-
-  saveData(data);
-  res.redirect(`/requests/${request.id}`);
-});
-
-app.post("/requests/:id/assign", requireRole("admin"), (req, res) => {
-  const data = loadData();
-  const request = data.requests.find((item) => String(item.id) === req.params.id);
-  const staffId = Number(req.body.staffId);
-  const staff = data.users.find((user) => user.id === staffId && user.role === "staff");
-
-  if (!request) {
-    return res.status(404).send("Request not found");
-  }
-
-  if (!staff) {
-    return res.status(400).send("Invalid staff member");
-  }
-
-  request.assignedTo = staff.id;
-  request.updatedAt = new Date().toISOString();
-  request.history.push({
-    id: `${request.id}-assignment-${Date.now()}`,
-    type: "assignment",
-    title: "Request Assigned",
-    description: `Request assigned to ${staff.username}.`,
-    status: request.status,
-    actor: req.session.user.username,
-    note: "",
-    date: request.updatedAt,
-  });
-
-  addNotification(
-    data,
-    staff.id,
-    `Request #${request.id} was assigned to you.`,
-    `/requests/${request.id}`
-  );
-
-  saveData(data);
-  res.redirect(`/requests/${request.id}`);
-});
-
-app.post("/notifications/read-all", requireAuth, (req, res) => {
-  const data = loadData();
-
-  data.notifications.forEach((notification) => {
-    if (notification.userId === req.session.user.id) {
-      notification.read = true;
-    }
-  });
-
-  saveData(data);
-  res.redirect(req.get("referer") || "/dashboard");
-});
-
-app.post("/admin/users/:id/status", requireRole("admin"), (req, res) => {
-  const data = loadData();
-  const user = data.users.find((item) => String(item.id) === req.params.id);
-  const status = req.body.status;
-
-  if (!user) {
-    return res.status(404).send("User not found");
-  }
-
-  if (!["active", "inactive"].includes(status)) {
-    return res.status(400).send("Invalid status");
-  }
-
-  user.status = status;
-  saveData(data);
-  res.redirect("/dashboard");
-});
-
-app.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).send("Attachment must be 10 MB or smaller.");
+    if (!REQUEST_CATEGORIES.includes(category) || !subject || !description) {
+      return res.status(400).send("Please provide a valid category, subject, and description.");
     }
 
-    return res.status(400).send(error.message);
+    const db = readDatabase();
+    const request = {
+      id: getNextId(db.requests),
+      studentId: req.session.user.id,
+      studentName: req.session.user.username,
+      category,
+      subject: subject.trim(),
+      description: description.trim(),
+      status: "Submitted",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      staffNote: "",
+      attachment: req.file
+        ? {
+            name: req.file.originalname,
+            url: req.file.path,
+          }
+        : null,
+    };
+
+    db.requests.push(request);
+    writeDatabase(db);
+    res.redirect("/student");
+  }
+);
+
+app.post(
+  "/student/appointments",
+  requireAuth,
+  requireRole("student"),
+  (req, res) => {
+    const { service, appointmentDate, notes } = req.body;
+
+    if (!REQUEST_CATEGORIES.includes(service) || !appointmentDate) {
+      return res.status(400).send("Please provide a valid service and appointment date.");
+    }
+
+    const db = readDatabase();
+    const appointment = {
+      id: getNextId(db.appointments),
+      studentId: req.session.user.id,
+      studentName: req.session.user.username,
+      service,
+      appointmentDate,
+      notes: (notes || "").trim(),
+      status: "Scheduled",
+      createdAt: new Date().toISOString(),
+    };
+
+    db.appointments.push(appointment);
+    writeDatabase(db);
+    res.redirect("/student");
+  }
+);
+
+app.get("/staff", requireAuth, requireRole("staff"), (req, res) => {
+  const db = readDatabase();
+  const activeRequests = db.requests.filter(
+    (request) => !["Closed", "Cancelled"].includes(request.status)
+  );
+
+  res.render("staff-dashboard", {
+    user: req.session.user,
+    requests: activeRequests,
+    statuses: REQUEST_STATUSES,
+  });
+});
+
+app.post(
+  "/staff/requests/:id/status",
+  requireAuth,
+  requireRole("staff"),
+  (req, res) => {
+    const requestId = Number(req.params.id);
+    const { status, staffNote } = req.body;
+
+    if (!REQUEST_STATUSES.includes(status)) {
+      return res.status(400).send("Invalid request status.");
+    }
+
+    const db = readDatabase();
+    const request = db.requests.find((item) => item.id === requestId);
+
+    if (!request) {
+      return res.status(404).send("Request not found.");
+    }
+
+    request.status = status;
+    request.staffNote = (staffNote || "").trim();
+    request.updatedAt = new Date().toISOString();
+    writeDatabase(db);
+    res.redirect("/staff");
+  }
+);
+
+app.get("/admin", requireAuth, requireRole("admin"), (req, res) => {
+  const db = readDatabase();
+
+  res.render("admin-dashboard", {
+    user: req.session.user,
+    users: db.users,
+    requests: db.requests,
+    appointments: db.appointments,
+  });
+});
+
+app.post(
+  "/admin/users/:id/status",
+  requireAuth,
+  requireRole("admin"),
+  (req, res) => {
+    const userId = Number(req.params.id);
+    const { status } = req.body;
+
+    if (!["active", "disabled"].includes(status)) {
+      return res.status(400).send("Invalid user status.");
+    }
+
+    const db = readDatabase();
+    const user = db.users.find((candidate) => candidate.id === userId);
+
+    if (!user) {
+      return res.status(404).send("User not found.");
+    }
+
+    user.status = status;
+    writeDatabase(db);
+    res.redirect("/admin");
+  }
+);
+
+app.get("/admin/requests/:id", requireAuth, requireRole("admin"), (req, res) => {
+  const requestId = Number(req.params.id);
+  const db = readDatabase();
+  const request = db.requests.find((item) => item.id === requestId);
+
+  if (!request) {
+    return res.status(404).send("Request not found.");
   }
 
-  if (error) {
-    return res.status(400).send(error.message);
+  res.render("admin-request", {
+    user: req.session.user,
+    request,
+    statuses: REQUEST_STATUSES,
+  });
+});
+
+app.post(
+  "/admin/requests/:id/status",
+  requireAuth,
+  requireRole("admin"),
+  (req, res) => {
+    const requestId = Number(req.params.id);
+    const { status, staffNote } = req.body;
+
+    if (!REQUEST_STATUSES.includes(status)) {
+      return res.status(400).send("Invalid request status.");
+    }
+
+    const db = readDatabase();
+    const request = db.requests.find((item) => item.id === requestId);
+
+    if (!request) {
+      return res.status(404).send("Request not found.");
+    }
+
+    request.status = status;
+    request.staffNote = (staffNote || "").trim();
+    request.updatedAt = new Date().toISOString();
+    writeDatabase(db);
+    res.redirect(`/admin/requests/${requestId}`);
+  }
+);
+
+app.post(
+  "/admin/appointments/:id/status",
+  requireAuth,
+  requireRole("admin"),
+  (req, res) => {
+    const appointmentId = Number(req.params.id);
+    const { status } = req.body;
+
+    if (!["Scheduled", "Completed", "Cancelled"].includes(status)) {
+      return res.status(400).send("Invalid appointment status.");
+    }
+
+    const db = readDatabase();
+    const appointment = db.appointments.find((item) => item.id === appointmentId);
+
+    if (!appointment) {
+      return res.status(404).send("Appointment not found.");
+    }
+
+    appointment.status = status;
+    writeDatabase(db);
+    res.redirect("/admin");
+  }
+);
+
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).send("Attachment is too large. Maximum size is 10 MB.");
   }
 
-  next();
+  if (err.message && err.message.startsWith("Unsupported file type")) {
+    return res.status(400).send(err.message);
+  }
+
+  res.status(500).send("Something went wrong.");
 });
 
 app.listen(PORT, () => {
