@@ -31,7 +31,7 @@ A role-based student services portal built with Node.js and Express. The applica
    Copy-Item .env.example .env
    ```
 
-   Then replace the placeholder Cloudinary values in `.env` if you want attachment uploads to work. The default `PORT=3000` can be changed if needed.
+   Replace `SESSION_SECRET` with a long, random value. If you want attachment uploads to work, also replace the placeholder Cloudinary credentials. The default `PORT=3000` can be changed if needed.
 
 4. Start the application:
 
