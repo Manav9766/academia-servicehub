@@ -55,7 +55,7 @@ These credentials are intended for local/demo use only.
 
 ## Data and uploads
 
-Application data is stored in `data/db.json`. The server creates the data and upload directories when needed. Attachments are uploaded through Cloudinary, so valid Cloudinary credentials are required for that feature.
+Application data is stored in `data/db.json`. The server creates the data and upload directories when needed. Attachments are uploaded through Cloudinary, so valid Cloudinary credentials are required for that feature. Uploads are limited to 10 MB per file and accept PNG, JPG/JPEG, PDF, DOC, and DOCX files.
 
 ## Project structure
 
