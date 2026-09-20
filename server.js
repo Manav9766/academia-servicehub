@@ -326,8 +326,11 @@ app.post(
   requireRole("student"),
   (req, res) => {
     const { service, appointmentDate, notes } = req.body;
+    const cleanedAppointmentDate =
+      typeof appointmentDate === "string" ? appointmentDate.trim() : "";
+    const cleanedNotes = typeof notes === "string" ? notes.trim() : "";
 
-    if (!REQUEST_CATEGORIES.includes(service) || !appointmentDate) {
+    if (!REQUEST_CATEGORIES.includes(service) || !cleanedAppointmentDate) {
       return res.status(400).send("Please provide a valid service and appointment date.");
     }
 
@@ -337,8 +340,8 @@ app.post(
       studentId: req.session.user.id,
       studentName: req.session.user.username,
       service,
-      appointmentDate,
-      notes: (notes || "").trim(),
+      appointmentDate: cleanedAppointmentDate,
+      notes: cleanedNotes,
       status: "Scheduled",
       createdAt: new Date().toISOString(),
     };
