@@ -287,8 +287,10 @@ app.post(
   upload.single("attachment"),
   (req, res) => {
     const { category, subject, description } = req.body;
+    const cleanedSubject = typeof subject === "string" ? subject.trim() : "";
+    const cleanedDescription = typeof description === "string" ? description.trim() : "";
 
-    if (!REQUEST_CATEGORIES.includes(category) || !subject || !description) {
+    if (!REQUEST_CATEGORIES.includes(category) || !cleanedSubject || !cleanedDescription) {
       return res.status(400).send("Please provide a valid category, subject, and description.");
     }
 
@@ -298,8 +300,8 @@ app.post(
       studentId: req.session.user.id,
       studentName: req.session.user.username,
       category,
-      subject: subject.trim(),
-      description: description.trim(),
+      subject: cleanedSubject,
+      description: cleanedDescription,
       status: "Submitted",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
