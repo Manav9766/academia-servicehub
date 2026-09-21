@@ -385,7 +385,7 @@ app.post(
     }
 
     request.status = status;
-    request.staffNote = (staffNote || "").trim();
+    request.staffNote = typeof staffNote === "string" ? staffNote.trim() : "";
     request.updatedAt = new Date().toISOString();
     writeDatabase(db);
     res.redirect("/staff");
@@ -464,7 +464,7 @@ app.post(
     }
 
     request.status = status;
-    request.staffNote = (staffNote || "").trim();
+    request.staffNote = typeof staffNote === "string" ? staffNote.trim() : "";
     request.updatedAt = new Date().toISOString();
     writeDatabase(db);
     res.redirect(`/admin/requests/${requestId}`);
