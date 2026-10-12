@@ -57,6 +57,12 @@ These credentials are intended for local/demo use only.
 
 Application data is stored in `data/db.json`. The server creates the data and upload directories when needed. Attachments are uploaded through Cloudinary, so valid Cloudinary credentials are required for that feature. Uploads are limited to 10 MB per file and accept PNG, JPG/JPEG, PDF, DOC, and DOCX files.
 
+### Reset local demo data
+
+To return the local app to its default demo users with empty requests and appointments, stop the server and remove `data/db.json`. On the next run, the application falls back to its built-in demo data, and the file is recreated the next time data is written.
+
+This removes only local application data; it does not delete files already stored in Cloudinary.
+
 ## Project structure
 
 ```text
