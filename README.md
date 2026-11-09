@@ -61,7 +61,11 @@ Application data is stored in `data/db.json`. The server creates the data and up
 
 To return the local app to its default demo users with empty requests and appointments, stop the server and remove `data/db.json`. On the next run, the application falls back to its built-in demo data, and the file is recreated the next time data is written.
 
-This removes only local application data; it does not delete files already stored in Cloudinary.
+This removes only local application data; it does not delete files already stored in Cloudinary. Back up `data/db.json` first if you need to preserve existing demo records.
+
+### Session behavior
+
+Login sessions use the default in-memory `express-session` store. Restarting the Node.js process clears active sessions, so users must sign in again. The session cookie has a one-hour lifetime that is refreshed on activity; this does not make the in-memory store suitable for production use.
 
 ## Project structure
 
