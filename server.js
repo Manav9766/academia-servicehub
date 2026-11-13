@@ -183,7 +183,8 @@ function readDatabase() {
     };
   } catch (error) {
     console.error("Failed to read database:", error);
-    return getEmptyDatabase();
+    // Do not silently reset corrupted data: a later write could overwrite the file.
+    throw error;
   }
 }
 
