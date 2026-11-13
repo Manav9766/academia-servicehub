@@ -63,6 +63,10 @@ To return the local app to its default demo users with empty requests and appoin
 
 This removes only local application data; it does not delete files already stored in Cloudinary. Back up `data/db.json` first if you need to preserve existing demo records.
 
+### Recover from an unreadable data file
+
+If `data/db.json` contains invalid JSON or cannot be read, requests that access stored data can fail instead of silently replacing existing records with demo data. Stop the server and **back up the file before making changes**. Check file permissions and JSON syntax, or restore a known-good backup. Only remove `data/db.json` if you intentionally want to reset local demo data as described above; doing so discards saved local records.
+
 ### Session behavior
 
 Login sessions use the default in-memory `express-session` store. Restarting the Node.js process clears active sessions, so users must sign in again. The session cookie has a one-hour lifetime that is refreshed on activity; this does not make the in-memory store suitable for production use.
