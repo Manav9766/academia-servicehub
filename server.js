@@ -259,8 +259,10 @@ app.post("/login", (req, res) => {
   res.redirect(redirectForRole(user.role));
 });
 
-app.post("/logout", (req, res) => {
-  req.session.destroy(() => {
+app.post("/logout", (req, res, next) => {
+  req.session.destroy((error) => {
+    if (error) return next(error);
+    res.clearCookie("connect.sid");
     res.redirect("/login");
   });
 });
