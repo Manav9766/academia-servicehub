@@ -8,6 +8,9 @@ npm-debug.log*
 
 # Local runtime data (recreated automatically by server.js)
 data/db.json
+# Backups of the local data file can contain user records
+data/db.json.*
+data/db.json-*
 
 # Runtime uploads and legacy local attachments
 public/uploads/
