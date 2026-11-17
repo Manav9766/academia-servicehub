@@ -14,8 +14,10 @@ A role-based student services portal built with Node.js and Express. The applica
 2. Install dependencies:
 
    ```bash
-   npm install
+   npm ci
    ```
+
+   `npm ci` installs the versions recorded in `package-lock.json` without rewriting the lockfile. Use `npm install` when intentionally adding or updating dependencies.
 
 3. Copy the provided environment template to `.env`:
 
@@ -92,4 +94,4 @@ This repository is a course/demo application, not a production-ready authenticat
 - `npm start` runs `node server.js`.
 - The default port is `3000` unless `PORT` is set.
 - Keep `.env` and other credentials out of version control.
-- `node_modules/` should not be committed; dependencies should be restored with `npm install` from `package-lock.json`.
+- `node_modules/` should not be committed; dependencies should be restored with `npm ci` from `package-lock.json`.
