@@ -55,6 +55,8 @@ The application initializes these local demo users when no data file exists:
 
 These credentials are intended for local/demo use only.
 
+**Network exposure:** The default `app.listen(PORT)` configuration does not restrict the server to the loopback interface. Depending on your machine and firewall, other devices on the network may be able to reach the app and sign in with these public demo credentials. Run it only in a trusted development environment; do not expose port 3000 to the internet or forward it from your router. Opening `localhost` in your own browser does not, by itself, restrict who can connect.
+
 ## Data and uploads
 
 Application data is stored in `data/db.json`. The server creates the data and upload directories when needed. Attachments are uploaded through Cloudinary, so valid Cloudinary credentials are required for that feature. Uploads are limited to 10 MB per file and accept PNG, JPG/JPEG, PDF, DOC, and DOCX files.
