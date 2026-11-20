@@ -195,7 +195,7 @@ function writeDatabase(data) {
 
 function getNextId(items) {
   if (!items.length) return 1;
-  return Math.max(...items.map((item) => Number(item.id) || 0)) + 1;
+  return items.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
 }
 
 function requireAuth(req, res, next) {
