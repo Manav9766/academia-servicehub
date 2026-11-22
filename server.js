@@ -250,13 +250,21 @@ app.post("/login", (req, res) => {
     });
   }
 
-  req.session.user = {
-    id: user.id,
-    username: user.username,
-    role: user.role,
-  };
+  // Rotate the session ID after authentication to prevent session fixation.
+  req.session.regenerate((error) => {
+    if (error) return res.status(500).send("Unable to start a session.");
 
-  res.redirect(redirectForRole(user.role));
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    };
+
+    req.session.save((saveError) => {
+      if (saveError) return res.status(500).send("Unable to start a session.");
+      res.redirect(redirectForRole(user.role));
+    });
+  });
 });
 
 app.post("/logout", (req, res, next) => {
