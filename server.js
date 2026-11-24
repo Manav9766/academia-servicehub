@@ -85,7 +85,7 @@ fs.mkdirSync(UPLOAD_DIRECTORY, { recursive: true });
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
-    const extension = path.extname(file.originalname).toLowerCase();
+    const extension = path.extname(file.originalname);
 
     const safeBaseName = path
       .basename(file.originalname, extension)
