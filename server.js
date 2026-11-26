@@ -515,6 +515,10 @@ app.use((err, req, res, next) => {
     return res.status(400).send("Attachment is too large. Maximum size is 10 MB.");
   }
 
+  if (err instanceof multer.MulterError && err.code === "LIMIT_UNEXPECTED_FILE") {
+    return res.status(400).send("Please upload only one attachment using the attachment field.");
+  }
+
   if (err.message && err.message.startsWith("Unsupported file type")) {
     return res.status(400).send(err.message);
   }
