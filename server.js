@@ -519,6 +519,10 @@ app.use((err, req, res, next) => {
     return res.status(400).send("Please upload only one attachment using the attachment field.");
   }
 
+  if (err.type === "entity.parse.failed" && err.status === 400) {
+    return res.status(400).send("Malformed request body.");
+  }
+
   if (err.message && err.message.startsWith("Unsupported file type")) {
     return res.status(400).send(err.message);
   }
