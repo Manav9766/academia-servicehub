@@ -232,7 +232,7 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const { username, password } = req.body;
+  const { username, password } = req.body ?? {};
   const db = readDatabase();
   const user = db.users.find(
     (candidate) => candidate.username === username && candidate.password === password
@@ -298,7 +298,7 @@ app.post(
   requireRole("student"),
   upload.single("attachment"),
   (req, res) => {
-    const { category, subject, description } = req.body;
+    const { category, subject, description } = req.body ?? {};
     const cleanedSubject = typeof subject === "string" ? subject.trim() : "";
     const cleanedDescription = typeof description === "string" ? description.trim() : "";
 
@@ -337,7 +337,7 @@ app.post(
   requireAuth,
   requireRole("student"),
   (req, res) => {
-    const { service, appointmentDate, notes } = req.body;
+    const { service, appointmentDate, notes } = req.body ?? {};
     const cleanedAppointmentDate =
       typeof appointmentDate === "string" ? appointmentDate.trim() : "";
     const cleanedNotes = typeof notes === "string" ? notes.trim() : "";
@@ -383,7 +383,7 @@ app.post(
   requireRole("staff"),
   (req, res) => {
     const requestId = Number(req.params.id);
-    const { status, staffNote } = req.body;
+    const { status, staffNote } = req.body ?? {};
 
     if (!REQUEST_STATUSES.includes(status)) {
       return res.status(400).send("Invalid request status.");
@@ -421,7 +421,7 @@ app.post(
   requireRole("admin"),
   (req, res) => {
     const userId = Number(req.params.id);
-    const { status } = req.body;
+    const { status } = req.body ?? {};
 
     if (!["active", "disabled"].includes(status)) {
       return res.status(400).send("Invalid user status.");
@@ -462,7 +462,7 @@ app.post(
   requireRole("admin"),
   (req, res) => {
     const requestId = Number(req.params.id);
-    const { status, staffNote } = req.body;
+    const { status, staffNote } = req.body ?? {};
 
     if (!REQUEST_STATUSES.includes(status)) {
       return res.status(400).send("Invalid request status.");
@@ -489,7 +489,7 @@ app.post(
   requireRole("admin"),
   (req, res) => {
     const appointmentId = Number(req.params.id);
-    const { status } = req.body;
+    const { status } = req.body ?? {};
 
     if (!["Scheduled", "Completed", "Cancelled"].includes(status)) {
       return res.status(400).send("Invalid appointment status.");
